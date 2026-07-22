@@ -1,6 +1,6 @@
 class ApiConfig {
   static const String baseUrlKey = 'api_base_url';
-  static const String defaultBaseUrl = 'http://localhost:3000';
+  static const String defaultBaseUrl = 'https://eventsys-kohl.vercel.app';
   static const String activeEventIdKey = 'active_event_id';
   static const String activeEventNameKey = 'active_event_name';
 
@@ -9,5 +9,6 @@ class ApiConfig {
   static String eventKeyPath(String eventId) => '/api/mobile/events/$eventId/key';
   static const String checkInPath = '/api/mobile/check-in';
   static const String attendeesPath = '/api/mobile/attendees';
-  static const String smsLogsPath = '/api/mobile/sms-logs';
+  static const String attendeesImportPath = '/api/mobile/attendees/import';
+  static const String membersPath = '/api/mobile/members';
 }

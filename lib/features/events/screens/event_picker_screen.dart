@@ -25,7 +25,7 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
         await ref.read(keyVaultProvider).save(event.id, event.eventKey!);
       }
 
-      await selectActiveEvent(ref, event);
+      await ref.read(eventSelectionControllerProvider).selectActiveEvent(event);
       if (mounted) context.go('/shell/dashboard');
     } catch (e) {
       if (mounted) {
@@ -71,7 +71,7 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
                       return;
                     }
                     await ref.read(keyVaultProvider).save(event.id, key);
-                    await selectActiveEvent(ref, event);
+                    await ref.read(eventSelectionControllerProvider).selectActiveEvent(event);
                     if (context.mounted) {
                       Navigator.pop(context);
                       context.go('/shell/dashboard');

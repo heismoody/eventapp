@@ -129,11 +129,9 @@ class _InvalidContent extends StatelessWidget {
         Text('Invalid QR Code', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         SizedBox(height: 8),
         Text(
-          trimmed.startsWith('ES1:')
-              ? 'Could not decrypt this code. Re-download the event key in Settings.'
-              : 'This QR code is not encrypted. Regenerate it from the admin portal.',
+          'Could not decrypt this code. Check your event key in Settings.',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.muted),
+          style: TextStyle(color: AppColors.muted),
         ),
       ],
     );

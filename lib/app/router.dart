@@ -2,28 +2,44 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/providers/auth_provider.dart';
-import '../features/auth/screens/login_screen.dart';
+import '../features/auth/screens/welcome_screen.dart';
 import '../features/events/screens/event_picker_screen.dart';
 import '../features/shell/main_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   ref.watch(authTokenProvider);
-  final authState = ref.watch(authInitializedProvider);
+  ref.watch(authInitializedProvider);
+  ref.watch(currentUserProvider);
 
   return GoRouter(
     initialLocation: '/login',
     redirect: (context, state) {
       final isLoggingIn = state.matchedLocation == '/login';
-      final isReady = authState.maybeWhen(data: (v) => v, orElse: () => false);
+      final token = ref.read(authTokenProvider);
+      final authenticated = isAuthenticated(token);
+      final user = ref.read(currentUserProvider);
 
-      if (!isReady && !isLoggingIn) return '/login';
-      if (isReady && isLoggingIn) return '/events';
+      if (!authenticated && !isLoggingIn) return '/login';
+
+      if (authenticated && isLoggingIn) {
+        return user?.isEventScoped == true ? '/shell/dashboard' : '/events';
+      }
+
+      if (authenticated &&
+          user?.isEventScoped == true &&
+          state.matchedLocation == '/events') {
+        return '/shell/dashboard';
+      }
+
       return null;
     },
     routes: [
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) {
+          final skipSplash = state.uri.queryParameters['skip'] == '1';
+          return WelcomeScreen(skipSplash: skipSplash);
+        },
       ),
       GoRoute(
         path: '/events',
@@ -45,8 +61,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AttendeesTab(),
           ),
           GoRoute(
-            path: '/shell/sms',
-            builder: (context, state) => const SmsLogsTab(),
+            path: '/shell/team',
+            builder: (context, state) => const TeamTab(),
           ),
           GoRoute(
             path: '/shell/settings',

@@ -1,31 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../auth/providers/auth_provider.dart';
 import '../dashboard/screens/dashboard_screen.dart';
 import '../scanner/screens/scanner_screen.dart';
 import '../attendees/screens/attendees_screen.dart';
-import '../sms_logs/screens/sms_logs_screen.dart';
 import '../settings/screens/settings_screen.dart';
+import '../team/screens/team_screen.dart';
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.child});
 
   final Widget child;
 
-  @override
-  State<MainShell> createState() => _MainShellState();
-}
-
-class _MainShellState extends State<MainShell> {
-  int _indexFromLocation(String location) {
+  int _indexFromLocation(String location, {required bool showTeamTab}) {
     if (location.startsWith('/shell/scanner')) return 1;
     if (location.startsWith('/shell/attendees')) return 2;
-    if (location.startsWith('/shell/sms')) return 3;
-    if (location.startsWith('/shell/settings')) return 4;
+    if (location.startsWith('/shell/team')) return showTeamTab ? 3 : 0;
+    if (location.startsWith('/shell/settings')) return showTeamTab ? 4 : 3;
     return 0;
   }
 
-  void _onTap(int index) {
+  void _onTap(BuildContext context, int index, {required bool showTeamTab}) {
     switch (index) {
       case 0:
         context.go('/shell/dashboard');
@@ -34,29 +31,53 @@ class _MainShellState extends State<MainShell> {
       case 2:
         context.go('/shell/attendees');
       case 3:
-        context.go('/shell/sms');
+        context.go(showTeamTab ? '/shell/team' : '/shell/settings');
       case 4:
         context.go('/shell/settings');
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
-    final currentIndex = _indexFromLocation(location);
+    final showTeamTab = ref.watch(currentUserProvider)?.isEventOwner ?? false;
+    final currentIndex = _indexFromLocation(location, showTeamTab: showTeamTab);
+
+    final destinations = <NavigationDestination>[
+      const NavigationDestination(
+        icon: Icon(Icons.dashboard_outlined),
+        selectedIcon: Icon(Icons.dashboard),
+        label: 'Dashboard',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.qr_code_scanner_outlined),
+        selectedIcon: Icon(Icons.qr_code_scanner),
+        label: 'Scan',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.people_outline),
+        selectedIcon: Icon(Icons.people),
+        label: 'Guests',
+      ),
+      if (showTeamTab)
+        const NavigationDestination(
+          icon: Icon(Icons.groups_outlined),
+          selectedIcon: Icon(Icons.groups),
+          label: 'Team',
+        ),
+      const NavigationDestination(
+        icon: Icon(Icons.settings_outlined),
+        selectedIcon: Icon(Icons.settings),
+        label: 'Settings',
+      ),
+    ];
 
     return Scaffold(
-      body: widget.child,
+      body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
-        onDestinationSelected: _onTap,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.qr_code_scanner_outlined), selectedIcon: Icon(Icons.qr_code_scanner), label: 'Scan'),
-          NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: 'Guests'),
-          NavigationDestination(icon: Icon(Icons.sms_outlined), selectedIcon: Icon(Icons.sms), label: 'SMS'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
-        ],
+        onDestinationSelected: (index) => _onTap(context, index, showTeamTab: showTeamTab),
+        destinations: destinations,
       ),
     );
   }
@@ -80,10 +101,10 @@ class AttendeesTab extends StatelessWidget {
   Widget build(BuildContext context) => const AttendeesScreen();
 }
 
-class SmsLogsTab extends StatelessWidget {
-  const SmsLogsTab({super.key});
+class TeamTab extends StatelessWidget {
+  const TeamTab({super.key});
   @override
-  Widget build(BuildContext context) => const SmsLogsScreen();
+  Widget build(BuildContext context) => const TeamScreen();
 }
 
 class SettingsTab extends StatelessWidget {

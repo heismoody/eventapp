@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required to scan guest QR codes for check-in.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Access contacts to add them as event attendees.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
