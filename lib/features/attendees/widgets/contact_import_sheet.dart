@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../shared/services/connectivity_service.dart';
 
 Future<bool?> showContactImportSheet({
@@ -122,9 +123,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
     final online = await ref.read(connectivityServiceProvider).isOnline();
     if (!mounted) return;
     if (!online) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Import requires an internet connection')),
-      );
+      AppToast.warning('Import requires an internet connection');
       return;
     }
 
@@ -155,16 +154,12 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
       final skipped = data['skipped'] as int? ?? 0;
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$inserted added, $skipped skipped')),
-        );
+        AppToast.success('$inserted added, $skipped skipped');
         Navigator.pop(context, true);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Import failed. Please try again.')),
-        );
+        AppToast.error('Import failed. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _importing = false);
@@ -272,7 +267,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
                         : ListView.separated(
                             padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
                             itemCount: filtered.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            separatorBuilder: (_, _) => const SizedBox(height: 10),
                             itemBuilder: (context, index) {
                               final contact = filtered[index];
                               final selected = _selectedIds.contains(contact.id);

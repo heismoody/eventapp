@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/welcome_screen.dart';
 import '../features/events/screens/event_picker_screen.dart';
+import '../features/contributions/screens/contribution_categories_screen.dart';
+import '../features/contributions/screens/sms_billing_screen.dart';
+import '../features/attendees/screens/guest_detail_screen.dart';
 import '../features/shell/main_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -68,7 +71,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/shell/settings',
             builder: (context, state) => const SettingsTab(),
           ),
+          GoRoute(
+            path: '/shell/contribution-categories',
+            builder: (context, state) => const ContributionCategoriesScreen(),
+          ),
+          GoRoute(
+            path: '/shell/sms-billing',
+            builder: (context, state) => const SmsBillingScreen(),
+          ),
         ],
+      ),
+      GoRoute(
+        path: '/shell/guests/:attendeeId',
+        builder: (context, state) => GuestDetailScreen(
+          attendeeId: state.pathParameters['attendeeId']!,
+        ),
       ),
     ],
   );

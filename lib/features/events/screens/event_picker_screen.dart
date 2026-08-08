@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../models/event_model.dart';
 import '../providers/event_provider.dart';
@@ -29,8 +30,8 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
       if (mounted) context.go('/shell/dashboard');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load event key. Enter it manually in Settings.')),
+        AppToast.error(
+          'Failed to load event key. Enter it manually in Settings.',
         );
       }
     }
@@ -65,9 +66,7 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
                   onPressed: () async {
                     final key = controller.text.trim();
                     if (key.length != 64) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Key must be 64 hex characters')),
-                      );
+                      AppToast.warning('Key must be 64 hex characters');
                       return;
                     }
                     await ref.read(keyVaultProvider).save(event.id, key);
@@ -104,7 +103,7 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: events.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final event = events[index];
               return FutureBuilder<bool>(

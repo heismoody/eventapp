@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../models/team_member_model.dart';
 import '../providers/team_provider.dart';
@@ -103,18 +104,12 @@ class TeamScreen extends ConsumerWidget {
                                 ref.invalidate(teamMembersProvider);
                                 if (context.mounted) {
                                   Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Member account created')),
-                                  );
+                                  AppToast.success('Member account created');
                                 }
                               } catch (_) {
                                 setState(() => submitting = false);
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Failed to create member account'),
-                                    ),
-                                  );
+                                  AppToast.error('Failed to create member account');
                                 }
                               }
                             },

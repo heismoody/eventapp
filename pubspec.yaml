@@ -23,6 +23,8 @@ dependencies:
   path: ^1.9.0
   cryptography: ^2.7.0
   flutter_contacts: ^1.1.9+1
+  file_picker: ^8.1.7
+  toastification: ^3.2.0
 
 dev_dependencies:
   flutter_test:

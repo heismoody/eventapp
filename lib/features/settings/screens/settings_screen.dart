@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/api_config.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -46,9 +47,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(ApiConfig.baseUrlKey, _serverController.text.trim());
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Server URL saved')),
-      );
+      AppToast.success('Server URL saved');
     }
   }
 
@@ -58,17 +57,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final key = _keyController.text.trim();
     if (key.length != 64) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Key must be 64 hex characters')),
-      );
+      AppToast.warning('Key must be 64 hex characters');
       return;
     }
 
     await ref.read(keyVaultProvider).save(eventId, key);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event key saved')),
-      );
+      AppToast.success('Event key saved');
     }
   }
 
@@ -80,15 +75,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final key = await ref.read(eventServiceProvider).fetchEventKey(eventId);
       await ref.read(keyVaultProvider).save(eventId, key);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Key re-downloaded')),
-        );
+        AppToast.success('Key re-downloaded');
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to download key')),
-        );
+        AppToast.error('Failed to download key');
       }
     }
   }
@@ -97,9 +88,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final synced = await ref.read(syncServiceProvider).drainQueue();
     ref.invalidate(pendingSyncCountProvider);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Synced $synced check-ins')),
-      );
+      AppToast.success('Synced $synced check-ins');
     }
   }
 
@@ -222,9 +211,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showKeySheet() {
     final eventId = ref.read(activeEventIdProvider);
     if (eventId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select an event first')),
-      );
+      AppToast.info('Select an event first');
       return;
     }
 
@@ -298,6 +285,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final pendingAsync = ref.watch(pendingSyncCountProvider);
     final pending = pendingAsync.maybeWhen(data: (v) => v, orElse: () => 0);
     final canSwitchEvent = user?.isEventScoped != true;
+    final isEventOwner = user?.isEventOwner ?? false;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -354,6 +342,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 subtitle: 'Manage API server URL',
                 onTap: _showServerSheet,
               ),
+              if (isEventOwner)
+                _SettingsItem(
+                  icon: Icons.sms_outlined,
+                  label: 'SMS billing',
+                  subtitle: 'Credits, usage logs, and payments',
+                  onTap: () => context.push('/shell/sms-billing'),
+                ),
             ],
           ),
           const SizedBox(height: 24),

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../local_db/checkin_history_dao.dart';
 import '../../../shared/services/connectivity_service.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../contributions/services/contribution_service.dart';
 import '../../events/providers/event_provider.dart';
 import '../services/attendee_service.dart';
+import '../widgets/attendee_display.dart';
 import '../widgets/contact_import_sheet.dart';
 
 class AttendeesScreen extends ConsumerStatefulWidget {
@@ -47,9 +52,50 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
     }
   }
 
+  Future<void> _remindUnpaid(String eventId, List<AttendeeRecord> attendees) async {
+    final unpaidIds = attendees
+        .where((a) =>
+            a.paymentStatus == ContributionPaymentStatus.partial ||
+            a.paymentStatus == ContributionPaymentStatus.unpaid)
+        .map((a) => a.id)
+        .toList();
+
+    if (unpaidIds.isEmpty) {
+      if (mounted) {
+        AppToast.info('No unpaid guests to remind');
+      }
+      return;
+    }
+
+    try {
+      final result = await ref.read(contributionServiceProvider).sendContributionSms(
+            eventId: eventId,
+            type: 'reminder',
+            attendeeIds: unpaidIds,
+          );
+      ref.invalidate(smsBillingProvider(eventId));
+      ref.invalidate(smsCreditsProvider(eventId));
+      if (mounted) {
+        if (!result.allowed) {
+          AppToast.warning(
+            result.error ?? 'No SMS credits available for this event',
+          );
+          return;
+        }
+        AppToast.success('Sent ${result.sent}, failed ${result.failed}');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.error('Failed to send reminders');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final eventId = ref.watch(activeEventIdProvider);
+    final user = ref.watch(currentUserProvider);
+    final isEventOwner = user?.isEventOwner ?? false;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -62,6 +108,29 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
           'Guests',
           style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.onSurface),
         ),
+        actions: [
+          if (eventId != null && isEventOwner && _isOnline)
+            IconButton(
+              tooltip: 'Contribution categories',
+              onPressed: () => context.push('/shell/contribution-categories'),
+              icon: const Icon(Icons.category_outlined),
+            ),
+          if (eventId != null && isEventOwner && _isOnline)
+            PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == 'remind') {
+                  final attendees = await ref.read(attendeesProvider(eventId).future);
+                  if (mounted) await _remindUnpaid(eventId, attendees);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'remind',
+                  child: Text('Remind unpaid'),
+                ),
+              ],
+            ),
+        ],
       ),
       floatingActionButton: eventId != null && _isOnline
           ? FloatingActionButton(
@@ -141,6 +210,7 @@ class _GuestFilterBar extends StatelessWidget {
       ('all', 'All'),
       ('checked', 'Checked in'),
       ('pending', 'Pending'),
+      ('unpaid', 'Unpaid'),
     ];
 
     return Container(
@@ -255,6 +325,15 @@ class _OnlineAttendeesList extends ConsumerWidget {
         var filtered = attendees;
         if (filter == 'checked') filtered = filtered.where((a) => a.checkedIn).toList();
         if (filter == 'pending') filtered = filtered.where((a) => !a.checkedIn).toList();
+        if (filter == 'unpaid') {
+          filtered = filtered
+              .where(
+                (a) =>
+                    a.paymentStatus == ContributionPaymentStatus.partial ||
+                    a.paymentStatus == ContributionPaymentStatus.unpaid,
+              )
+              .toList();
+        }
         if (search.isNotEmpty) {
           filtered = filtered
               .where((a) => a.name.toLowerCase().contains(search.toLowerCase()))
@@ -282,72 +361,8 @@ class _OnlineAttendeesList extends ConsumerWidget {
             children: [
               _GuestsListSection(
                 attendees: filtered,
-                onTap: (attendee) => _showDetail(
-                  context,
-                  attendee.name,
-                  attendee.phone,
-                  attendee.contributionAmount,
-                  attendee.checkedInAt,
-                  attendee.checkedIn,
-                ),
+                onTap: (attendee) => context.push('/shell/guests/${attendee.id}'),
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showDetail(
-    BuildContext context,
-    String name,
-    String phone,
-    String? contribution,
-    DateTime? checkedInAt,
-    bool checkedIn,
-  ) {
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(name, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              _DetailField(label: 'Phone', value: phone),
-              if (contribution != null) ...[
-                const SizedBox(height: 12),
-                _DetailField(label: 'Contribution', value: contribution),
-              ],
-              const SizedBox(height: 12),
-              _DetailField(
-                label: 'Status',
-                value: checkedIn ? 'Checked in' : 'Pending',
-              ),
-              if (checkedInAt != null) ...[
-                const SizedBox(height: 12),
-                _DetailField(
-                  label: 'Checked in at',
-                  value: DateFormatter.formatDateTime(checkedInAt),
-                ),
-              ],
             ],
           ),
         );
@@ -388,7 +403,7 @@ class _OfflineHistoryList extends StatelessWidget {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 96),
           itemCount: items.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final item = items[index];
             return _GuestCard(
@@ -445,6 +460,7 @@ class _GuestsListSection extends StatelessWidget {
                 subtitle: attendee.phone,
                 trailing: attendee.checkedIn ? 'Checked in' : 'Pending',
                 checkedIn: attendee.checkedIn,
+                paymentStatus: attendee.paymentStatus,
               ),
             ),
           ),
@@ -490,6 +506,7 @@ class _GuestTile extends StatelessWidget {
     required this.subtitle,
     required this.trailing,
     required this.checkedIn,
+    this.paymentStatus = ContributionPaymentStatus.none,
   });
 
   final String initials;
@@ -497,6 +514,7 @@ class _GuestTile extends StatelessWidget {
   final String subtitle;
   final String trailing;
   final bool checkedIn;
+  final ContributionPaymentStatus paymentStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -534,6 +552,24 @@ class _GuestTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (paymentStatus != ContributionPaymentStatus.none) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: contributionStatusColor(paymentStatus).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      contributionStatusLabel(paymentStatus),
+                      style: TextStyle(
+                        color: contributionStatusColor(paymentStatus),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -555,37 +591,6 @@ class _GuestTile extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _DetailField extends StatelessWidget {
-  const _DetailField({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
-        const SizedBox(height: 6),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-        ),
-      ],
     );
   }
 }
