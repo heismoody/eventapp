@@ -7,6 +7,9 @@ import '../../../core/constants/api_config.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../shared/services/connectivity_service.dart';
+import '../../../shared/widgets/guest_category_field.dart';
+import '../../contributions/services/contribution_service.dart';
+import '../../contributions/widgets/contribution_category_sheet.dart';
 
 Future<bool?> showContactImportSheet({
   required BuildContext context,
@@ -40,6 +43,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
   bool _importing = false;
   String? _error;
   String _search = '';
+  String? _selectedCategoryId;
 
   @override
   void initState() {
@@ -64,7 +68,10 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
       }
 
       final contacts = await FlutterContacts.getContacts(withProperties: true);
-      contacts.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+      contacts.sort(
+        (a, b) =>
+            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
+      );
 
       setState(() {
         _contacts = contacts.where((c) => c.phones.isNotEmpty).toList();
@@ -119,6 +126,16 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
     });
   }
 
+  Future<void> _openAddCategory() async {
+    final created = await showContributionCategorySheet(
+      context: context,
+      eventId: widget.eventId,
+    );
+    if (created != null && mounted) {
+      setState(() => _selectedCategoryId = created.id);
+    }
+  }
+
   Future<void> _importSelected() async {
     final online = await ref.read(connectivityServiceProvider).isOnline();
     if (!mounted) return;
@@ -127,17 +144,21 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
       return;
     }
 
-    final selected = _contacts.where((c) => _selectedIds.contains(c.id)).toList();
+    final selected = _contacts
+        .where((c) => _selectedIds.contains(c.id))
+        .toList();
     if (selected.isEmpty) return;
 
     setState(() => _importing = true);
 
     try {
       final payload = selected
-          .map((contact) => {
-                'name': contact.displayName.trim(),
-                'phone': contact.phones.first.number.trim(),
-              })
+          .map(
+            (contact) => {
+              'name': contact.displayName.trim(),
+              'phone': contact.phones.first.number.trim(),
+            },
+          )
           .toList();
 
       final dio = ref.read(apiClientProvider);
@@ -145,6 +166,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
         ApiConfig.attendeesImportPath,
         data: {
           'eventId': widget.eventId,
+          'categoryId': _selectedCategoryId,
           'contacts': payload,
         },
       );
@@ -171,6 +193,9 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
     final filtered = _filteredContacts;
     final selectedCount = _selectedIds.length;
     final sheetHeight = MediaQuery.sizeOf(context).height * 0.88;
+    final categoriesAsync = ref.watch(
+      contributionCategoriesProvider(widget.eventId),
+    );
 
     return SizedBox(
       height: sheetHeight,
@@ -201,7 +226,9 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
                 if (!_loading && _error == null)
                   TextButton(
                     onPressed: filtered.isEmpty ? null : _toggleSelectAll,
-                    child: Text(_allFilteredSelected ? 'Deselect all' : 'Select all'),
+                    child: Text(
+                      _allFilteredSelected ? 'Deselect all' : 'Select all',
+                    ),
                   ),
               ],
             ),
@@ -227,6 +254,27 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
           ),
           if (!_loading && _error == null)
             Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: categoriesAsync.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (_, _) => GuestCategoryField(
+                  categories: const [],
+                  selectedCategoryId: _selectedCategoryId,
+                  onAddCategory: _openAddCategory,
+                  onChanged: (value) =>
+                      setState(() => _selectedCategoryId = value),
+                ),
+                data: (categories) => GuestCategoryField(
+                  categories: categories,
+                  selectedCategoryId: _selectedCategoryId,
+                  onAddCategory: _openAddCategory,
+                  onChanged: (value) =>
+                      setState(() => _selectedCategoryId = value),
+                ),
+              ),
+            ),
+          if (!_loading && _error == null)
+            Padding(
               padding: const EdgeInsets.fromLTRB(28, 12, 24, 0),
               child: Text(
                 '${filtered.length} contacts • $selectedCount selected',
@@ -241,45 +289,45 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(_error!, textAlign: TextAlign.center),
-                              const SizedBox(height: 16),
-                              FilledButton(
-                                onPressed: _loadContacts,
-                                child: const Text('Try again'),
-                              ),
-                            ],
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(_error!, textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: _loadContacts,
+                            child: const Text('Try again'),
                           ),
-                        ),
-                      )
-                    : filtered.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No contacts with phone numbers found',
-                              style: TextStyle(color: AppColors.muted),
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 10),
-                            itemBuilder: (context, index) {
-                              final contact = filtered[index];
-                              final selected = _selectedIds.contains(contact.id);
-                              return _ContactSelectCard(
-                                initials: _initials(contact.displayName),
-                                name: contact.displayName,
-                                phone: contact.phones.first.number,
-                                selected: selected,
-                                onTap: () => _toggleContact(contact.id),
-                              );
-                            },
-                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : filtered.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No contacts with phone numbers found',
+                      style: TextStyle(color: AppColors.muted),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final contact = filtered[index];
+                      final selected = _selectedIds.contains(contact.id);
+                      return _ContactSelectCard(
+                        initials: _initials(contact.displayName),
+                        name: contact.displayName,
+                        phone: contact.phones.first.number,
+                        selected: selected,
+                        onTap: () => _toggleContact(contact.id),
+                      );
+                    },
+                  ),
           ),
           SafeArea(
             top: false,
@@ -287,8 +335,12 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
             child: SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _importing || selectedCount == 0 ? null : _importSelected,
-                child: Text(_importing ? 'Importing...' : 'Import ($selectedCount)'),
+                onPressed: _importing || selectedCount == 0
+                    ? null
+                    : _importSelected,
+                child: Text(
+                  _importing ? 'Importing...' : 'Import ($selectedCount)',
+                ),
               ),
             ),
           ),
@@ -358,7 +410,10 @@ class _ContactSelectCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       phone,
-                      style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -381,5 +436,6 @@ String _initials(String name) {
   final parts = name.trim().split(RegExp(r'\s+'));
   if (parts.isEmpty || parts.first.isEmpty) return '?';
   if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'.toUpperCase();
+  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+      .toUpperCase();
 }

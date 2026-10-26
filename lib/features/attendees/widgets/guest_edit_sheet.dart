@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../shared/widgets/guest_category_field.dart';
+import '../../../shared/widgets/tanzania_phone_field.dart';
 import '../../contributions/models/contribution_models.dart';
 import '../../contributions/services/contribution_service.dart';
 import '../../contributions/widgets/contribution_category_sheet.dart';
@@ -39,6 +41,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _amountController;
+  late final TextEditingController _pledgeController;
   String? _selectedCategoryId;
   bool _busy = false;
 
@@ -47,11 +50,16 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     super.initState();
     _nameController = TextEditingController(text: widget.attendee.name);
     _phoneController = TextEditingController(
-      text: _normalizePhoneInput(widget.attendee.phone),
+      text: TanzaniaPhoneField.localPartOf(widget.attendee.phone),
     );
     _amountController = TextEditingController(
       text: widget.attendee.paidAmount > 0
           ? widget.attendee.paidAmount.toStringAsFixed(0)
+          : '',
+    );
+    _pledgeController = TextEditingController(
+      text: widget.attendee.targetAmountValue > 0
+          ? widget.attendee.targetAmountValue.toStringAsFixed(0)
           : '',
     );
     _selectedCategoryId = widget.attendee.categoryId;
@@ -62,26 +70,8 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
+    _pledgeController.dispose();
     super.dispose();
-  }
-
-  String _normalizePhoneInput(String phone) {
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.startsWith('255')) return digits;
-    if (digits.startsWith('0')) return '255${digits.substring(1)}';
-    if (digits.length == 9) return '255$digits';
-    return digits;
-  }
-
-  String? _validatePhone(String? value) {
-    final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
-    if (!digits.startsWith('255')) {
-      return 'Phone must start with 255';
-    }
-    if (digits.length < 12) {
-      return 'Enter a valid phone number';
-    }
-    return null;
   }
 
   String? _validateAmount(String? value) {
@@ -109,12 +99,15 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     setState(() => _busy = true);
     try {
       final amountText = _amountController.text.trim();
-      await ref.read(attendeeServiceProvider).updateAttendee(
+      await ref
+          .read(attendeeServiceProvider)
+          .updateAttendee(
             attendeeId: widget.attendee.id,
             name: _nameController.text.trim(),
-            phone: _normalizePhoneInput(_phoneController.text.trim()),
+            phone: TanzaniaPhoneField.normalize(_phoneController.text),
             categoryId: _selectedCategoryId,
             contributionAmount: amountText.isEmpty ? '0' : amountText,
+            pledgeAmount: _pledgeController.text.trim(),
           );
       ref.invalidate(attendeesProvider(eventId));
       if (mounted) {
@@ -130,48 +123,17 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     }
   }
 
-  Widget _buildCategoryField(String eventId, List<ContributionCategory> categories) {
-    if (categories.isEmpty) {
-      return InkWell(
-        onTap: _busy ? null : () => _openAddCategory(eventId),
-        borderRadius: BorderRadius.circular(12),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: 'Contribution category',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            suffixIcon: const Icon(Icons.add, color: AppColors.primary),
-          ),
-          child: const Text(
-            'Add category',
-            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
-          ),
-        ),
-      );
-    }
-
-    return DropdownButtonFormField<String?>(
-      value: _selectedCategoryId,
-      decoration: InputDecoration(
-        labelText: 'Contribution category',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      items: [
-        const DropdownMenuItem<String?>(
-          value: null,
-          child: Text('No category'),
-        ),
-        ...categories.map(
-          (category) => DropdownMenuItem<String?>(
-            value: category.id,
-            child: Text(
-              '${category.name} — TZS ${category.targetAmountValue.toStringAsFixed(0)}',
-            ),
-          ),
-        ),
-      ],
-      onChanged: _busy
-          ? null
-          : (value) => setState(() => _selectedCategoryId = value),
+  Widget _buildCategoryField(
+    String eventId,
+    List<ContributionCategory> categories,
+  ) {
+    return GuestCategoryField(
+      categories: categories,
+      selectedCategoryId: _selectedCategoryId,
+      enabled: !_busy,
+      label: 'Contribution category',
+      onAddCategory: () => _openAddCategory(eventId),
+      onChanged: (value) => setState(() => _selectedCategoryId = value),
     );
   }
 
@@ -207,17 +169,16 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                'Edit guest',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Edit guest', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
                 enabled: !_busy,
                 decoration: InputDecoration(
                   labelText: 'Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 textCapitalization: TextCapitalization.words,
                 validator: (value) {
@@ -228,25 +189,13 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                 },
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                controller: _phoneController,
-                enabled: !_busy,
-                decoration: InputDecoration(
-                  labelText: 'Phone',
-                  hintText: '255712345678',
-                  prefixText: '+',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  helperText: 'Must start with 255',
-                ),
-                keyboardType: TextInputType.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: _validatePhone,
-              ),
+              TanzaniaPhoneField(controller: _phoneController, enabled: !_busy),
               const SizedBox(height: 12),
               categoriesAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (_, __) => _buildCategoryField(eventId ?? '', const []),
-                data: (categories) => _buildCategoryField(eventId ?? '', categories),
+                data: (categories) =>
+                    _buildCategoryField(eventId ?? '', categories),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -254,10 +203,31 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                 enabled: !_busy,
                 decoration: InputDecoration(
                   labelText: 'Amount paid (TZS)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                ],
+                validator: _validateAmount,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _pledgeController,
+                enabled: !_busy,
+                decoration: InputDecoration(
+                  labelText: 'Pledge (TZS, optional)',
+                  helperText: 'What this guest has promised to contribute',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                ],
                 validator: _validateAmount,
               ),
               const SizedBox(height: 20),

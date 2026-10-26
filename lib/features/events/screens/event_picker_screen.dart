@@ -8,6 +8,7 @@ import '../../../core/utils/date_formatter.dart';
 import '../models/event_model.dart';
 import '../providers/event_provider.dart';
 import '../services/event_service.dart';
+import '../../../shared/widgets/skeleton_box.dart';
 
 class EventPickerScreen extends ConsumerStatefulWidget {
   const EventPickerScreen({super.key});
@@ -16,11 +17,42 @@ class EventPickerScreen extends ConsumerStatefulWidget {
   ConsumerState<EventPickerScreen> createState() => _EventPickerScreenState();
 }
 
+class _EventCardSkeleton extends StatelessWidget {
+  const _EventCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonBox(width: 160, height: 16),
+                  const SizedBox(height: 10),
+                  SkeletonBox(width: 120, height: 12, borderRadius: 6),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            const SkeletonBox(width: 64, height: 24, borderRadius: 999),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
   Future<void> _selectEvent(EventModel event) async {
     try {
       if (event.eventKey == null || event.eventKey!.isEmpty) {
-        final key = await ref.read(eventServiceProvider).fetchEventKey(event.id);
+        final key = await ref
+            .read(eventServiceProvider)
+            .fetchEventKey(event.id);
         await ref.read(keyVaultProvider).save(event.id, key);
       } else {
         await ref.read(keyVaultProvider).save(event.id, event.eventKey!);
@@ -44,20 +76,32 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
       isScrollControlled: true,
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Enter Event Key', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Enter Event Key',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
-              Text('Paste the 64-character hex key for ${event.name}',
-                  style: const TextStyle(color: AppColors.muted)),
+              Text(
+                'Paste the 64-character hex key for ${event.name}',
+                style: const TextStyle(color: AppColors.muted),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 maxLines: 3,
-                decoration: const InputDecoration(hintText: 'Event encryption key'),
+                decoration: const InputDecoration(
+                  hintText: 'Event encryption key',
+                ),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -70,7 +114,9 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
                       return;
                     }
                     await ref.read(keyVaultProvider).save(event.id, key);
-                    await ref.read(eventSelectionControllerProvider).selectActiveEvent(event);
+                    await ref
+                        .read(eventSelectionControllerProvider)
+                        .selectActiveEvent(event);
                     if (context.mounted) {
                       Navigator.pop(context);
                       context.go('/shell/dashboard');
@@ -93,7 +139,12 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Select Event')),
       body: eventsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: 5,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (_, _) => const _EventCardSkeleton(),
+        ),
         error: (e, _) => Center(child: Text('Failed to load events: $e')),
         data: (events) {
           if (events.isEmpty) {
@@ -112,13 +163,18 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
                   final hasKey = snapshot.data ?? false;
                   return Card(
                     child: ListTile(
-                      title: Text(event.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      title: Text(
+                        event.name,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       subtitle: Text(
                         '${DateFormatter.formatDate(event.date)} • ${event.venue ?? 'No venue'}',
                       ),
                       trailing: Chip(
-                        label: Text(hasKey ? 'Key saved' : 'Key missing',
-                            style: const TextStyle(fontSize: 11)),
+                        label: Text(
+                          hasKey ? 'Key saved' : 'Key missing',
+                          style: const TextStyle(fontSize: 11),
+                        ),
                         backgroundColor: hasKey
                             ? AppColors.success.withValues(alpha: 0.15)
                             : AppColors.warning.withValues(alpha: 0.15),

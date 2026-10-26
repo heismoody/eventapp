@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../events/providers/event_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/login_form.dart';
@@ -25,15 +26,15 @@ class _WelcomeSlide {
 const _slides = [
   _WelcomeSlide(
     imageAsset: 'assets/images/welcome_wedding.png',
-    title: 'EventSys',
+    title: 'Cardly',
     subtitle: 'Every guest. Every moment. Perfectly managed.',
-    overlayColor: Color(0xFF3D2B1F),
+    overlayColor: AppColors.primary,
   ),
   _WelcomeSlide(
     imageAsset: 'assets/images/welcome_celebration.png',
     title: 'Celebrate with confidence',
     subtitle: 'Scan guests, track check-ins, and stay in control.',
-    overlayColor: Color(0xFF8B6914),
+    overlayColor: AppColors.accent,
   ),
 ];
 
@@ -71,18 +72,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
       duration: _sheetAnimationDuration,
     );
 
-    _sheetSlide = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _sheetController,
-      curve: Curves.easeOutCubic,
-    ));
+    _sheetSlide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _sheetController, curve: Curves.easeOutCubic),
+        );
 
-    _heroFade = Tween<double>(begin: 1, end: 0.92).animate(CurvedAnimation(
-      parent: _sheetController,
-      curve: Curves.easeOut,
-    ));
+    _heroFade = Tween<double>(
+      begin: 1,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _sheetController, curve: Curves.easeOut));
 
     _carouselTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted || _sheetVisible) return;
@@ -179,7 +177,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                     width: MediaQuery.sizeOf(context).width,
                     child: Material(
                       elevation: 24,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(28),
+                      ),
                       clipBehavior: Clip.antiAlias,
                       color: Colors.white,
                       child: ConstrainedBox(
@@ -258,7 +258,7 @@ class _WelcomeHeroSlide extends StatelessWidget {
               border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
             ),
             child: const Text(
-              'EventSys Scanner',
+              'Cardly',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
@@ -316,10 +316,7 @@ class _WelcomeHeroSlide extends StatelessWidget {
 }
 
 class _PageIndicators extends StatelessWidget {
-  const _PageIndicators({
-    required this.count,
-    required this.activeIndex,
-  });
+  const _PageIndicators({required this.count, required this.activeIndex});
 
   final int count;
   final int activeIndex;

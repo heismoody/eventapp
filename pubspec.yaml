@@ -1,7 +1,7 @@
 name: eventapp
-description: EventSys mobile scanner app
+description: Cardly mobile app
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.11.3
@@ -25,14 +25,28 @@ dependencies:
   flutter_contacts: ^1.1.9+1
   file_picker: ^8.1.7
   toastification: ^3.2.0
+  url_launcher: ^6.3.3
+  pdf: ^3.11.1
+  package_info_plus: ^8.1.2
+  path_provider: ^2.1.5
+  open_filex: ^4.5.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/welcome_wedding.png
-    - assets/images/welcome_celebration.png
+    - assets/images/
+    - assets/icon/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#541E06"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  remove_alpha_ios: true

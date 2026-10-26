@@ -6,6 +6,7 @@ class SyncQueueItem {
     required this.checkedInAt,
     required this.attempts,
     required this.synced,
+    this.method = 'scan',
   });
 
   final int id;
@@ -14,6 +15,7 @@ class SyncQueueItem {
   final DateTime checkedInAt;
   final int attempts;
   final bool synced;
+  final String method;
 
   factory SyncQueueItem.fromMap(Map<String, dynamic> map) {
     return SyncQueueItem(
@@ -23,6 +25,7 @@ class SyncQueueItem {
       checkedInAt: DateTime.parse(map['checked_in_at'] as String),
       attempts: map['attempts'] as int,
       synced: (map['synced'] as int) == 1,
+      method: (map['method'] as String?) ?? 'scan',
     );
   }
 }

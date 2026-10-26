@@ -19,7 +19,14 @@ class AppDatabase {
 
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE sync_queue ADD COLUMN method TEXT NOT NULL DEFAULT 'scan'",
+          );
+        }
+      },
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE checkin_history (
@@ -43,6 +50,7 @@ class AppDatabase {
             checked_in_at TEXT NOT NULL,
             attempts INTEGER NOT NULL DEFAULT 0,
             synced INTEGER NOT NULL DEFAULT 0,
+            method TEXT NOT NULL DEFAULT 'scan',
             UNIQUE(qr_token, event_id)
           )
         ''');

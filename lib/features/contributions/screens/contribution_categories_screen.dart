@@ -16,7 +16,8 @@ class ContributionCategoriesScreen extends ConsumerStatefulWidget {
       _ContributionCategoriesScreenState();
 }
 
-class _ContributionCategoriesScreenState extends ConsumerState<ContributionCategoriesScreen> {
+class _ContributionCategoriesScreenState
+    extends ConsumerState<ContributionCategoriesScreen> {
   Future<void> _refresh(String eventId) async {
     ref.invalidate(contributionCategoriesProvider(eventId));
     await ref.read(contributionCategoriesProvider(eventId).future);
@@ -37,9 +38,7 @@ class _ContributionCategoriesScreenState extends ConsumerState<ContributionCateg
   Widget build(BuildContext context) {
     final eventId = ref.watch(activeEventIdProvider);
     if (eventId == null) {
-      return const Scaffold(
-        body: Center(child: Text('Select an event first')),
-      );
+      return const Scaffold(body: Center(child: Text('Select an event first')));
     }
 
     final categoriesAsync = ref.watch(contributionCategoriesProvider(eventId));
@@ -53,7 +52,10 @@ class _ContributionCategoriesScreenState extends ConsumerState<ContributionCateg
         scrolledUnderElevation: 0,
         title: const Text(
           'Contribution categories',
-          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -108,22 +110,12 @@ class _ContributionCategoriesScreenState extends ConsumerState<ContributionCateg
                   child: Row(
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              category.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'TZS ${category.targetAmountValue.toStringAsFixed(0)}',
-                              style: const TextStyle(color: AppColors.muted),
-                            ),
-                          ],
+                        child: Text(
+                          category.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -141,14 +133,19 @@ class _ContributionCategoriesScreenState extends ConsumerState<ContributionCateg
                             await ref
                                 .read(contributionServiceProvider)
                                 .deleteCategory(category.id);
-                            ref.invalidate(contributionCategoriesProvider(eventId));
+                            ref.invalidate(
+                              contributionCategoriesProvider(eventId),
+                            );
                           } catch (_) {
                             if (context.mounted) {
                               AppToast.error('Failed to delete category');
                             }
                           }
                         },
-                        icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.danger,
+                        ),
                       ),
                     ],
                   ),

@@ -231,7 +231,7 @@ class _ScannerIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: active
-          ? AppColors.gold.withValues(alpha: 0.18)
+          ? AppColors.accent.withValues(alpha: 0.18)
           : const Color(0xFFF1F5F9),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
@@ -244,7 +244,7 @@ class _ScannerIconButton extends StatelessWidget {
             height: 40,
             child: Icon(
               icon,
-              color: active ? AppColors.gold : AppColors.onSurface,
+              color: active ? AppColors.accent : AppColors.onSurface,
               size: 22,
             ),
           ),

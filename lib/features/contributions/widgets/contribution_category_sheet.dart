@@ -17,18 +17,13 @@ Future<ContributionCategory?> showContributionCategorySheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (context) => _ContributionCategorySheet(
-      eventId: eventId,
-      category: category,
-    ),
+    builder: (context) =>
+        _ContributionCategorySheet(eventId: eventId, category: category),
   );
 }
 
 class _ContributionCategorySheet extends ConsumerStatefulWidget {
-  const _ContributionCategorySheet({
-    required this.eventId,
-    this.category,
-  });
+  const _ContributionCategorySheet({required this.eventId, this.category});
 
   final String eventId;
   final ContributionCategory? category;
@@ -41,24 +36,17 @@ class _ContributionCategorySheet extends ConsumerStatefulWidget {
 class _ContributionCategorySheetState
     extends ConsumerState<_ContributionCategorySheet> {
   late final TextEditingController _nameController;
-  late final TextEditingController _amountController;
   bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
-    _amountController = TextEditingController(
-      text: widget.category != null
-          ? widget.category!.targetAmountValue.toStringAsFixed(0)
-          : '',
-    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _amountController.dispose();
     super.dispose();
   }
 
@@ -71,17 +59,20 @@ class _ContributionCategorySheetState
         saved = await service.createCategory(
           eventId: widget.eventId,
           name: _nameController.text.trim(),
-          targetAmount: _amountController.text.trim(),
         );
       } else {
         saved = await service.updateCategory(
           categoryId: widget.category!.id,
           name: _nameController.text.trim(),
-          targetAmount: _amountController.text.trim(),
         );
       }
       ref.invalidate(contributionCategoriesProvider(widget.eventId));
-      if (mounted) Navigator.pop(context, saved);
+      if (mounted) {
+        AppToast.success(
+          widget.category == null ? 'Category saved' : 'Category updated',
+        );
+        Navigator.pop(context, saved);
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _submitting = false);
@@ -124,15 +115,6 @@ class _ContributionCategorySheetState
               controller: _nameController,
               enabled: !_submitting,
               decoration: const InputDecoration(labelText: 'Category name'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amountController,
-              enabled: !_submitting,
-              decoration: const InputDecoration(
-                labelText: 'Target amount (TZS)',
-              ),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
             SizedBox(

@@ -30,9 +30,26 @@ final authInitializedProvider = FutureProvider<bool>((ref) async {
   ref.read(currentUserProvider.notifier).state = user;
 
   if (user?.isEventScoped == true) {
-    await ref
-        .read(eventSelectionControllerProvider)
-        .initializeOwnedEvent(user!.ownedEventId!);
+    final ownedEventId = user!.ownedEventId!;
+
+    // Restore whatever was already selected last session first — instant,
+    // no network needed — so the dashboard never waits on connectivity to
+    // show the event it already knows about.
+    final controller = ref.read(eventSelectionControllerProvider);
+    await controller.loadActiveEventFromPrefs();
+
+    // The cache is only valid if it belongs to *this* account. If a
+    // different account logged in on this device before (and logout didn't
+    // get a chance to clear it, or this is a stale leftover), the cached id
+    // won't match this user's own event — never trust it in that case.
+    if (ref.read(activeEventIdProvider) != ownedEventId) {
+      try {
+        await controller.initializeOwnedEvent(ownedEventId);
+      } catch (_) {
+        // Network failed and there's nothing trustworthy cached — the
+        // dashboard's empty state will prompt once connectivity returns.
+      }
+    }
   }
 
   return true;

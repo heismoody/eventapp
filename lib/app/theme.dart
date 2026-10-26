@@ -8,23 +8,24 @@ ThemeData buildAppTheme() {
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       primary: AppColors.primary,
-      secondary: AppColors.gold,
+      secondary: AppColors.accent,
       surface: AppColors.surface,
     ),
     scaffoldBackgroundColor: AppColors.background,
   );
 
   return base.copyWith(
-    textTheme: GoogleFonts.nunitoSansTextTheme(base.textTheme).copyWith(
-      headlineLarge: GoogleFonts.nunito(
+    // Source Sans 3 — same family as the web portal (app/layout.tsx).
+    textTheme: GoogleFonts.sourceSans3TextTheme(base.textTheme).copyWith(
+      headlineLarge: GoogleFonts.sourceSans3(
         fontWeight: FontWeight.w800,
         color: AppColors.onSurface,
       ),
-      headlineMedium: GoogleFonts.nunito(
+      headlineMedium: GoogleFonts.sourceSans3(
         fontWeight: FontWeight.w700,
         color: AppColors.onSurface,
       ),
-      titleLarge: GoogleFonts.nunito(
+      titleLarge: GoogleFonts.sourceSans3(
         fontWeight: FontWeight.w700,
         color: AppColors.onSurface,
       ),
@@ -44,8 +45,8 @@ ThemeData buildAppTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.gold,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

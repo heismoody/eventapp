@@ -43,15 +43,11 @@ String formatTzsAmount(double amount) {
 String formatCompactAmount(double amount) {
   if (amount >= 1000000) {
     final value = amount / 1000000;
-    return value >= 10
-        ? '${value.round()}M'
-        : '${value.toStringAsFixed(1)}M';
+    return value >= 10 ? '${value.round()}M' : '${value.toStringAsFixed(1)}M';
   }
   if (amount >= 1000) {
     final value = amount / 1000;
-    return value >= 10
-        ? '${value.round()}K'
-        : '${value.toStringAsFixed(1)}K';
+    return value >= 10 ? '${value.round()}K' : '${value.toStringAsFixed(1)}K';
   }
   return amount.round().toString();
 }

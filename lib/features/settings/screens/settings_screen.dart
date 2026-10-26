@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../core/constants/app_colors.dart';
@@ -13,6 +16,10 @@ import '../../events/providers/event_provider.dart';
 import '../../events/services/event_service.dart';
 import '../../scanner/providers/scanner_provider.dart';
 import '../../scanner/services/sync_service.dart';
+
+const _faqUrl = 'https://cardly.co.tz/#faq';
+const _termsUrl = 'https://cardly.co.tz/terms';
+const _policyUrl = 'https://cardly.co.tz/privacy';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -30,7 +37,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.initState();
     final prefs = ref.read(sharedPreferencesProvider);
     _serverController = TextEditingController(
-      text: prefs.getString(ApiConfig.baseUrlKey) ?? ApiConfig.defaultBaseUrl,
+      text: AppEnvironment.baseUrl(prefs),
     );
     _keyController = TextEditingController();
     ref.read(eventSelectionControllerProvider).loadActiveEventFromPrefs();
@@ -92,6 +99,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _openLink(String url) async {
+    final opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && mounted) {
+      AppToast.error('Could not open the page');
+    }
+  }
+
   Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -99,8 +116,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: const Text('Log out?'),
         content: const Text('You will need to sign in again to use the app.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Log out')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Log out'),
+          ),
         ],
       ),
     );
@@ -109,45 +132,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     await ref.read(sessionManagerProvider).handleSessionExpired();
     if (mounted) context.go('/login?skip=1');
-  }
-
-  void _showAccountInfo(UserModel user) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text('Personal info', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 20),
-              _InfoField(label: 'Full name', value: user.name),
-              const SizedBox(height: 16),
-              _InfoField(label: 'Email', value: user.email),
-              const SizedBox(height: 16),
-              _InfoField(label: 'Role', value: user.roles.join(', ')),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   void _showServerSheet() {
@@ -244,7 +228,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Encryption key', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Encryption key',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
               const Text(
                 'Paste the 64-character key for decrypting guest QR codes.',
@@ -263,11 +250,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(onPressed: _saveKey, child: const Text('Save key')),
+                    child: OutlinedButton(
+                      onPressed: _saveKey,
+                      child: const Text('Save key'),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: OutlinedButton(onPressed: _redownloadKey, child: const Text('Re-download')),
+                    child: OutlinedButton(
+                      onPressed: _redownloadKey,
+                      child: const Text('Re-download'),
+                    ),
                   ),
                 ],
               ),
@@ -285,8 +278,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final pendingAsync = ref.watch(pendingSyncCountProvider);
     final pending = pendingAsync.maybeWhen(data: (v) => v, orElse: () => 0);
     final canSwitchEvent = user?.isEventScoped != true;
-    final isEventOwner = user?.isEventOwner ?? false;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -294,9 +285,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
+        centerTitle: false,
         title: const Text(
-          'Account',
-          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.onSurface),
+          'Settings',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
+          ),
         ),
         actions: [
           IconButton(
@@ -311,66 +306,115 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      body: Column(
         children: [
-          if (user != null) ...[
-            _ProfileHeaderCard(
-              user: user,
-              onSeeInfo: () => _showAccountInfo(user),
-            ),
-            const SizedBox(height: 28),
-          ],
-          _SettingsSection(
-            title: 'General',
-            items: [
-              _SettingsItem(
-                icon: Icons.event_outlined,
-                label: 'Active event',
-                subtitle: eventName,
-                onTap: canSwitchEvent ? () => context.go('/events') : null,
-              ),
-              _SettingsItem(
-                icon: Icons.cloud_sync_outlined,
-                label: 'Sync check-ins',
-                subtitle: pending > 0 ? '$pending waiting to sync' : 'All synced',
-                onTap: _forceSync,
-              ),
-              _SettingsItem(
-                icon: Icons.dns_outlined,
-                label: 'Server connection',
-                subtitle: 'Manage API server URL',
-                onTap: _showServerSheet,
-              ),
-              if (isEventOwner)
-                _SettingsItem(
-                  icon: Icons.sms_outlined,
-                  label: 'SMS billing',
-                  subtitle: 'Credits, usage logs, and payments',
-                  onTap: () => context.push('/shell/sms-billing'),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              children: [
+                if (user != null) ...[
+                  _ProfileHeaderCard(
+                    user: user,
+                    onSeeInfo: () => context.push('/shell/profile'),
+                  ),
+                  const SizedBox(height: 28),
+                ],
+                _SettingsSection(
+                  items: [
+                    _SettingsItem(
+                      icon: Icons.event_outlined,
+                      label: 'Active event',
+                      subtitle: eventName,
+                      onTap: canSwitchEvent
+                          ? () => context.go('/events')
+                          : null,
+                    ),
+                    _SettingsItem(
+                      icon: Icons.cloud_sync_outlined,
+                      label: 'Sync check-ins',
+                      subtitle: pending > 0
+                          ? '$pending waiting to sync'
+                          : 'All synced',
+                      onTap: _forceSync,
+                    ),
+                    // Dev builds only — production is locked to its server.
+                    if (AppEnvironment.allowsServerOverride)
+                      _SettingsItem(
+                        icon: Icons.dns_outlined,
+                        label: 'Server connection',
+                        subtitle: 'Manage API server URL',
+                        onTap: _showServerSheet,
+                      ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 20),
+                _SettingsSection(
+                  items: [
+                    _SettingsItem(
+                      icon: Icons.vpn_key_outlined,
+                      label: 'Encryption key',
+                      subtitle: 'QR code decryption key',
+                      onTap: _showKeySheet,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _SettingsSection(
+                  items: [
+                    _SettingsItem(
+                      icon: Icons.help_outline_rounded,
+                      label: 'FAQ',
+                      subtitle: 'Common questions about Cardly',
+                      onTap: () => _openLink(_faqUrl),
+                    ),
+                    _SettingsItem(
+                      icon: Icons.description_outlined,
+                      label: 'Terms of service',
+                      subtitle: 'The rules for using Cardly',
+                      onTap: () => _openLink(_termsUrl),
+                    ),
+                    _SettingsItem(
+                      icon: Icons.shield_outlined,
+                      label: 'User policy',
+                      subtitle: 'How your data is handled',
+                      onTap: () => _openLink(_policyUrl),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const _AppVersionFooter(),
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
-          _SettingsSection(
-            title: 'Others',
-            items: [
-              _SettingsItem(
-                icon: Icons.vpn_key_outlined,
-                label: 'Encryption key',
-                subtitle: 'QR code decryption key',
-                onTap: _showKeySheet,
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: _logout,
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.danger,
+                  size: 18,
+                ),
+                label: const Text(
+                  'Log out',
+                  style: TextStyle(
+                    color: AppColors.danger,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.danger.withValues(alpha: 0.1),
+                  side: BorderSide.none,
+                  shape: const StadiumBorder(),
+                  elevation: 0,
+                ),
               ),
-              _SettingsItem(
-                icon: Icons.logout_rounded,
-                label: 'Log out',
-                subtitle: 'Sign out of this device',
-                iconColor: AppColors.danger,
-                labelColor: AppColors.danger,
-                onTap: _logout,
-                showChevron: false,
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -379,10 +423,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 }
 
 class _ProfileHeaderCard extends StatelessWidget {
-  const _ProfileHeaderCard({
-    required this.user,
-    required this.onSeeInfo,
-  });
+  const _ProfileHeaderCard({required this.user, required this.onSeeInfo});
 
   final UserModel user;
   final VoidCallback onSeeInfo;
@@ -391,114 +432,125 @@ class _ProfileHeaderCard extends StatelessWidget {
     final parts = user.name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'.toUpperCase();
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onSeeInfo,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-            child: Text(
-              _initials,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-              ),
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.border),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.name,
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                child: Text(
+                  _initials,
                   style: const TextStyle(
-                    fontSize: 20,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.onSurface,
+                    fontSize: 20,
                   ),
                 ),
-                const SizedBox(height: 4),
-                InkWell(
-                  onTap: onSeeInfo,
-                  borderRadius: BorderRadius.circular(8),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'See personal info',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.onSurface,
                       ),
-                      Icon(Icons.chevron_right, size: 18, color: AppColors.primary),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      user.email,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.muted),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({
-    required this.title,
-    required this.items,
-  });
+/// Shows the installed version/build — mainly so an update that actually
+/// landed is easy to confirm at a glance, without digging through app info.
+class _AppVersionFooter extends StatelessWidget {
+  const _AppVersionFooter();
 
-  final String title;
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        if (info == null) return const SizedBox.shrink();
+        return Center(
+          child: Text(
+            AppEnvironment.isProd
+                ? 'Cardly v${info.version} (${info.buildNumber})'
+                : 'Cardly v${info.version} (${info.buildNumber}) · ${AppEnvironment.label}',
+            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({required this.items});
+
   final List<_SettingsItem> items;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 10),
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.muted,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            children: [
-              for (var i = 0; i < items.length; i++) ...[
-                items[i],
-                if (i < items.length - 1)
-                  const Divider(height: 1, indent: 58, color: AppColors.border),
-              ],
-            ],
-          ),
-        ),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            items[i],
+            if (i < items.length - 1)
+              const Divider(
+                height: 1,
+                indent: 60,
+                endIndent: 16,
+                color: AppColors.border,
+              ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -509,18 +561,12 @@ class _SettingsItem extends StatelessWidget {
     required this.label,
     required this.subtitle,
     required this.onTap,
-    this.iconColor,
-    this.labelColor,
-    this.showChevron = true,
   });
 
   final IconData icon;
   final String label;
   final String subtitle;
   final VoidCallback? onTap;
-  final Color? iconColor;
-  final Color? labelColor;
-  final bool showChevron;
 
   @override
   Widget build(BuildContext context) {
@@ -539,10 +585,10 @@ class _SettingsItem extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: (iconColor ?? AppColors.onSurface).withValues(alpha: 0.06),
+                  color: AppColors.onSurface.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 20, color: iconColor ?? AppColors.onSurface),
+                child: Icon(icon, size: 20, color: AppColors.onSurface),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -553,59 +599,28 @@ class _SettingsItem extends StatelessWidget {
                       label,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: enabled ? (labelColor ?? AppColors.onSurface) : AppColors.muted,
+                        color: enabled ? AppColors.onSurface : AppColors.muted,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              if (showChevron && enabled)
+              if (enabled)
                 const Icon(Icons.chevron_right, color: AppColors.muted),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _InfoField extends StatelessWidget {
-  const _InfoField({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
-        const SizedBox(height: 6),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
     );
   }
 }

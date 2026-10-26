@@ -12,11 +12,16 @@ final eventsProvider = FutureProvider<List<EventModel>>((ref) async {
 final activeEventIdProvider = StateProvider<String?>((ref) => null);
 final activeEventNameProvider = StateProvider<String?>((ref) => null);
 
-final eventKeysProvider = FutureProvider.family<bool, String>((ref, eventId) async {
+final eventKeysProvider = FutureProvider.family<bool, String>((
+  ref,
+  eventId,
+) async {
   return ref.read(keyVaultProvider).hasKey(eventId);
 });
 
-final eventSelectionControllerProvider = Provider<EventSelectionController>((ref) {
+final eventSelectionControllerProvider = Provider<EventSelectionController>((
+  ref,
+) {
   return EventSelectionController(ref);
 });
 
@@ -34,16 +39,32 @@ class EventSelectionController {
     _ref.read(activeEventNameProvider.notifier).state = event.name;
 
     if (event.eventKey != null && event.eventKey!.isNotEmpty) {
-      await _ref.read(eventServiceProvider).saveEventKey(event.id, event.eventKey!);
+      await _ref
+          .read(eventServiceProvider)
+          .saveEventKey(event.id, event.eventKey!);
     }
   }
 
   Future<void> loadActiveEventFromPrefs() async {
     final prefs = _ref.read(sharedPreferencesProvider);
-    _ref.read(activeEventIdProvider.notifier).state =
-        prefs.getString(ApiConfig.activeEventIdKey);
-    _ref.read(activeEventNameProvider.notifier).state =
-        prefs.getString(ApiConfig.activeEventNameKey);
+    _ref.read(activeEventIdProvider.notifier).state = prefs.getString(
+      ApiConfig.activeEventIdKey,
+    );
+    _ref.read(activeEventNameProvider.notifier).state = prefs.getString(
+      ApiConfig.activeEventNameKey,
+    );
+  }
+
+  /// Wipes the selected event, in memory and on disk. Called on logout so
+  /// the next person to sign in on this device never lands on — or briefly
+  /// flashes — whichever event the previous account last had open.
+  Future<void> clearActiveEvent() async {
+    final prefs = _ref.read(sharedPreferencesProvider);
+    await prefs.remove(ApiConfig.activeEventIdKey);
+    await prefs.remove(ApiConfig.activeEventNameKey);
+
+    _ref.read(activeEventIdProvider.notifier).state = null;
+    _ref.read(activeEventNameProvider.notifier).state = null;
   }
 
   Future<bool> initializeOwnedEvent(String ownedEventId) async {

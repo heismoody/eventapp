@@ -29,7 +29,10 @@ class SyncStatusBanner extends StatelessWidget {
         children: [
           Icon(isOnline ? Icons.sync : Icons.wifi_off, color: color, size: 18),
           const SizedBox(width: 8),
-          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+          Text(
+            text,
+            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
