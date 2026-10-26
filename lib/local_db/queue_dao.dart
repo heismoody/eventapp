@@ -9,6 +9,7 @@ class QueueDao {
     required String qrToken,
     required String eventId,
     required DateTime checkedInAt,
+    String method = 'scan',
   }) async {
     final db = await _db;
     await db.insert(
@@ -19,6 +20,7 @@ class QueueDao {
         'checked_in_at': checkedInAt.toIso8601String(),
         'attempts': 0,
         'synced': 0,
+        'method': method,
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );

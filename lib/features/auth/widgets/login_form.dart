@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/auth_provider.dart';
@@ -10,11 +11,7 @@ import '../services/auth_service.dart';
 typedef LoginSuccessCallback = void Function();
 
 class LoginForm extends ConsumerStatefulWidget {
-  const LoginForm({
-    super.key,
-    required this.onSuccess,
-    this.compact = false,
-  });
+  const LoginForm({super.key, required this.onSuccess, this.compact = false});
 
   final LoginSuccessCallback onSuccess;
   final bool compact;
@@ -36,8 +33,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   void initState() {
     super.initState();
     final prefs = ref.read(sharedPreferencesProvider);
-    _serverController.text =
-        prefs.getString(ApiConfig.baseUrlKey) ?? ApiConfig.defaultBaseUrl;
+    _serverController.text = AppEnvironment.baseUrl(prefs);
   }
 
   @override
@@ -55,13 +51,17 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     });
 
     try {
-      final prefs = ref.read(sharedPreferencesProvider);
-      await prefs.setString(ApiConfig.baseUrlKey, _serverController.text.trim());
+      if (AppEnvironment.allowsServerOverride) {
+        final prefs = ref.read(sharedPreferencesProvider);
+        await prefs.setString(
+          ApiConfig.baseUrlKey,
+          _serverController.text.trim(),
+        );
+      }
 
-      final user = await ref.read(authServiceProvider).login(
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
+      final user = await ref
+          .read(authServiceProvider)
+          .login(_emailController.text.trim(), _passwordController.text);
 
       final token = await ref.read(authServiceProvider).getToken();
       ref.read(authTokenProvider.notifier).state = token;
@@ -70,7 +70,11 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
       widget.onSuccess();
     } catch (_) {
-      setState(() => _error = 'Login failed. Check credentials and server URL.');
+      setState(
+        () => _error = AppEnvironment.allowsServerOverride
+            ? 'Login failed. Check credentials and server URL.'
+            : 'Login failed. Check your email and password.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -87,16 +91,16 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         Text(
           'Welcome back',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.onSurface,
-              ),
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           'Sign in to manage your event',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.muted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
         ),
         SizedBox(height: widget.compact ? 16 : 24),
         TextField(
@@ -116,9 +120,12 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
               tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
               icon: Icon(
-                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                _obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
               ),
             ),
           ),
@@ -126,24 +133,30 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _loading ? null : _login(),
         ),
-        if (_showServerField) ...[
-          SizedBox(height: fieldSpacing),
-          TextField(
-            controller: _serverController,
-            decoration: const InputDecoration(
-              labelText: 'Server URL',
-              prefixIcon: Icon(Icons.dns_outlined),
+        // Production builds are locked to the production server, so there's
+        // nothing to configure — the override only exists in dev builds.
+        if (AppEnvironment.allowsServerOverride) ...[
+          if (_showServerField) ...[
+            SizedBox(height: fieldSpacing),
+            TextField(
+              controller: _serverController,
+              decoration: const InputDecoration(
+                labelText: 'Server URL',
+                prefixIcon: Icon(Icons.dns_outlined),
+              ),
+              keyboardType: TextInputType.url,
             ),
-            keyboardType: TextInputType.url,
+          ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () =>
+                  setState(() => _showServerField = !_showServerField),
+              child: Text(_showServerField ? 'Hide server URL' : 'Advanced'),
+            ),
           ),
-        ],
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () => setState(() => _showServerField = !_showServerField),
-            child: Text(_showServerField ? 'Hide server URL' : 'Advanced'),
-          ),
-        ),
+        ] else
+          SizedBox(height: fieldSpacing),
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(_error!, style: const TextStyle(color: AppColors.danger)),

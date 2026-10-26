@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:toastification/toastification.dart';
+import '../core/config/app_environment.dart';
 import 'router.dart';
 import 'theme.dart';
 
@@ -12,7 +13,7 @@ class EventApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'EventSys Scanner',
+      title: AppEnvironment.isProd ? 'Cardly' : 'Cardly Dev',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       routerConfig: router,
@@ -20,7 +21,7 @@ class EventApp extends ConsumerWidget {
         final screenWidth = MediaQuery.sizeOf(context).width;
         final topPadding = MediaQuery.paddingOf(context).top;
 
-        return ToastificationWrapper(
+        final app = ToastificationWrapper(
           config: ToastificationConfig(
             alignment: Alignment.topCenter,
             itemWidth: screenWidth * 0.95,
@@ -30,6 +31,17 @@ class EventApp extends ConsumerWidget {
             maxTitleLines: 4,
           ),
           child: child ?? const SizedBox.shrink(),
+        );
+
+        if (AppEnvironment.isProd) return app;
+
+        // Corner ribbon on every screen of a dev build, so a test install is
+        // never mistaken for the production app.
+        return Banner(
+          message: 'DEV',
+          location: BannerLocation.topEnd,
+          color: Colors.orange.shade700,
+          child: app,
         );
       },
     );

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.eventapp"
+    namespace = "tz.co.cardly.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,14 +20,30 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.eventapp"
+        applicationId = "tz.co.cardly.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    // dev and prod install side by side: different package id and launcher
+    // name, and the Dart side (AppEnvironment) reads the flavor to pick the
+    // server. Build with `--flavor dev` or `--flavor prod`.
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            resValue("string", "app_name", "Cardly Dev")
+        }
+        create("prod") {
+            dimension = "env"
+            resValue("string", "app_name", "Cardly")
+        }
     }
 
     buildTypes {

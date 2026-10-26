@@ -34,6 +34,7 @@ class SyncService {
           data: {
             'qrToken': queueItem.qrToken,
             'eventId': queueItem.eventId,
+            'method': queueItem.method,
           },
         );
 

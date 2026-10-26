@@ -75,11 +75,19 @@ class _SuccessContent extends StatelessWidget {
       children: [
         const Icon(Icons.check_circle, color: AppColors.success, size: 56),
         const SizedBox(height: 12),
-        const Text('Checked In', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        const Text(
+          'Checked In',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 8),
-        Text(guest.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+        Text(
+          guest.name,
+          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 4),
         Text(guest.phone, style: const TextStyle(color: AppColors.muted)),
+        const SizedBox(height: 14),
+        _CategoryBadge(categoryName: guest.categoryName),
         if (guest.contributionAmount != null) ...[
           const SizedBox(height: 12),
           Chip(
@@ -88,6 +96,51 @@ class _SuccessContent extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _CategoryBadge extends StatelessWidget {
+  const _CategoryBadge({required this.categoryName});
+
+  final String? categoryName;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCategory = categoryName != null;
+    final color = hasCategory ? AppColors.primary : AppColors.muted;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'CATEGORY',
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hasCategory ? categoryName! : 'No category assigned',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: color,
+              fontSize: hasCategory ? 26 : 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -102,16 +155,28 @@ class _DuplicateContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 56),
+        const Icon(
+          Icons.warning_amber_rounded,
+          color: AppColors.warning,
+          size: 56,
+        ),
         const SizedBox(height: 12),
-        const Text('Already Checked In', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        const Text(
+          'Already Checked In',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 8),
-        Text(guest.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+        Text(
+          guest.name,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 4),
         Text(
           'Registered at ${DateFormatter.formatTime(checkedInAt)}',
           style: const TextStyle(color: AppColors.muted),
         ),
+        const SizedBox(height: 14),
+        _CategoryBadge(categoryName: guest.categoryName),
       ],
     );
   }
@@ -126,7 +191,10 @@ class _InvalidContent extends StatelessWidget {
       children: [
         Icon(Icons.error_outline, color: AppColors.danger, size: 56),
         SizedBox(height: 12),
-        Text('Invalid QR Code', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        Text(
+          'Invalid QR Code',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
         SizedBox(height: 8),
         Text(
           'Could not decrypt this code. Check your event key in Settings.',

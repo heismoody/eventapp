@@ -5,9 +5,10 @@ import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/welcome_screen.dart';
 import '../features/events/screens/event_picker_screen.dart';
 import '../features/contributions/screens/contribution_categories_screen.dart';
-import '../features/contributions/screens/sms_billing_screen.dart';
 import '../features/attendees/screens/guest_detail_screen.dart';
+import '../features/reports/screens/report_screen.dart';
 import '../features/shell/main_shell.dart';
+import '../features/settings/screens/edit_profile_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   ref.watch(authTokenProvider);
@@ -68,6 +69,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const TeamTab(),
           ),
           GoRoute(
+            path: '/shell/contributions',
+            builder: (context, state) => const ContributionsTab(),
+          ),
+          GoRoute(
             path: '/shell/settings',
             builder: (context, state) => const SettingsTab(),
           ),
@@ -75,17 +80,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/shell/contribution-categories',
             builder: (context, state) => const ContributionCategoriesScreen(),
           ),
-          GoRoute(
-            path: '/shell/sms-billing',
-            builder: (context, state) => const SmsBillingScreen(),
-          ),
         ],
       ),
       GoRoute(
+        path: '/shell/profile',
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
         path: '/shell/guests/:attendeeId',
-        builder: (context, state) => GuestDetailScreen(
-          attendeeId: state.pathParameters['attendeeId']!,
-        ),
+        builder: (context, state) =>
+            GuestDetailScreen(attendeeId: state.pathParameters['attendeeId']!),
+      ),
+      GoRoute(
+        path: '/shell/report',
+        builder: (context, state) => const ReportScreen(),
       ),
     ],
   );

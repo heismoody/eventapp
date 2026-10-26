@@ -6,9 +6,11 @@ import '../../../core/crypto/qr_decryptor.dart';
 import '../../../local_db/checkin_history_dao.dart';
 import '../../../local_db/queue_dao.dart';
 import '../../../shared/services/connectivity_service.dart';
+import '../../attendees/services/attendee_service.dart';
 import '../../events/providers/event_provider.dart';
 import '../../events/services/event_service.dart';
 import '../models/scan_result.dart';
+import '../models/scanned_guest.dart';
 
 final scannerProvider = Provider<ScannerController>((ref) {
   return ScannerController(ref);
@@ -32,15 +34,48 @@ class ScannerController {
       return const ScanResult(type: ScanResultType.invalid);
     }
 
-    final guest = await QrDecryptor.decrypt(rawValue.trim(), keyHex);
-    if (guest == null) {
+    final decrypted = await QrDecryptor.decrypt(rawValue.trim(), keyHex);
+    if (decrypted == null) {
       return const ScanResult(type: ScanResultType.invalid);
     }
 
-    if (guest.eventId != eventId) {
+    if (decrypted.eventId != eventId) {
       return const ScanResult(type: ScanResultType.invalid);
     }
 
+    final category = await _ref
+        .read(attendeeServiceProvider)
+        .categoryFor(eventId, decrypted.qrToken);
+    final guest = decrypted.withCategory(category);
+
+    return _recordCheckIn(guest, eventId, method: 'scan');
+  }
+
+  /// Manual check-in from the guest list, for when a QR will not scan.
+  /// Uses exactly the same duplicate check, local history, offline queue and
+  /// API call as a scan.
+  Future<ScanResult> manualCheckIn(AttendeeRecord attendee) async {
+    final eventId = _ref.read(activeEventIdProvider);
+    if (eventId == null) {
+      return const ScanResult(type: ScanResultType.invalid);
+    }
+
+    final guest = ScannedGuest(
+      qrToken: attendee.qrToken,
+      name: attendee.name,
+      phone: attendee.phone,
+      eventId: eventId,
+      contributionAmount: attendee.contributionAmount,
+      categoryName: attendee.categoryName,
+    );
+    return _recordCheckIn(guest, eventId, method: 'manual');
+  }
+
+  Future<ScanResult> _recordCheckIn(
+    ScannedGuest guest,
+    String eventId, {
+    required String method,
+  }) async {
     final existing = await _historyDao.getByQrToken(guest.qrToken, eventId);
     if (existing != null) {
       return ScanResult(
@@ -66,7 +101,11 @@ class ScannerController {
         final dio = _ref.read(apiClientProvider);
         await dio.post(
           ApiConfig.checkInPath,
-          data: {'qrToken': guest.qrToken, 'eventId': eventId},
+          data: {
+            'qrToken': guest.qrToken,
+            'eventId': eventId,
+            'method': method,
+          },
         );
         await _historyDao.markSynced(guest.qrToken, eventId);
       } catch (_) {
@@ -74,6 +113,7 @@ class ScannerController {
           qrToken: guest.qrToken,
           eventId: eventId,
           checkedInAt: checkedInAt,
+          method: method,
         );
       }
     } else {
@@ -81,6 +121,7 @@ class ScannerController {
         qrToken: guest.qrToken,
         eventId: eventId,
         checkedInAt: checkedInAt,
+        method: method,
       );
     }
 

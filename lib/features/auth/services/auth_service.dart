@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
 import '../models/user_model.dart';
 
@@ -31,7 +32,7 @@ class AuthService {
     );
 
     final prefs = _ref.read(sharedPreferencesProvider);
-    final baseUrl = prefs.getString(ApiConfig.baseUrlKey) ?? ApiConfig.defaultBaseUrl;
+    final baseUrl = AppEnvironment.baseUrl(prefs);
 
     final response = await dio.post(
       '$baseUrl${ApiConfig.authPath}',

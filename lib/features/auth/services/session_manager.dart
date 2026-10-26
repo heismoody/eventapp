@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../events/providers/event_provider.dart';
 import '../providers/auth_provider.dart';
 import 'auth_service.dart';
 
@@ -19,6 +20,7 @@ class SessionManager {
 
     try {
       await _ref.read(authServiceProvider).logout();
+      await _ref.read(eventSelectionControllerProvider).clearActiveEvent();
       _ref.read(authTokenProvider.notifier).state = null;
       _ref.read(currentUserProvider.notifier).state = null;
       _ref.invalidate(authInitializedProvider);

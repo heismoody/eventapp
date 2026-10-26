@@ -19,6 +19,6 @@ void main() {
       ),
     );
 
-    expect(find.text('EventSys Scanner'), findsOneWidget);
+    expect(find.text('Cardly'), findsOneWidget);
   });
 }

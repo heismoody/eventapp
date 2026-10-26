@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +8,16 @@ import '../../../core/utils/date_formatter.dart';
 import '../models/team_member_model.dart';
 import '../providers/team_provider.dart';
 
+String _memberErrorMessage(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map && data['error'] is String) {
+      return data['error'] as String;
+    }
+  }
+  return 'Failed to create member account';
+}
+
 class TeamScreen extends ConsumerWidget {
   const TeamScreen({super.key});
 
@@ -15,118 +26,15 @@ class TeamScreen extends ConsumerWidget {
     await ref.read(teamMembersProvider.future);
   }
 
-  Future<void> _showAddMemberSheet(BuildContext context, WidgetRef ref) async {
-    final nameController = TextEditingController();
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-    var submitting = false;
-    var obscurePassword = true;
-
-    await showModalBottomSheet<void>(
+  Future<void> _showAddMemberSheet(BuildContext context, WidgetRef ref) {
+    return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                12,
-                24,
-                MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text('Add kamati member', style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create an account for a committee member to help monitor your event.',
-                    style: TextStyle(color: AppColors.muted),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Full name'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      suffixIcon: IconButton(
-                        tooltip: obscurePassword ? 'Show password' : 'Hide password',
-                        onPressed: () => setState(() => obscurePassword = !obscurePassword),
-                        icon: Icon(
-                          obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                      ),
-                    ),
-                    obscureText: obscurePassword,
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: submitting
-                          ? null
-                          : () async {
-                              setState(() => submitting = true);
-                              try {
-                                await ref.read(teamServiceProvider).createMember(
-                                      name: nameController.text.trim(),
-                                      email: emailController.text.trim(),
-                                      password: passwordController.text,
-                                    );
-                                ref.invalidate(teamMembersProvider);
-                                if (context.mounted) {
-                                  Navigator.pop(context);
-                                  AppToast.success('Member account created');
-                                }
-                              } catch (_) {
-                                setState(() => submitting = false);
-                                if (context.mounted) {
-                                  AppToast.error('Failed to create member account');
-                                }
-                              }
-                            },
-                      child: Text(submitting ? 'Creating...' : 'Create member'),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+      builder: (context) => const _AddMemberSheet(),
     );
-
-    nameController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
   }
 
   @override
@@ -179,6 +87,135 @@ class TeamScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _AddMemberSheet extends ConsumerStatefulWidget {
+  const _AddMemberSheet();
+
+  @override
+  ConsumerState<_AddMemberSheet> createState() => _AddMemberSheetState();
+}
+
+class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  var _submitting = false;
+  var _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (name.isEmpty || email.isEmpty) {
+      AppToast.error('Name and email are required');
+      return;
+    }
+    if (password.length < 6) {
+      AppToast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      await ref.read(teamServiceProvider).createMember(
+            name: name,
+            email: email,
+            password: password,
+          );
+      ref.invalidate(teamMembersProvider);
+      if (mounted) {
+        Navigator.pop(context);
+        AppToast.success('Member account created');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        AppToast.error(_memberErrorMessage(e));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        12,
+        24,
+        MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 44,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text('Add kamati member', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            'Create an account for a committee member to help monitor your event.',
+            style: TextStyle(color: AppColors.muted),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Full name'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _emailController,
+            decoration: const InputDecoration(labelText: 'Email'),
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _passwordController,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              helperText: 'At least 6 characters',
+              suffixIcon: IconButton(
+                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+            obscureText: _obscurePassword,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submitting ? null : _submit,
+              child: Text(_submitting ? 'Creating...' : 'Create member'),
+            ),
+          ),
+        ],
       ),
     );
   }

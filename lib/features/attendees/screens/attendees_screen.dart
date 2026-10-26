@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../local_db/checkin_history_dao.dart';
 import '../../../shared/services/connectivity_service.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../../contributions/services/contribution_service.dart';
+import '../../../shared/widgets/speed_dial_fab.dart';
+import '../../contributions/widgets/categories_manage_sheet.dart';
 import '../../events/providers/event_provider.dart';
 import '../services/attendee_service.dart';
+import '../widgets/add_guest_sheet.dart';
 import '../widgets/attendee_display.dart';
 import '../widgets/contact_import_sheet.dart';
 
@@ -52,154 +52,121 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
     }
   }
 
-  Future<void> _remindUnpaid(String eventId, List<AttendeeRecord> attendees) async {
-    final unpaidIds = attendees
-        .where((a) =>
-            a.paymentStatus == ContributionPaymentStatus.partial ||
-            a.paymentStatus == ContributionPaymentStatus.unpaid)
-        .map((a) => a.id)
-        .toList();
-
-    if (unpaidIds.isEmpty) {
-      if (mounted) {
-        AppToast.info('No unpaid guests to remind');
-      }
-      return;
-    }
-
-    try {
-      final result = await ref.read(contributionServiceProvider).sendContributionSms(
-            eventId: eventId,
-            type: 'reminder',
-            attendeeIds: unpaidIds,
-          );
-      ref.invalidate(smsBillingProvider(eventId));
-      ref.invalidate(smsCreditsProvider(eventId));
-      if (mounted) {
-        if (!result.allowed) {
-          AppToast.warning(
-            result.error ?? 'No SMS credits available for this event',
-          );
-          return;
-        }
-        AppToast.success('Sent ${result.sent}, failed ${result.failed}');
-      }
-    } catch (_) {
-      if (mounted) {
-        AppToast.error('Failed to send reminders');
-      }
+  Future<void> _addGuestManually(String eventId) async {
+    final added = await showAddGuestSheet(
+      context: context,
+      ref: ref,
+      eventId: eventId,
+    );
+    if (added == true && mounted) {
+      ref.invalidate(attendeesProvider(eventId));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final eventId = ref.watch(activeEventIdProvider);
-    final user = ref.watch(currentUserProvider);
-    final isEventOwner = user?.isEventOwner ?? false;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
-        foregroundColor: AppColors.onSurface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: const Text(
-          'Guests',
-          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.onSurface),
-        ),
-        actions: [
-          if (eventId != null && isEventOwner && _isOnline)
-            IconButton(
-              tooltip: 'Contribution categories',
-              onPressed: () => context.push('/shell/contribution-categories'),
-              icon: const Icon(Icons.category_outlined),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: AppBar(
+            backgroundColor: const Color(0xFFF8FAFC),
+            foregroundColor: AppColors.onSurface,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            title: const Text(
+              'Guests',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: AppColors.onSurface,
+              ),
             ),
-          if (eventId != null && isEventOwner && _isOnline)
-            PopupMenuButton<String>(
-              onSelected: (value) async {
-                if (value == 'remind') {
-                  final attendees = await ref.read(attendeesProvider(eventId).future);
-                  if (mounted) await _remindUnpaid(eventId, attendees);
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'remind',
-                  child: Text('Remind unpaid'),
-                ),
-              ],
-            ),
-        ],
-      ),
-      floatingActionButton: eventId != null && _isOnline
-          ? FloatingActionButton(
-              onPressed: () => _importContacts(eventId),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              tooltip: 'Import contacts',
-              child: const Icon(Icons.add),
-            )
-          : null,
-      body: eventId == null
-          ? const _GuestsEmptySelectionState()
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Search by name',
-                        prefixIcon: Icon(Icons.search),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onChanged: (v) => setState(() => _search = v),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  child: _GuestFilterBar(
-                    value: _filter,
-                    onChanged: (value) => setState(() => _filter = value),
-                  ),
-                ),
-                if (!_isOnline)
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: _OfflineBanner(),
-                  ),
-                Expanded(
-                  child: _isOnline
-                      ? _OnlineAttendeesList(
-                          eventId: eventId,
-                          filter: _filter,
-                          search: _search,
-                          onRefresh: () => _refresh(eventId),
-                        )
-                      : _OfflineHistoryList(
-                          eventId: eventId,
-                          search: _search,
+          ),
+          body: eventId == null
+              ? const _GuestsEmptySelectionState()
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.border),
                         ),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            hintText: 'Search by name',
+                            prefixIcon: Icon(Icons.search),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onChanged: (v) => setState(() => _search = v),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: _GuestFilterBar(
+                        value: _filter,
+                        onChanged: (value) => setState(() => _filter = value),
+                      ),
+                    ),
+                    if (!_isOnline)
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                        child: _OfflineBanner(),
+                      ),
+                    Expanded(
+                      child: _isOnline
+                          ? _OnlineAttendeesList(
+                              eventId: eventId,
+                              filter: _filter,
+                              search: _search,
+                              onRefresh: () => _refresh(eventId),
+                            )
+                          : _OfflineHistoryList(
+                              eventId: eventId,
+                              search: _search,
+                            ),
+                    ),
+                  ],
+                ),
+        ),
+        if (eventId != null && _isOnline)
+          Positioned.fill(
+            child: SpeedDialFab(
+              actions: [
+                SpeedDialAction(
+                  icon: Icons.person_add_alt_1,
+                  label: 'Add guest manually',
+                  onTap: () => _addGuestManually(eventId),
+                ),
+                SpeedDialAction(
+                  icon: Icons.contacts_outlined,
+                  label: 'Import from contacts',
+                  onTap: () => _importContacts(eventId),
+                ),
+                SpeedDialAction(
+                  icon: Icons.category_outlined,
+                  label: 'Categories',
+                  onTap: () => showCategoriesManageSheet(
+                    context: context,
+                    eventId: eventId,
+                  ),
                 ),
               ],
             ),
+          ),
+      ],
     );
   }
 }
 
 class _GuestFilterBar extends StatelessWidget {
-  const _GuestFilterBar({
-    required this.value,
-    required this.onChanged,
-  });
+  const _GuestFilterBar({required this.value, required this.onChanged});
 
   final String value;
   final ValueChanged<String> onChanged;
@@ -210,7 +177,6 @@ class _GuestFilterBar extends StatelessWidget {
       ('all', 'All'),
       ('checked', 'Checked in'),
       ('pending', 'Pending'),
-      ('unpaid', 'Unpaid'),
     ];
 
     return Container(
@@ -250,7 +216,9 @@ class _FilterTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+      color: selected
+          ? AppColors.primary.withValues(alpha: 0.1)
+          : Colors.transparent,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
@@ -292,7 +260,11 @@ class _OfflineBanner extends StatelessWidget {
           Expanded(
             child: Text(
               'Offline — showing locally scanned guests only',
-              style: TextStyle(color: AppColors.warning, fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: AppColors.warning,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -320,19 +292,16 @@ class _OnlineAttendeesList extends ConsumerWidget {
 
     return attendeesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _GuestsErrorState(onRetry: () => ref.invalidate(attendeesProvider(eventId))),
+      error: (e, _) => _GuestsErrorState(
+        onRetry: () => ref.invalidate(attendeesProvider(eventId)),
+      ),
       data: (attendees) {
         var filtered = attendees;
-        if (filter == 'checked') filtered = filtered.where((a) => a.checkedIn).toList();
-        if (filter == 'pending') filtered = filtered.where((a) => !a.checkedIn).toList();
-        if (filter == 'unpaid') {
-          filtered = filtered
-              .where(
-                (a) =>
-                    a.paymentStatus == ContributionPaymentStatus.partial ||
-                    a.paymentStatus == ContributionPaymentStatus.unpaid,
-              )
-              .toList();
+        if (filter == 'checked') {
+          filtered = filtered.where((a) => a.checkedIn).toList();
+        }
+        if (filter == 'pending') {
+          filtered = filtered.where((a) => !a.checkedIn).toList();
         }
         if (search.isNotEmpty) {
           filtered = filtered
@@ -345,10 +314,7 @@ class _OnlineAttendeesList extends ConsumerWidget {
             onRefresh: onRefresh,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              children: const [
-                SizedBox(height: 120),
-                _GuestsListEmptyState(),
-              ],
+              children: const [SizedBox(height: 120), _GuestsListEmptyState()],
             ),
           );
         }
@@ -361,7 +327,8 @@ class _OnlineAttendeesList extends ConsumerWidget {
             children: [
               _GuestsListSection(
                 attendees: filtered,
-                onTap: (attendee) => context.push('/shell/guests/${attendee.id}'),
+                onTap: (attendee) =>
+                    context.push('/shell/guests/${attendee.id}'),
               ),
             ],
           ),
@@ -372,10 +339,7 @@ class _OnlineAttendeesList extends ConsumerWidget {
 }
 
 class _OfflineHistoryList extends StatelessWidget {
-  const _OfflineHistoryList({
-    required this.eventId,
-    required this.search,
-  });
+  const _OfflineHistoryList({required this.eventId, required this.search});
 
   final String eventId;
   final String search;
@@ -392,7 +356,11 @@ class _OfflineHistoryList extends StatelessWidget {
         var items = snapshot.data!;
         if (search.isNotEmpty) {
           items = items
-              .where((i) => (i['name'] as String).toLowerCase().contains(search.toLowerCase()))
+              .where(
+                (i) => (i['name'] as String).toLowerCase().contains(
+                  search.toLowerCase(),
+                ),
+              )
               .toList();
         }
 
@@ -425,10 +393,7 @@ class _OfflineHistoryList extends StatelessWidget {
 }
 
 class _GuestsListSection extends StatelessWidget {
-  const _GuestsListSection({
-    required this.attendees,
-    required this.onTap,
-  });
+  const _GuestsListSection({required this.attendees, required this.onTap});
 
   final List<AttendeeRecord> attendees;
   final void Function(AttendeeRecord attendee) onTap;
@@ -471,10 +436,7 @@ class _GuestsListSection extends StatelessWidget {
 }
 
 class _GuestCard extends StatelessWidget {
-  const _GuestCard({
-    required this.child,
-    this.onTap,
-  });
+  const _GuestCard({required this.child, this.onTap});
 
   final Widget child;
   final VoidCallback? onTap;
@@ -555,9 +517,14 @@ class _GuestTile extends StatelessWidget {
                 if (paymentStatus != ContributionPaymentStatus.none) ...[
                   const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: contributionStatusColor(paymentStatus).withValues(alpha: 0.12),
+                      color: contributionStatusColor(
+                        paymentStatus,
+                      ).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -633,7 +600,11 @@ class _GuestsListEmptyState extends StatelessWidget {
             color: AppColors.primary.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.people_outline, size: 42, color: AppColors.primary),
+          child: const Icon(
+            Icons.people_outline,
+            size: 42,
+            color: AppColors.primary,
+          ),
         ),
         const SizedBox(height: 20),
         const Text(
@@ -646,7 +617,7 @@ class _GuestsListEmptyState extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Try a different filter or tap + to import contacts.',
+          'Try a different filter or tap + to add a guest.',
           textAlign: TextAlign.center,
           style: TextStyle(color: AppColors.muted, height: 1.5),
         ),
@@ -673,10 +644,17 @@ class _GuestsErrorState extends StatelessWidget {
               color: AppColors.danger.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.error_outline, color: AppColors.danger, size: 34),
+            child: const Icon(
+              Icons.error_outline,
+              color: AppColors.danger,
+              size: 34,
+            ),
           ),
           const SizedBox(height: 16),
-          const Text('Failed to load guests', style: TextStyle(fontWeight: FontWeight.w700)),
+          const Text(
+            'Failed to load guests',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 16),
           OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
         ],
@@ -689,5 +667,6 @@ String _initials(String name) {
   final parts = name.trim().split(RegExp(r'\s+'));
   if (parts.isEmpty) return '?';
   if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'.toUpperCase();
+  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+      .toUpperCase();
 }

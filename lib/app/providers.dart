@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/config/app_environment.dart';
 import '../../core/constants/api_config.dart';
 import '../../core/auth/jwt_utils.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -14,7 +15,7 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 
 // ─── Pretty logger ──────────────────────────────────────────────────────────
 
-const _logTag = 'EventSys';
+const _logTag = 'Cardly';
 const _forceApiLogs = bool.fromEnvironment('API_LOGS', defaultValue: false);
 
 bool get _apiLoggingEnabled => !kReleaseMode || _forceApiLogs;
@@ -57,7 +58,9 @@ class _PrettyLogInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     _log('\n┌──── ERROR ──────────────────────────────────────────────');
-    _log('│ ❌ ${err.response?.statusCode ?? 'NO STATUS'}  ${err.requestOptions.uri}');
+    _log(
+      '│ ❌ ${err.response?.statusCode ?? 'NO STATUS'}  ${err.requestOptions.uri}',
+    );
     _log('│ ${err.message}');
     if (err.response?.data != null) {
       _log('│ Body: ${_summarise(err.response!.data)}');
@@ -96,8 +99,7 @@ final apiClientProvider = Provider<Dio>((ref) {
     InterceptorsWrapper(
       onRequest: (options, handler) async {
         final prefs = ref.read(sharedPreferencesProvider);
-        final baseUrl = prefs.getString(ApiConfig.baseUrlKey) ?? ApiConfig.defaultBaseUrl;
-        options.baseUrl = baseUrl;
+        options.baseUrl = AppEnvironment.baseUrl(prefs);
 
         final token = ref.read(authTokenProvider);
         if (token != null && token.isNotEmpty) {
