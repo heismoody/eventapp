@@ -1,9 +1,13 @@
-name: Build & publish APK
+name: Build & release app
 
-# development → Cardly Dev  → appdev.cardly.co.tz (latest-dev.json)
-# main        → Cardly      → app.cardly.co.tz    (latest.json)
-# The APK goes into the portal's public/app-releases/ on that server, where
-# the app's in-app update check finds it through the manifest.
+# development → Cardly Dev (APK)  → uploaded to appdev.cardly.co.tz, picked up by
+#                                    the dev app's own updater (latest-dev.json)
+# main        → Cardly (Play .aab) → signed bundle attached to the run as an
+#                                    artifact, uploaded to Google Play Console
+#
+# Keep this file's name: GitHub keys the run counter (our build number) to
+# the workflow file, and renaming it would restart build numbers at 1 —
+# older than what's already installed, so no phone would see an update.
 on:
   push:
     branches:
@@ -12,19 +16,17 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: release-apk-${{ github.ref_name }}
+  group: release-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   release:
-    name: Build ${{ github.ref_name == 'main' && 'prod' || 'dev' }} APK
+    name: ${{ github.ref_name == 'main' && 'Build Play bundle' || 'Build & publish dev APK' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     env:
       FLAVOR: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
-      HOST: ${{ github.ref_name == 'main' && 'app.cardly.co.tz' || 'appdev.cardly.co.tz' }}
-      MANIFEST: ${{ github.ref_name == 'main' && 'latest.json' || 'latest-dev.json' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -42,10 +44,12 @@ jobs:
 
       - name: Work out version
         run: |
-          # Build number = run counter: always increasing, so every push is
-          # newer than the last and phones offer it as an update. The +100
-          # keeps it above the numbers used by earlier hand-built releases.
-          # The version name (1.0.1, …) still comes from pubspec.yaml.
+          # Build number = run counter, shared by both branches: always
+          # increasing, so every dev push is newer than the last (phones
+          # offer the update) and Play never sees a version code twice (it
+          # permanently rejects reuse). The +100 keeps it above the numbers
+          # used by earlier hand-built releases. The version name (1.0.1, …)
+          # still comes from pubspec.yaml.
           echo "BUILD_NUMBER=$(( ${{ github.run_number }} + 100 ))" >> "$GITHUB_ENV"
           VERSION_NAME=$(grep '^version:' pubspec.yaml | sed -E 's/^version: *([^+]+).*/\1/')
           echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
@@ -56,7 +60,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           # Without the real key Gradle would quietly fall back to a throwaway
-          # debug key, and that APK could never update an installed app.
+          # debug key — a dev APK that can't update installs, or a bundle Play
+          # rejects as not signed with the registered upload key.
           if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
             echo "::error::ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PASSWORD secrets are missing"
             exit 1
@@ -74,35 +79,66 @@ jobs:
           flutter pub get
           flutter analyze --no-fatal-infos
 
-      - name: Build APK
-        run: flutter build apk --release --flavor "$FLAVOR" --build-number="$BUILD_NUMBER"
+      # ───────────── main → Google Play bundle ─────────────
 
-      - name: Prepare release files
+      - name: Build Play bundle
+        if: env.FLAVOR == 'prod'
+        run: |
+          flutter build appbundle --release --flavor prod --build-number="$BUILD_NUMBER"
+          mkdir -p release
+          cp build/app/outputs/bundle/prodRelease/app-prod-release.aab \
+            "release/cardly-$VERSION_NAME-$BUILD_NUMBER.aab"
+
+      - name: Attach bundle to this run
+        if: env.FLAVOR == 'prod'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardly-${{ env.VERSION_NAME }}-${{ env.BUILD_NUMBER }}-play
+          path: release/*.aab
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload instructions
+        if: env.FLAVOR == 'prod'
+        run: |
+          {
+            echo "## Cardly $VERSION_NAME (version code $BUILD_NUMBER) — ready for Google Play"
+            echo ""
+            echo "1. Download the **cardly-$VERSION_NAME-$BUILD_NUMBER-play** artifact below (a zip with the .aab)."
+            echo "2. Play Console → Cardly → Testing (or Production) → Create new release → upload the .aab."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # ───────────── development → self-hosted dev APK ─────────────
+
+      - name: Build dev APK
+        if: env.FLAVOR == 'dev'
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          PREFIX=$([ "$FLAVOR" = "prod" ] && echo "cardly" || echo "cardly-dev")
+          flutter build apk --release --flavor dev --build-number="$BUILD_NUMBER"
+
           # Build number in the name: every release is a new URL, so a CDN
           # can never serve a cached older APK under the latest manifest.
-          APK_NAME="$PREFIX-$VERSION_NAME-$BUILD_NUMBER.apk"
+          APK_NAME="cardly-dev-$VERSION_NAME-$BUILD_NUMBER.apk"
           mkdir -p release
-          cp "build/app/outputs/flutter-apk/app-$FLAVOR-release.apk" "release/$APK_NAME"
+          cp build/app/outputs/flutter-apk/app-dev-release.apk "release/$APK_NAME"
 
           NOTES=$(printf '%s' "${COMMIT_MESSAGE:-Manual release}" | head -n 1)
           jq -n \
             --argjson code "$BUILD_NUMBER" \
             --arg name "$VERSION_NAME" \
-            --arg url "https://$HOST/app-releases/$APK_NAME" \
+            --arg url "https://appdev.cardly.co.tz/app-releases/$APK_NAME" \
             --arg notes "$NOTES" \
             '{versionCode: $code, versionName: $name, apkUrl: $url, releaseNotes: $notes, mandatory: false}' \
-            > "release/$MANIFEST"
+            > release/latest-dev.json
 
           echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
-          cat "release/$MANIFEST"
+          cat release/latest-dev.json
 
       # APK first, manifest second — a phone must never read a manifest that
       # points at a file that isn't on the server yet.
-      - name: Upload APK
+      - name: Upload dev APK
+        if: env.FLAVOR == 'dev'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -110,21 +146,23 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           source: release/${{ env.APK_NAME }}
-          target: ${{ github.ref_name == 'main' && secrets.DEPLOY_PATH || secrets.DEPLOY_PATH_DEV }}/public/app-releases
+          target: ${{ secrets.DEPLOY_PATH_DEV }}/public/app-releases
           strip_components: 1
 
-      - name: Publish manifest
+      - name: Publish dev manifest
+        if: env.FLAVOR == 'dev'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: release/${{ env.MANIFEST }}
-          target: ${{ github.ref_name == 'main' && secrets.DEPLOY_PATH || secrets.DEPLOY_PATH_DEV }}/public/app-releases
+          source: release/latest-dev.json
+          target: ${{ secrets.DEPLOY_PATH_DEV }}/public/app-releases
           strip_components: 1
 
-      - name: Remove old APKs (keep the latest 3)
+      - name: Remove old dev APKs (keep the latest 3)
+        if: env.FLAVOR == 'dev'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -133,7 +171,6 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -euo pipefail
-            cd "${{ github.ref_name == 'main' && secrets.DEPLOY_PATH || secrets.DEPLOY_PATH_DEV }}/public/app-releases"
-            if [ "${{ env.FLAVOR }}" = "prod" ]; then PATTERN='cardly-[0-9]*.apk'; else PATTERN='cardly-dev-*.apk'; fi
-            ls -1t $PATTERN 2>/dev/null | tail -n +4 | xargs -r rm -f --
+            cd "${{ secrets.DEPLOY_PATH_DEV }}/public/app-releases"
+            ls -1t cardly-dev-*.apk 2>/dev/null | tail -n +4 | xargs -r rm -f --
             ls -la

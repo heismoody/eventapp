@@ -5,8 +5,10 @@ import '../constants/api_config.dart';
 
 /// Which build this is, decided at build time by `--flavor dev|prod`.
 ///
-/// prod is locked to the production server; dev talks to appdev and keeps
-/// the "Advanced" server override for pointing at a laptop while testing.
+/// prod is the Google Play build: locked to the production server, and
+/// updated only through the Play Store. dev is self-hosted on appdev with
+/// its own in-app updater, and keeps the "Advanced" server override for
+/// pointing at a laptop while testing.
 /// A build with no flavor (iOS/macOS, or a plain `flutter run` on a
 /// platform without flavors) is treated as dev, so a production install can
 /// never end up there by accident.
@@ -22,13 +24,15 @@ class AppEnvironment {
 
   static bool get allowsServerOverride => !isProd;
 
-  /// The self-hosted update manifest, served from the portal's public/
-  /// folder (no auth — it's checked before anyone has to be logged in).
-  /// Separate per flavor: both servers deploy the same repo, and a dev
-  /// phone must never be offered a prod APK (or vice versa) — with
-  /// different package ids it would install as a second app, not update.
-  static String get releaseManifestPath =>
-      isProd ? '/app-releases/latest.json' : '/app-releases/latest-dev.json';
+  /// Only the self-hosted dev build updates itself. Google Play forbids an
+  /// app it distributes from downloading and installing its own APK, so
+  /// the prod (Play) build leaves updates entirely to the Play Store.
+  static bool get hasSelfUpdates => !isProd;
+
+  /// The dev build's self-hosted update manifest on appdev, served from the
+  /// portal's public/app-releases (no auth — it's checked before anyone has
+  /// to be logged in).
+  static const String releaseManifestPath = '/app-releases/latest-dev.json';
 
   /// The server every request goes to. In prod any previously saved
   /// override is ignored — an install that was once pointed elsewhere still
