@@ -74,5 +74,7 @@ class UpdateService {
 }
 
 final appUpdateProvider = FutureProvider<AppRelease?>((ref) async {
+  // The Play build never checks — the Play Store owns its updates.
+  if (!AppEnvironment.hasSelfUpdates) return null;
   return ref.read(updateServiceProvider).checkForUpdate();
 });

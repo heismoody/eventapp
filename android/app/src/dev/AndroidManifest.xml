@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dev build only: lets the self-hosted in-app updater hand a downloaded
+         APK to Android's own installer. Merged on top of main/AndroidManifest.xml. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+</manifest>
