@@ -15,19 +15,15 @@ class CheckinHistoryDao {
     bool synced = false,
   }) async {
     final db = await _db;
-    await db.insert(
-      'checkin_history',
-      {
-        'qr_token': qrToken,
-        'event_id': eventId,
-        'name': name,
-        'phone': phone,
-        'contribution': contribution,
-        'checked_in_at': checkedInAt.toIso8601String(),
-        'synced': synced ? 1 : 0,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('checkin_history', {
+      'qr_token': qrToken,
+      'event_id': eventId,
+      'name': name,
+      'phone': phone,
+      'contribution': contribution,
+      'checked_in_at': checkedInAt.toIso8601String(),
+      'synced': synced ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<bool> exists(String qrToken, String eventId) async {
@@ -41,7 +37,10 @@ class CheckinHistoryDao {
     return rows.isNotEmpty;
   }
 
-  Future<Map<String, dynamic>?> getByQrToken(String qrToken, String eventId) async {
+  Future<Map<String, dynamic>?> getByQrToken(
+    String qrToken,
+    String eventId,
+  ) async {
     final db = await _db;
     final rows = await db.query(
       'checkin_history',

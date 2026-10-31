@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_toast.dart';
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 
@@ -25,7 +27,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   final _passwordController = TextEditingController();
   final _serverController = TextEditingController();
   bool _loading = false;
-  String? _error;
   bool _showServerField = false;
   bool _obscurePassword = true;
 
@@ -45,10 +46,13 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   }
 
   Future<void> _login() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      AppToast.warning('Enter your email and password.');
+      return;
+    }
+
+    setState(() => _loading = true);
 
     try {
       if (AppEnvironment.allowsServerOverride) {
@@ -69,14 +73,49 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       ref.invalidate(authInitializedProvider);
 
       widget.onSuccess();
-    } catch (_) {
-      setState(
-        () => _error = AppEnvironment.allowsServerOverride
-            ? 'Login failed. Check credentials and server URL.'
-            : 'Login failed. Check your email and password.',
-      );
+    } catch (error) {
+      if (mounted) AppToast.error(_loginErrorMessage(error));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Turns a failed login into the actual reason, so the person knows
+  /// whether to fix their password, their account, or their connection.
+  /// Server-URL hints only appear in dev builds, where the URL is editable.
+  String _loginErrorMessage(Object error) {
+    final checkUrl = AppEnvironment.allowsServerOverride
+        ? ' Check the server URL under Advanced.'
+        : '';
+
+    if (error is! DioException) {
+      // A 200 that isn't the login JSON — usually a URL pointing at some
+      // other website.
+      return 'Unexpected response from the server.$checkUrl';
+    }
+
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.transformTimeout:
+      case DioExceptionType.connectionError:
+        return "Can't reach the server. Check your internet connection.$checkUrl";
+      case DioExceptionType.badCertificate:
+        return "The server's security certificate isn't valid.$checkUrl";
+      case DioExceptionType.badResponse:
+        return switch (error.response?.statusCode) {
+          400 => 'Enter your email and password.',
+          401 => 'Wrong email or password, or the account is disabled.',
+          403 => "This account isn't allowed to use the Cardly app.",
+          404 => "Login service not found on this server.$checkUrl",
+          final code? when code >= 500 =>
+            'The server had a problem. Please try again shortly.',
+          _ => 'Login failed. Please try again.$checkUrl',
+        };
+      case DioExceptionType.cancel:
+      case DioExceptionType.unknown:
+        return 'Login failed. Please try again.$checkUrl';
     }
   }
 
@@ -157,10 +196,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           ),
         ] else
           SizedBox(height: fieldSpacing),
-        if (_error != null) ...[
-          const SizedBox(height: 8),
-          Text(_error!, style: const TextStyle(color: AppColors.danger)),
-        ],
         SizedBox(height: widget.compact ? 16 : 20),
         SizedBox(
           width: double.infinity,

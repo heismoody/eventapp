@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../events/providers/event_provider.dart';
 import '../models/team_member_model.dart';
 import '../providers/team_provider.dart';
 
@@ -50,7 +51,10 @@ class TeamScreen extends ConsumerWidget {
         scrolledUnderElevation: 0,
         title: const Text(
           'Team',
-          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -129,10 +133,13 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
 
     setState(() => _submitting = true);
     try {
-      await ref.read(teamServiceProvider).createMember(
+      await ref
+          .read(teamServiceProvider)
+          .createMember(
             name: name,
             email: email,
             password: password,
+            eventId: ref.read(activeEventIdProvider),
           );
       ref.invalidate(teamMembersProvider);
       if (mounted) {
@@ -171,7 +178,10 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Add kamati member', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Add kamati member',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           const Text(
             'Create an account for a committee member to help monitor your event.',
@@ -230,7 +240,8 @@ class _TeamMembersSection extends StatelessWidget {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'.toUpperCase();
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
   }
 
   @override
@@ -401,10 +412,7 @@ class _EmptyTeamState extends StatelessWidget {
 }
 
 class _TeamErrorState extends StatelessWidget {
-  const _TeamErrorState({
-    required this.message,
-    required this.onRetry,
-  });
+  const _TeamErrorState({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -424,7 +432,11 @@ class _TeamErrorState extends StatelessWidget {
                 color: AppColors.danger.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline, color: AppColors.danger, size: 34),
+              child: const Icon(
+                Icons.error_outline,
+                color: AppColors.danger,
+                size: 34,
+              ),
             ),
             const SizedBox(height: 16),
             Text(message, style: const TextStyle(fontWeight: FontWeight.w700)),

@@ -16,11 +16,11 @@ class ScannedGuest {
   final String? categoryName;
 
   ScannedGuest withCategory(String? categoryName) => ScannedGuest(
-        qrToken: qrToken,
-        name: name,
-        phone: phone,
-        eventId: eventId,
-        contributionAmount: contributionAmount,
-        categoryName: categoryName,
-      );
+    qrToken: qrToken,
+    name: name,
+    phone: phone,
+    eventId: eventId,
+    contributionAmount: contributionAmount,
+    categoryName: categoryName,
+  );
 }

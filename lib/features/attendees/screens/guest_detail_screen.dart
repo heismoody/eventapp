@@ -214,8 +214,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
             hasTarget: _attendee.targetAmountValue > 0,
             onBack: () => context.pop(),
           ),
-          if (ref.watch(currentUserProvider)?.roles.contains('scanner') ==
-                  true &&
+          if (ref.watch(currentUserProvider)?.canCheckIn == true &&
               !_attendee.checkedIn)
             Container(
               width: double.infinity,

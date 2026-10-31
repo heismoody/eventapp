@@ -55,25 +55,25 @@ class AppToast {
   static Icon _icon(AppToastType type) {
     return switch (type) {
       AppToastType.success => Icon(
-          Icons.check_circle_rounded,
-          color: ToastificationType.success.color,
-          size: 24,
-        ),
+        Icons.check_circle_rounded,
+        color: ToastificationType.success.color,
+        size: 24,
+      ),
       AppToastType.error => Icon(
-          Icons.error_rounded,
-          color: ToastificationType.error.color,
-          size: 24,
-        ),
+        Icons.error_rounded,
+        color: ToastificationType.error.color,
+        size: 24,
+      ),
       AppToastType.info => Icon(
-          Icons.info_rounded,
-          color: ToastificationType.info.color,
-          size: 24,
-        ),
+        Icons.info_rounded,
+        color: ToastificationType.info.color,
+        size: 24,
+      ),
       AppToastType.warning => Icon(
-          Icons.warning_rounded,
-          color: ToastificationType.warning.color,
-          size: 24,
-        ),
+        Icons.warning_rounded,
+        color: ToastificationType.warning.color,
+        size: 24,
+      ),
     };
   }
 }

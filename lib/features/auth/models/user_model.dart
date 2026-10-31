@@ -14,7 +14,16 @@ class UserModel {
   final String? ownedEventId;
 
   bool get isEventOwner => roles.contains('event_owner');
+  bool get isSuperAdmin => roles.contains('super_admin');
   bool get isEventScoped => ownedEventId != null && ownedEventId!.isNotEmpty;
+
+  /// Owner tools — contributions, team, the money side of the dashboard.
+  /// An owner has them for their own event; a super admin for whichever
+  /// event they picked.
+  bool get canManageEvent => isEventOwner || isSuperAdmin;
+
+  /// The Scan tab and manual "Check in guest".
+  bool get canCheckIn => roles.contains('scanner') || isSuperAdmin;
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(

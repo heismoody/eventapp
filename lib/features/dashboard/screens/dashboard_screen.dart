@@ -178,7 +178,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final isEventOwner = user?.isEventOwner == true;
+    final canManageEvent = user?.canManageEvent == true;
     final eventId = ref.watch(activeEventIdProvider);
     final pendingAsync = ref.watch(pendingSyncCountProvider);
     final attendeesAsync = eventId != null
@@ -233,7 +233,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         )
         .length;
 
-    final teamMembersAsync = isEventOwner
+    final teamMembersAsync = canManageEvent
         ? ref.watch(teamMembersProvider)
         : null;
     final teamMembers = teamMembersAsync?.maybeWhen(
@@ -246,7 +246,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         teamMembersAsync.isLoading &&
         !teamMembersAsync.hasValue;
 
-    final contributionRecords = eventId != null && isEventOwner
+    final contributionRecords = eventId != null && canManageEvent
         ? ref
               .watch(contributionsProvider(eventId))
               .maybeWhen(data: (v) => v, orElse: () => <ContributionRecord>[])
@@ -356,7 +356,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   accent: AppColors.accent,
                                   isLoading: teamLoading,
                                 ),
-                              if (isEventOwner)
+                              if (canManageEvent)
                                 SummaryStatItem(
                                   icon: Icons.payments_outlined,
                                   label: 'Contributions',
@@ -402,15 +402,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 .whereType<DateTime>()
                                 .toList(),
                             teamMembers: teamMembers,
-                            contributions: isEventOwner
+                            contributions: canManageEvent
                                 ? contributionRecords
                                 : null,
-                            isEventOwner: isEventOwner,
+                            canManageEvent: canManageEvent,
                           ),
                         ),
                       ),
                       if (phase == _DashboardPhase.preparation) ...[
-                        if (usesContributions && isEventOwner) ...[
+                        if (usesContributions && canManageEvent) ...[
                           _sectionLabel('Contributions'),
                           SliverToBoxAdapter(
                             child: Padding(
@@ -423,7 +423,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ],
                       ] else if (phase == _DashboardPhase.live) ...[
                         if (usesContributions &&
-                            isEventOwner &&
+                            canManageEvent &&
                             unpaidCount > 0)
                           SliverToBoxAdapter(
                             child: Padding(
@@ -436,7 +436,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                             ),
                           ),
-                        if (usesContributions && isEventOwner) ...[
+                        if (usesContributions && canManageEvent) ...[
                           _sectionLabel('Contributions'),
                           SliverToBoxAdapter(
                             child: Padding(
@@ -449,7 +449,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ],
                       ] else if (phase == _DashboardPhase.live) ...[
                         if (usesContributions &&
-                            isEventOwner &&
+                            canManageEvent &&
                             unpaidCount > 0)
                           SliverToBoxAdapter(
                             child: Padding(
@@ -462,7 +462,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                             ),
                           ),
-                        if (usesContributions && isEventOwner) ...[
+                        if (usesContributions && canManageEvent) ...[
                           _sectionLabel('Contributions'),
                           SliverToBoxAdapter(
                             child: Padding(
@@ -491,19 +491,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   label: 'View guests',
                   onTap: () => context.go('/shell/attendees'),
                 ),
-                if (isEventOwner)
+                if (canManageEvent)
                   SpeedDialAction(
                     icon: Icons.payments_outlined,
                     label: 'Contributions',
                     onTap: () => context.go('/shell/contributions'),
                   ),
-                if (isEventOwner)
+                if (canManageEvent)
                   SpeedDialAction(
                     icon: Icons.groups_outlined,
                     label: 'Manage team',
                     onTap: () => context.go('/shell/team'),
                   ),
-                if (isEventOwner)
+                if (canManageEvent)
                   SpeedDialAction(
                     icon: Icons.summarize_outlined,
                     label: 'View report',
@@ -978,7 +978,7 @@ class _TrendChartsCard extends StatefulWidget {
     required this.guestDates,
     required this.teamMembers,
     required this.contributions,
-    required this.isEventOwner,
+    required this.canManageEvent,
   });
 
   final List<DateTime> guestDates;
@@ -986,7 +986,7 @@ class _TrendChartsCard extends StatefulWidget {
   // simply no team yet (CTA shown).
   final List<TeamMemberModel>? teamMembers;
   final List<ContributionRecord>? contributions;
-  final bool isEventOwner;
+  final bool canManageEvent;
 
   @override
   State<_TrendChartsCard> createState() => _TrendChartsCardState();
@@ -1007,7 +1007,7 @@ class _TrendChartsCardState extends State<_TrendChartsCard>
         onCta: () => context.go('/shell/attendees'),
         dates: widget.guestDates,
       ),
-      if (widget.isEventOwner)
+      if (widget.canManageEvent)
         _TrendTab(
           label: 'Team',
           accent: AppColors.accent,
@@ -1017,7 +1017,7 @@ class _TrendChartsCardState extends State<_TrendChartsCard>
           onCta: () => context.go('/shell/team'),
           dates: widget.teamMembers?.map((m) => m.createdAt).toList() ?? [],
         ),
-      if (widget.isEventOwner)
+      if (widget.canManageEvent)
         _TrendTab(
           label: 'Contributions',
           accent: AppColors.success,

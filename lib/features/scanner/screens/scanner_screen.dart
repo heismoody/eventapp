@@ -105,7 +105,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
@@ -147,16 +150,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                               ),
                               Text(
                                 'Check in guests instantly',
-                                style: TextStyle(color: AppColors.muted, fontSize: 12),
+                                style: TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 12,
+                                ),
                               ),
                             ],
                           ),
                         ),
                         _ScannerIconButton(
-                          icon: _torchOn ? Icons.flashlight_on : Icons.flashlight_off_outlined,
+                          icon: _torchOn
+                              ? Icons.flashlight_on
+                              : Icons.flashlight_off_outlined,
                           active: _torchOn,
                           onPressed: _toggleTorch,
-                          tooltip: _torchOn ? 'Turn off flashlight' : 'Turn on flashlight',
+                          tooltip: _torchOn
+                              ? 'Turn off flashlight'
+                              : 'Turn on flashlight',
                         ),
                         const SizedBox(width: 8),
                         _StatusPill(isOnline: _isOnline),
@@ -169,7 +179,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
@@ -185,7 +198,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          _processing ? Icons.hourglass_top : Icons.center_focus_strong_outlined,
+                          _processing
+                              ? Icons.hourglass_top
+                              : Icons.center_focus_strong_outlined,
                           color: AppColors.primary,
                           size: 22,
                         ),
@@ -281,9 +296,7 @@ class _StatusPill extends StatelessWidget {
 }
 
 class _ScannerFramePainter extends CustomPainter {
-  const _ScannerFramePainter({
-    required this.scanRect,
-  });
+  const _ScannerFramePainter({required this.scanRect});
 
   final Rect scanRect;
 
@@ -294,7 +307,8 @@ class _ScannerFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final overlayPaint = Paint()..color = Colors.black.withValues(alpha: 0.55);
-    final fullScreen = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final fullScreen = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
     final cutout = Path()
       ..addRRect(
         RRect.fromRectAndRadius(scanRect, const Radius.circular(_borderRadius)),

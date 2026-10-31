@@ -137,10 +137,17 @@ final pendingSyncCountProvider = FutureProvider<int>((ref) async {
   return QueueDao().pendingCount();
 });
 
-final checkinCountProvider = FutureProvider.family<int, String>((ref, eventId) async {
+final checkinCountProvider = FutureProvider.family<int, String>((
+  ref,
+  eventId,
+) async {
   return CheckinHistoryDao().countForEvent(eventId);
 });
 
-final recentCheckinsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, eventId) async {
-  return CheckinHistoryDao().getAll(eventId: eventId);
-});
+final recentCheckinsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      eventId,
+    ) async {
+      return CheckinHistoryDao().getAll(eventId: eventId);
+    });

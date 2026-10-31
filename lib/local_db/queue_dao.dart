@@ -12,27 +12,19 @@ class QueueDao {
     String method = 'scan',
   }) async {
     final db = await _db;
-    await db.insert(
-      'sync_queue',
-      {
-        'qr_token': qrToken,
-        'event_id': eventId,
-        'checked_in_at': checkedInAt.toIso8601String(),
-        'attempts': 0,
-        'synced': 0,
-        'method': method,
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('sync_queue', {
+      'qr_token': qrToken,
+      'event_id': eventId,
+      'checked_in_at': checkedInAt.toIso8601String(),
+      'attempts': 0,
+      'synced': 0,
+      'method': method,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   Future<List<Map<String, dynamic>>> getPending() async {
     final db = await _db;
-    return db.query(
-      'sync_queue',
-      where: 'synced = 0',
-      orderBy: 'id ASC',
-    );
+    return db.query('sync_queue', where: 'synced = 0', orderBy: 'id ASC');
   }
 
   Future<int> pendingCount() async {
@@ -45,7 +37,12 @@ class QueueDao {
 
   Future<void> markSynced(int id) async {
     final db = await _db;
-    await db.update('sync_queue', {'synced': 1}, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'sync_queue',
+      {'synced': 1},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> incrementAttempts(int id) async {
