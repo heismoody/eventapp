@@ -89,10 +89,13 @@ Future<Uint8List> buildEventReportPdf(
 
         _sectionTitle('Attendance'),
         _kpiGrid({
-          'Registered': '${report.totals.registered}',
-          'Checked in': '${report.totals.checkedIn}',
-          'Not checked in': '${report.totals.notCheckedIn}',
-          'Check-in rate': '${report.totals.checkInRate.round()}%',
+          'Cards': '${report.totals.registered}',
+          'People expected': '${report.people.expected}',
+          'People entered': '${report.people.entered}',
+          'Not yet in': '${report.people.notEntered}',
+          'Attendance rate': '${report.people.rate.round()}%',
+          if (report.people.over > 0)
+            'Over card limits': '${report.people.over}',
           'Cards assigned': '${report.totals.cardsAssigned}',
           'Cards activated': '${report.totals.cardsActivated}',
         }),
@@ -198,16 +201,18 @@ pw.Widget _categoryTable(List<ReportCategoryRow> categories) {
       1: pw.Alignment.centerRight,
       2: pw.Alignment.centerRight,
       3: pw.Alignment.centerRight,
+      4: pw.Alignment.centerRight,
     },
-    headers: const ['Category', 'Guests', 'Checked in', 'Rate'],
+    headers: const ['Category', 'Cards', 'People', 'In', 'Rate'],
     data: [
       for (final c in categories)
         [
           c.name,
           '${c.attendees}',
-          '${c.checkedIn}',
-          c.attendees > 0
-              ? '${(c.checkedIn / c.attendees * 100).round()}%'
+          '${c.peopleExpected}',
+          '${c.peopleEntered}',
+          c.peopleExpected > 0
+              ? '${(c.peopleEntered / c.peopleExpected * 100).round()}%'
               : '0%',
         ],
     ],
@@ -266,7 +271,7 @@ pw.Widget _messagingSection(ReportMessaging messaging) {
       ),
       pw.SizedBox(height: 6),
       pw.Text(
-        '${messaging.attendeesReached} guests reached',
+        '${messaging.peopleReached} people reached',
         style: const pw.TextStyle(fontSize: 10, color: _brandMuted),
       ),
       if (messaging.messages.isNotEmpty) ...[
@@ -365,7 +370,9 @@ pw.Widget _participantsTable(
           a.name,
           a.phone,
           a.categoryName ?? '—',
-          a.checkedIn ? 'Yes' : 'No',
+          a.admits > 1
+              ? '${a.enteredCount}/${a.admits}'
+              : (a.checkedIn ? 'Yes' : 'No'),
           if (includeContributions) _formatTzs(a.paidAmount),
         ],
     ],

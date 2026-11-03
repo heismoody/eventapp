@@ -6,6 +6,7 @@ class EventReport {
     required this.generatedAt,
     required this.event,
     required this.totals,
+    required this.people,
     required this.categories,
     required this.checkIns,
     required this.registrations,
@@ -15,7 +16,12 @@ class EventReport {
 
   final DateTime generatedAt;
   final ReportEvent event;
+
+  /// Card counts, as before.
   final ReportTotals totals;
+
+  /// Attendance in people (a Couple card counts 2).
+  final ReportPeople people;
   final List<ReportCategoryRow> categories;
   final ReportTimeline checkIns;
   final ReportTimeline registrations;
@@ -23,10 +29,16 @@ class EventReport {
   final ReportContributions? contributions;
 
   factory EventReport.fromJson(Map<String, dynamic> json) {
+    final totals = ReportTotals.fromJson(
+      json['totals'] as Map<String, dynamic>,
+    );
     return EventReport(
       generatedAt: DateTime.parse(json['generatedAt'] as String),
       event: ReportEvent.fromJson(json['event'] as Map<String, dynamic>),
-      totals: ReportTotals.fromJson(json['totals'] as Map<String, dynamic>),
+      totals: totals,
+      people: json['people'] is Map<String, dynamic>
+          ? ReportPeople.fromJson(json['people'] as Map<String, dynamic>)
+          : ReportPeople.fromCards(totals),
       categories: (json['categories'] as List<dynamic>)
           .map((e) => ReportCategoryRow.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -106,25 +118,80 @@ class ReportTotals {
   }
 }
 
+/// Attendance in people. `entered` is capped at each card's places, with
+/// anyone beyond them in `over`, so entered + notEntered = expected.
+class ReportPeople {
+  const ReportPeople({
+    required this.expected,
+    required this.entered,
+    required this.notEntered,
+    required this.over,
+    required this.rate,
+    required this.cardsPartial,
+    required this.cardsNotArrived,
+  });
+
+  final int expected;
+  final int entered;
+  final int notEntered;
+  final int over;
+  final double rate;
+  final int cardsPartial;
+  final int cardsNotArrived;
+
+  factory ReportPeople.fromJson(Map<String, dynamic> json) => ReportPeople(
+    expected: json['expected'] as int,
+    entered: json['entered'] as int,
+    notEntered: json['notEntered'] as int,
+    over: json['over'] as int? ?? 0,
+    rate: (json['rate'] as num).toDouble(),
+    cardsPartial: json['cardsPartial'] as int? ?? 0,
+    cardsNotArrived: json['cardsNotArrived'] as int? ?? 0,
+  );
+
+  /// A server from before card places: every card is one person.
+  factory ReportPeople.fromCards(ReportTotals totals) => ReportPeople(
+    expected: totals.registered,
+    entered: totals.checkedIn,
+    notEntered: totals.notCheckedIn,
+    over: 0,
+    rate: totals.checkInRate,
+    cardsPartial: 0,
+    cardsNotArrived: totals.notCheckedIn,
+  );
+}
+
 class ReportCategoryRow {
   const ReportCategoryRow({
     required this.id,
     required this.name,
     required this.attendees,
     required this.checkedIn,
+    required this.peopleExpected,
+    required this.peopleEntered,
   });
 
   final String? id;
   final String name;
+
+  /// Cards, and cards with someone in.
   final int attendees;
   final int checkedIn;
 
+  /// People the cards admit, and people in.
+  final int peopleExpected;
+  final int peopleEntered;
+
   factory ReportCategoryRow.fromJson(Map<String, dynamic> json) {
+    final attendees = json['attendees'] as int;
+    final checkedIn = json['checkedIn'] as int;
     return ReportCategoryRow(
       id: json['id'] as String?,
       name: json['name'] as String,
-      attendees: json['attendees'] as int,
-      checkedIn: json['checkedIn'] as int,
+      attendees: attendees,
+      checkedIn: checkedIn,
+      peopleExpected: json['peopleExpected'] as int? ?? attendees,
+      peopleEntered: json['peopleEntered'] as int? ?? checkedIn,
     );
   }
 }
@@ -264,12 +331,16 @@ class ReportMessaging {
     required this.channels,
     required this.byType,
     required this.attendeesReached,
+    required this.peopleReached,
     required this.messages,
   });
 
   final List<ReportChannelStats> channels;
   final List<ReportMessageTypeStats> byType;
   final int attendeesReached;
+
+  /// Main guests plus companions delivered to.
+  final int peopleReached;
   final List<ReportMessageDetail> messages;
 
   factory ReportMessaging.fromJson(Map<String, dynamic> json) {
@@ -283,6 +354,8 @@ class ReportMessaging {
           )
           .toList(),
       attendeesReached: json['attendeesReached'] as int,
+      peopleReached:
+          json['peopleReached'] as int? ?? json['attendeesReached'] as int,
       messages: (json['messages'] as List<dynamic>? ?? [])
           .map((e) => ReportMessageDetail.fromJson(e as Map<String, dynamic>))
           .toList(),

@@ -346,22 +346,23 @@ class _AttendanceTab extends StatelessWidget {
         _ReportSectionTitle('Overview'),
         SummaryStatRow(
           items: [
+            // In people, not cards: a Couple card counts 2.
             SummaryStatItem(
               icon: Icons.people_outline,
-              label: 'Registered',
-              value: '${report.totals.registered}',
+              label: 'Expected',
+              value: '${report.people.expected}',
               accent: AppColors.primary,
             ),
             SummaryStatItem(
               icon: Icons.login_rounded,
-              label: 'Checked in',
-              value: '${report.totals.checkedIn}',
+              label: 'Entered',
+              value: '${report.people.entered}',
               accent: AppColors.success,
             ),
             SummaryStatItem(
               icon: Icons.percent_rounded,
-              label: 'Check-in rate',
-              value: '${report.totals.checkInRate.round()}%',
+              label: 'Rate',
+              value: '${report.people.rate.round()}%',
               accent: AppColors.accent,
             ),
           ],
@@ -371,8 +372,8 @@ class _AttendanceTab extends StatelessWidget {
           items: [
             SummaryStatItem(
               icon: Icons.person_off_outlined,
-              label: 'Not checked in',
-              value: '${report.totals.notCheckedIn}',
+              label: 'Not yet in',
+              value: '${report.people.notEntered}',
               accent: AppColors.warning,
             ),
             SummaryStatItem(
@@ -469,7 +470,8 @@ class _CategoryTable extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${categories[i].checkedIn}/${categories[i].attendees}',
+                  '${categories[i].peopleEntered}/${categories[i].peopleExpected}',
+
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -574,7 +576,7 @@ class _MessagingSection extends StatelessWidget {
                 const SizedBox(height: 10),
               ],
               Text(
-                '${messaging.attendeesReached} guests reached',
+                '${messaging.peopleReached} people reached',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,

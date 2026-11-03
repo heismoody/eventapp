@@ -86,7 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.invalidate(teamMembersProvider);
     final eventId = ref.read(activeEventIdProvider);
     if (eventId != null) {
-      ref.invalidate(checkinCountProvider(eventId));
+      ref.invalidate(waitingPeopleProvider(eventId));
       ref.invalidate(recentCheckinsProvider(eventId));
       ref.invalidate(attendeesProvider(eventId));
       ref.invalidate(contributionCategoriesProvider(eventId));
@@ -121,11 +121,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final time = DateTime.tryParse(item['checked_in_at'] as String? ?? '');
         if (time == null) continue;
         final synced = (item['synced'] as int?) == 1;
+        final people = item['count'] as int? ?? 1;
+        final label = people > 1 ? 'Checked in · $people people' : 'Checked in';
         entries.add(
           _ActivityEntry(
             time: time,
             title: item['name'] as String? ?? 'Guest',
-            subtitle: synced ? 'Checked in' : 'Checked in · queued',
+            subtitle: synced ? label : '$label · queued',
             icon: Icons.login_rounded,
             iconColor: AppColors.primary,
           ),
@@ -199,18 +201,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       data: (v) => v,
       orElse: () => <AttendeeRecord>[],
     );
-    final localCheckinCount = eventId != null
+    // This phone's admits the server hasn't counted yet.
+    final waitingPeople = eventId != null
         ? ref
-              .watch(checkinCountProvider(eventId))
+              .watch(waitingPeopleProvider(eventId))
               .maybeWhen(data: (v) => v, orElse: () => 0)
         : 0;
 
     final totalGuests = attendees.length;
-    final checkedInCount = attendees.isNotEmpty
-        ? attendees.where((a) => a.checkedIn).length
-        : localCheckinCount;
-    final checkInRate = totalGuests > 0
-        ? ((checkedInCount / totalGuests) * 100).round()
+    // Counted in people, not cards: a Couple card admits 2.
+    final expectedPeople = attendees.fold<int>(0, (sum, a) => sum + a.admits);
+    final checkedInCount =
+        attendees.fold<int>(0, (sum, a) => sum + a.enteredCount) +
+        waitingPeople;
+    final checkInRate = expectedPeople > 0
+        ? ((checkedInCount / expectedPeople) * 100).round().clamp(0, 100)
         : 0;
 
     final events = ref
@@ -328,7 +333,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               eventName: activeEvent.name,
                               eventDate: activeEvent.date,
                               venue: activeEvent.venue,
-                              totalGuests: totalGuests,
+                              totalGuests: expectedPeople,
                               checkedIn: checkedInCount,
                               checkInRate: checkInRate,
                               isLoading: guestsLoading,
@@ -770,13 +775,13 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                       children: [
                         _SnapshotStat(
                           value: _twoDigits(totalGuests),
-                          label: 'Guests',
+                          label: 'People',
                           isLoading: isLoading,
                         ),
                         const _StatDivider(),
                         _SnapshotStat(
                           value: _twoDigits(checkedIn),
-                          label: 'Checked in',
+                          label: 'Entered',
                           isLoading: isLoading,
                         ),
                         const _StatDivider(),

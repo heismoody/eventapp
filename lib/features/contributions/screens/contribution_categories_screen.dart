@@ -110,12 +110,27 @@ class _ContributionCategoriesScreenState
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          category.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.onSurface,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              category.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              category.defaultAdmits == 1
+                                  ? '1 person per card'
+                                  : '${category.defaultAdmits} people per card',
+                              style: const TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       IconButton(

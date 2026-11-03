@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/screens/dashboard_screen.dart';
 import '../scanner/screens/scanner_screen.dart';
+import '../scanner/services/sync_service.dart';
 import '../attendees/screens/attendees_screen.dart';
 import '../contributions/screens/contributions_screen.dart';
 import '../settings/screens/settings_screen.dart';
@@ -95,6 +96,8 @@ class MainShell extends ConsumerWidget {
         if (release != null) showUpdateDialog(context, release);
       });
     });
+
+    ref.watch(syncCoordinatorProvider);
 
     final location = GoRouterState.of(context).uri.toString();
     final user = ref.watch(currentUserProvider);

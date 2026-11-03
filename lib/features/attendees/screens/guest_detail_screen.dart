@@ -111,63 +111,27 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
   }
 
   Future<void> _manualCheckIn() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Check in without QR?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _attendee.name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _attendee.phone,
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _attendee.categoryName ?? 'No category',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Confirm this is the person at the door. This will be recorded '
-              'as a manual check-in.',
-              style: TextStyle(color: AppColors.muted, height: 1.4),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Check in'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
     setState(() => _busy = true);
     try {
-      final result = await ref.read(scannerProvider).manualCheckIn(_attendee);
-      ref.invalidate(pendingSyncCountProvider);
-      ref.invalidate(checkinCountProvider(widget.eventId));
-      ref.invalidate(recentCheckinsProvider(widget.eventId));
-      ref.invalidate(attendeesProvider(widget.eventId));
+      final scanner = ref.read(scannerProvider);
+      final result = await scanner.manualLookup(_attendee);
       if (!mounted) return;
-      await showGuestResultSheet(context, result: result);
+      await showGuestResultSheet(
+        context,
+        result: result,
+        onAdmit: (card, count) async {
+          final admitted = await scanner.admit(
+            card,
+            count: count,
+            method: 'manual',
+          );
+          ref.invalidate(pendingSyncCountProvider);
+          ref.invalidate(waitingPeopleProvider(widget.eventId));
+          ref.invalidate(recentCheckinsProvider(widget.eventId));
+          return admitted;
+        },
+      );
+      if (mounted) await _refresh();
     } catch (_) {
       if (mounted) AppToast.error('Check-in failed. Try again.');
     } finally {
@@ -215,7 +179,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
             onBack: () => context.pop(),
           ),
           if (ref.watch(currentUserProvider)?.canCheckIn == true &&
-              !_attendee.checkedIn)
+              _attendee.placesLeft > 0)
             Container(
               width: double.infinity,
               color: Colors.white,
@@ -223,7 +187,12 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
               child: FilledButton.icon(
                 onPressed: _busy ? null : _manualCheckIn,
                 icon: const Icon(Icons.how_to_reg_outlined),
-                label: const Text('Check in guest'),
+                label: Text(
+                  _attendee.enteredCount == 0
+                      ? 'Check in guest'
+                      : 'Check in · ${_attendee.enteredCount} of '
+                            '${_attendee.admits} entered',
+                ),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                   backgroundColor: AppColors.success,

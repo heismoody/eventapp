@@ -3,17 +3,22 @@ class ContributionCategory {
     required this.id,
     required this.eventId,
     required this.name,
+    this.defaultAdmits = 1,
   });
 
   final String id;
   final String eventId;
   final String name;
 
+  /// People a card of this type admits unless set otherwise on the card.
+  final int defaultAdmits;
+
   factory ContributionCategory.fromJson(Map<String, dynamic> json) {
     return ContributionCategory(
       id: json['id'] as String,
       eventId: json['eventId'] as String,
       name: json['name'] as String,
+      defaultAdmits: json['defaultAdmits'] as int? ?? 1,
     );
   }
 }

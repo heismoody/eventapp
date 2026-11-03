@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/services/connectivity_service.dart';
 import '../../../shared/widgets/guest_result_sheet.dart';
+import '../../attendees/services/attendee_service.dart';
 import '../../events/providers/event_provider.dart';
 import '../providers/scanner_provider.dart';
 
@@ -25,6 +28,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   bool _isOnline = true;
   bool _torchOn = false;
 
+  Timer? _guestListRefresh;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +37,28 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     ref.read(connectivityServiceProvider).onStatusChanged.listen((online) {
       if (mounted) setState(() => _isOnline = online);
     });
+    // Another gate's entries reach this phone through the guest list, so
+    // keep it fresh while scanning.
+    _guestListRefresh = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _refreshGuestList(),
+    );
+    _refreshGuestList();
+  }
+
+  Future<void> _refreshGuestList() async {
+    final eventId = ref.read(activeEventIdProvider);
+    if (eventId == null || !_isOnline) return;
+    try {
+      await ref.read(attendeeServiceProvider).fetchAttendees(eventId);
+    } catch (_) {}
+  }
+
+  void _invalidateCheckInViews(String eventId) {
+    ref.invalidate(pendingSyncCountProvider);
+    ref.invalidate(waitingPeopleProvider(eventId));
+    ref.invalidate(recentCheckinsProvider(eventId));
+    ref.invalidate(attendeesProvider(eventId));
   }
 
   Future<void> _checkConnectivity() async {
@@ -54,17 +81,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     setState(() => _processing = true);
     HapticFeedback.mediumImpact();
 
-    final result = await ref.read(scannerProvider).processScan(value);
-
-    ref.invalidate(pendingSyncCountProvider);
-    final eventId = ref.read(activeEventIdProvider);
-    if (eventId != null) {
-      ref.invalidate(checkinCountProvider(eventId));
-      ref.invalidate(recentCheckinsProvider(eventId));
-    }
+    final scanner = ref.read(scannerProvider);
+    final result = await scanner.processScan(value);
 
     if (mounted) {
-      await showGuestResultSheet(context, result: result);
+      await showGuestResultSheet(
+        context,
+        result: result,
+        onAdmit: (card, count) async {
+          final admitted = await scanner.admit(
+            card,
+            count: count,
+            method: 'scan',
+          );
+          _invalidateCheckInViews(card.eventId);
+          return admitted;
+        },
+      );
     }
 
     await Future<void>.delayed(const Duration(seconds: 2));
@@ -80,6 +113,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
   @override
   void dispose() {
+    _guestListRefresh?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -208,7 +242,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         Expanded(
                           child: Text(
                             _processing
-                                ? 'Processing guest check-in...'
+                                ? 'Checking card...'
                                 : 'Align the QR code inside the frame',
                             style: const TextStyle(
                               color: AppColors.onSurface,
