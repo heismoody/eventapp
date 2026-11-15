@@ -58,3 +58,24 @@ final authInitializedProvider = FutureProvider<bool>((ref) async {
 bool isAuthenticated(String? token) {
   return token != null && token.isNotEmpty && !JwtUtils.isExpired(token);
 }
+
+/// Makes a fresh sign-in live: the router and every screen see the new
+/// token and user. Call after [AuthService.login] or a password reset.
+Future<void> publishSession(WidgetRef ref, UserModel user) async {
+  final token = await ref.read(authServiceProvider).getToken();
+  ref.read(authTokenProvider.notifier).state = token;
+  ref.read(currentUserProvider.notifier).state = user;
+  ref.invalidate(authInitializedProvider);
+}
+
+/// Where a just-signed-in person lands: their own event's dashboard, or
+/// the event list for staff who work across events.
+Future<String> homeRouteAfterSignIn(WidgetRef ref, UserModel user) async {
+  if (user.isEventScoped) {
+    await ref
+        .read(eventSelectionControllerProvider)
+        .initializeOwnedEvent(user.ownedEventId!);
+    return '/shell/dashboard';
+  }
+  return '/events';
+}

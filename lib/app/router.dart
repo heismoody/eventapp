@@ -1,8 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/providers/auth_provider.dart';
+import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
+import '../features/event_request/screens/request_event_screen.dart';
+import '../features/event_request/screens/request_sent_screen.dart';
 import '../features/events/screens/event_picker_screen.dart';
 import '../features/contributions/screens/contribution_categories_screen.dart';
 import '../features/attendees/screens/guest_detail_screen.dart';
@@ -12,19 +16,32 @@ import '../features/shell/main_shell.dart';
 import '../features/settings/screens/edit_profile_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  ref.watch(authTokenProvider);
-  ref.watch(authInitializedProvider);
-  ref.watch(currentUserProvider);
+  // One router for the app's whole life. A sign-in or sign-out re-runs the
+  // redirect through refreshListenable. Watching these providers instead
+  // rebuilt the router mid-navigation, which tripped Riverpod's "provider
+  // changed before it rebuilt" assertion right after signing in.
+  final authChanged = ValueNotifier<int>(0);
+  void bump() => authChanged.value++;
+  ref.listen(authTokenProvider, (_, _) => bump());
+  ref.listen(authInitializedProvider, (_, _) => bump());
+  ref.listen(currentUserProvider, (_, _) => bump());
+  ref.onDispose(authChanged.dispose);
 
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: authChanged,
     redirect: (context, state) {
       final isLoggingIn = state.matchedLocation == '/login';
+      // Open to anyone: asking Cardly for an event needs no account.
+      final isPlanningEvent = state.matchedLocation.startsWith('/plan-event');
+      final isResetting = state.matchedLocation == '/forgot-password';
       final token = ref.read(authTokenProvider);
       final authenticated = isAuthenticated(token);
       final user = ref.read(currentUserProvider);
 
-      if (!authenticated && !isLoggingIn) return '/login';
+      if (!authenticated && !isLoggingIn && !isPlanningEvent && !isResetting) {
+        return '/login';
+      }
 
       if (authenticated && isLoggingIn) {
         return user?.isEventScoped == true ? '/shell/dashboard' : '/events';
@@ -45,6 +62,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           final skipSplash = state.uri.queryParameters['skip'] == '1';
           return WelcomeScreen(skipSplash: skipSplash);
         },
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) =>
+            ForgotPasswordScreen(initialIdentifier: state.extra as String?),
+      ),
+      GoRoute(
+        path: '/plan-event',
+        builder: (context, state) => const RequestEventScreen(),
+      ),
+      GoRoute(
+        path: '/plan-event/sent',
+        builder: (context, state) =>
+            RequestSentScreen(details: state.extra as RequestSentDetails?),
       ),
       GoRoute(
         path: '/events',

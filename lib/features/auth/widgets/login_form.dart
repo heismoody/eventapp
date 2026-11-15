@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/config/app_environment.dart';
@@ -48,7 +49,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.isEmpty) {
-      AppToast.warning('Enter your email and password.');
+      AppToast.warning('Enter your email or phone number, and your password.');
       return;
     }
 
@@ -67,10 +68,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           .read(authServiceProvider)
           .login(_emailController.text.trim(), _passwordController.text);
 
-      final token = await ref.read(authServiceProvider).getToken();
-      ref.read(authTokenProvider.notifier).state = token;
-      ref.read(currentUserProvider.notifier).state = user;
-      ref.invalidate(authInitializedProvider);
+      await publishSession(ref, user);
 
       widget.onSuccess();
     } catch (error) {
@@ -105,8 +103,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         return "The server's security certificate isn't valid.$checkUrl";
       case DioExceptionType.badResponse:
         return switch (error.response?.statusCode) {
-          400 => 'Enter your email and password.',
-          401 => 'Wrong email or password, or the account is disabled.',
+          400 => 'Enter your email or phone number, and your password.',
+          401 =>
+            "That password doesn't match this email or phone number. "
+                'Try again, or tap Forgot password.',
           403 => "This account isn't allowed to use the Cardly app.",
           404 => "Login service not found on this server.$checkUrl",
           final code? when code >= 500 =>
@@ -136,7 +136,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Sign in to manage your event',
+          'Use the email or phone number Cardly set up for you.',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -145,10 +145,16 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         TextField(
           controller: _emailController,
           decoration: const InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.mail_outline),
+            labelText: 'Email or phone number',
+            hintText: 'you@example.com or 0712 345 678',
+            prefixIcon: Icon(Icons.person_outline),
           ),
           keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          autofillHints: const [
+            AutofillHints.email,
+            AutofillHints.telephoneNumber,
+          ],
           textInputAction: TextInputAction.next,
         ),
         SizedBox(height: fieldSpacing),
@@ -172,31 +178,44 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _loading ? null : _login(),
         ),
-        // Production builds are locked to the production server, so there's
-        // nothing to configure — the override only exists in dev builds.
-        if (AppEnvironment.allowsServerOverride) ...[
-          if (_showServerField) ...[
-            SizedBox(height: fieldSpacing),
-            TextField(
-              controller: _serverController,
-              decoration: const InputDecoration(
-                labelText: 'Server URL',
-                prefixIcon: Icon(Icons.dns_outlined),
+        // "Advanced" (dev builds only) on the left, "Forgot password?" on
+        // the right. Production builds are locked to the production server,
+        // so there's nothing to configure there.
+        Row(
+          children: [
+            if (AppEnvironment.allowsServerOverride)
+              TextButton(
+                onPressed: () =>
+                    setState(() => _showServerField = !_showServerField),
+                child: Text(_showServerField ? 'Hide server URL' : 'Advanced'),
               ),
-              keyboardType: TextInputType.url,
+            const Spacer(),
+            TextButton(
+              onPressed: _loading
+                  ? null
+                  : () => context.push(
+                      '/forgot-password',
+                      extra: _emailController.text.trim(),
+                    ),
+              child: const Text(
+                'Forgot password?',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
           ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () =>
-                  setState(() => _showServerField = !_showServerField),
-              child: Text(_showServerField ? 'Hide server URL' : 'Advanced'),
+        ),
+        if (AppEnvironment.allowsServerOverride && _showServerField) ...[
+          TextField(
+            controller: _serverController,
+            decoration: const InputDecoration(
+              labelText: 'Server URL',
+              prefixIcon: Icon(Icons.dns_outlined),
             ),
+            keyboardType: TextInputType.url,
           ),
-        ] else
           SizedBox(height: fieldSpacing),
-        SizedBox(height: widget.compact ? 16 : 20),
+        ],
+        SizedBox(height: widget.compact ? 8 : 12),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
