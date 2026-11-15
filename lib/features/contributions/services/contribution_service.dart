@@ -31,11 +31,12 @@ class ContributionService {
   Future<ContributionCategory> createCategory({
     required String eventId,
     required String name,
+    int defaultAdmits = 1,
   }) async {
     final dio = _ref.read(apiClientProvider);
     final response = await dio.post(
       ApiConfig.contributionCategoriesPath,
-      data: {'eventId': eventId, 'name': name},
+      data: {'eventId': eventId, 'name': name, 'defaultAdmits': defaultAdmits},
     );
     final data = response.data as Map<String, dynamic>;
     return ContributionCategory.fromJson(
@@ -43,18 +44,29 @@ class ContributionService {
     );
   }
 
-  Future<ContributionCategory> updateCategory({
+  /// [applyToCards] also moves this type's cards still on the old default
+  /// to the new one; cardsUpdated says how many moved.
+  Future<({ContributionCategory category, int cardsUpdated})> updateCategory({
     required String categoryId,
     required String name,
+    int? defaultAdmits,
+    bool applyToCards = false,
   }) async {
     final dio = _ref.read(apiClientProvider);
     final response = await dio.patch(
       ApiConfig.contributionCategoryPath(categoryId),
-      data: {'name': name},
+      data: {
+        'name': name,
+        'defaultAdmits': ?defaultAdmits,
+        if (applyToCards) 'applyToCards': true,
+      },
     );
     final data = response.data as Map<String, dynamic>;
-    return ContributionCategory.fromJson(
-      data['category'] as Map<String, dynamic>,
+    return (
+      category: ContributionCategory.fromJson(
+        data['category'] as Map<String, dynamic>,
+      ),
+      cardsUpdated: data['cardsUpdated'] as int? ?? 0,
     );
   }
 

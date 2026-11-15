@@ -94,8 +94,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _forceSync() async {
     final synced = await ref.read(syncServiceProvider).drainQueue();
     ref.invalidate(pendingSyncCountProvider);
-    if (mounted) {
-      AppToast.success('Synced $synced check-ins');
+    final stillWaiting = await ref.read(pendingSyncCountProvider.future);
+    if (!mounted) return;
+    if (stillWaiting > 0) {
+      AppToast.error(
+        'Synced $synced · $stillWaiting still waiting — check the network',
+      );
+    } else {
+      AppToast.success(
+        synced == 0 ? 'Everything is synced' : 'Synced $synced check-ins',
+      );
     }
   }
 

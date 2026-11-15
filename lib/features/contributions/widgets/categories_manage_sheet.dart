@@ -172,6 +172,12 @@ class _CategoriesManageSheet extends ConsumerWidget {
                           color: AppColors.onSurface,
                         ),
                       ),
+                      subtitle: Text(
+                        category.defaultAdmits == 1
+                            ? '1 person per card'
+                            : '${category.defaultAdmits} people per card',
+                        style: const TextStyle(color: AppColors.muted),
+                      ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

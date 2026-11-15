@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
-import '../../../local_db/checkin_history_dao.dart';
+import '../../../local_db/entries_dao.dart';
 import '../../../shared/services/connectivity_service.dart';
 import '../../../shared/widgets/speed_dial_fab.dart';
 import '../../contributions/widgets/categories_manage_sheet.dart';
@@ -176,6 +176,7 @@ class _GuestFilterBar extends StatelessWidget {
     const options = [
       ('all', 'All'),
       ('checked', 'Checked in'),
+      ('partial', 'Partly in'),
       ('pending', 'Pending'),
     ];
 
@@ -300,6 +301,10 @@ class _OnlineAttendeesList extends ConsumerWidget {
         if (filter == 'checked') {
           filtered = filtered.where((a) => a.checkedIn).toList();
         }
+        if (filter == 'partial') {
+          // Cards still waiting for someone, e.g. a partner coming later.
+          filtered = filtered.where((a) => a.isPartlyEntered).toList();
+        }
         if (filter == 'pending') {
           filtered = filtered.where((a) => !a.checkedIn).toList();
         }
@@ -347,7 +352,7 @@ class _OfflineHistoryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: CheckinHistoryDao().getAll(eventId: eventId),
+      future: EntriesDao().recent(eventId: eventId),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -423,7 +428,11 @@ class _GuestsListSection extends StatelessWidget {
                 initials: _initials(attendee.name),
                 name: attendee.name,
                 subtitle: attendee.phone,
-                trailing: attendee.checkedIn ? 'Checked in' : 'Pending',
+                trailing: attendee.admits > 1
+                    ? '${attendee.enteredCount}/${attendee.admits} in'
+                    : attendee.checkedIn
+                    ? 'Checked in'
+                    : 'Pending',
                 checkedIn: attendee.checkedIn,
                 paymentStatus: attendee.paymentStatus,
               ),

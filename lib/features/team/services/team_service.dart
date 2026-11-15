@@ -8,8 +8,11 @@ class TeamService {
 
   final Dio _dio;
 
-  Future<List<TeamMemberModel>> fetchMembers() async {
-    final response = await _dio.get(ApiConfig.membersPath);
+  Future<List<TeamMemberModel>> fetchMembers({String? eventId}) async {
+    final response = await _dio.get(
+      ApiConfig.membersPath,
+      queryParameters: {'eventId': ?eventId},
+    );
     final data = response.data as Map<String, dynamic>;
     final members = data['members'] as List<dynamic>;
 
@@ -22,6 +25,7 @@ class TeamService {
     required String name,
     required String email,
     required String password,
+    String? eventId,
   }) async {
     final response = await _dio.post(
       ApiConfig.membersPath,
@@ -29,6 +33,7 @@ class TeamService {
         'name': name,
         'email': email,
         'password': password,
+        'eventId': ?eventId,
       },
     );
 

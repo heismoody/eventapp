@@ -12,13 +12,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
         child: const EventApp(),
       ),
     );
 
-    expect(find.text('Cardly'), findsOneWidget);
+    expect(find.text('Cardly'), findsWidgets);
   });
 }

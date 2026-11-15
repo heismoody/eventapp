@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/api_error.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../shared/widgets/guest_category_field.dart';
+import '../../../shared/widgets/people_field.dart';
 import '../../../shared/widgets/tanzania_phone_field.dart';
+import '../../contributions/models/contribution_models.dart';
 import '../../contributions/services/contribution_service.dart';
 import '../../contributions/widgets/contribution_category_sheet.dart';
 import '../services/attendee_service.dart';
@@ -39,6 +42,7 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _peopleController = TextEditingController();
   String? _selectedCategoryId;
   bool _busy = false;
 
@@ -46,6 +50,7 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _peopleController.dispose();
     super.dispose();
   }
 
@@ -59,6 +64,13 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
     }
   }
 
+  int _typeDefault(List<ContributionCategory>? categories) =>
+      categories
+          ?.where((c) => c.id == _selectedCategoryId)
+          .firstOrNull
+          ?.defaultAdmits ??
+      1;
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -71,6 +83,7 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
             name: _nameController.text.trim(),
             phone: TanzaniaPhoneField.normalize(_phoneController.text),
             categoryId: _selectedCategoryId,
+            admits: int.tryParse(_peopleController.text.trim()),
           );
       if (mounted) {
         Navigator.pop(context, true);
@@ -79,9 +92,7 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
     } catch (e) {
       if (mounted) {
         AppToast.error(
-          e is StateError
-              ? e.message
-              : 'Failed to add guest. Please try again.',
+          apiErrorMessage(e, 'Failed to add guest. Please try again.'),
         );
       }
     } finally {
@@ -170,6 +181,16 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
                   onChanged: (value) =>
                       setState(() => _selectedCategoryId = value),
                 ),
+              ),
+              const SizedBox(height: 12),
+              PeopleField(
+                controller: _peopleController,
+                enabled: !_busy,
+                label: 'People on this card',
+                hint: '${_typeDefault(categoriesAsync.valueOrNull)}',
+                helperText:
+                    'Leave empty for the category\'s '
+                    '${_typeDefault(categoriesAsync.valueOrNull)}',
               ),
               const SizedBox(height: 20),
               if (_busy)

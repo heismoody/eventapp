@@ -22,20 +22,23 @@ class QrDecryptor {
 
       final iv = combined.sublist(0, ivLength);
       final tag = combined.sublist(combined.length - tagLength);
-      final ciphertext = combined.sublist(ivLength, combined.length - tagLength);
+      final ciphertext = combined.sublist(
+        ivLength,
+        combined.length - tagLength,
+      );
 
       final keyBytes = _hexToBytes(keyHex);
       final algorithm = AesGcm.with256bits();
       final secretKey = SecretKey(keyBytes);
 
-      final secretBox = SecretBox(
-        ciphertext,
-        nonce: iv,
-        mac: Mac(tag),
-      );
+      final secretBox = SecretBox(ciphertext, nonce: iv, mac: Mac(tag));
 
-      final decrypted = await algorithm.decrypt(secretBox, secretKey: secretKey);
-      final jsonMap = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
+      final decrypted = await algorithm.decrypt(
+        secretBox,
+        secretKey: secretKey,
+      );
+      final jsonMap =
+          jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
 
       return ScannedGuest(
         qrToken: jsonMap['t'] as String,

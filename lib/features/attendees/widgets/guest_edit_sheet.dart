@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/api_error.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../shared/widgets/guest_category_field.dart';
+import '../../../shared/widgets/people_field.dart';
 import '../../../shared/widgets/tanzania_phone_field.dart';
 import '../../contributions/models/contribution_models.dart';
 import '../../contributions/services/contribution_service.dart';
@@ -42,6 +44,9 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
   late final TextEditingController _phoneController;
   late final TextEditingController _amountController;
   late final TextEditingController _pledgeController;
+  late final TextEditingController _peopleController;
+  late final List<_CompanionRow> _companions;
+  bool _companionsChanged = false;
   String? _selectedCategoryId;
   bool _busy = false;
 
@@ -62,6 +67,13 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
           ? widget.attendee.targetAmountValue.toStringAsFixed(0)
           : '',
     );
+    _peopleController = TextEditingController(
+      text: '${widget.attendee.admits}',
+    );
+    _companions = [
+      for (final companion in widget.attendee.companions)
+        _CompanionRow.from(companion),
+    ];
     _selectedCategoryId = widget.attendee.categoryId;
   }
 
@@ -71,6 +83,10 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     _phoneController.dispose();
     _amountController.dispose();
     _pledgeController.dispose();
+    _peopleController.dispose();
+    for (final row in _companions) {
+      row.dispose();
+    }
     super.dispose();
   }
 
@@ -99,6 +115,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     setState(() => _busy = true);
     try {
       final amountText = _amountController.text.trim();
+      final people = int.tryParse(_peopleController.text.trim());
       await ref
           .read(attendeeServiceProvider)
           .updateAttendee(
@@ -108,19 +125,162 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
             categoryId: _selectedCategoryId,
             contributionAmount: amountText.isEmpty ? '0' : amountText,
             pledgeAmount: _pledgeController.text.trim(),
+            admits: people != widget.attendee.admits ? people : null,
           );
+      if (_companionsChanged) await _saveCompanions();
       ref.invalidate(attendeesProvider(eventId));
       if (mounted) {
         Navigator.pop(context);
         AppToast.success('Guest updated');
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        AppToast.error('Failed to update guest');
+        AppToast.error(apiErrorMessage(error, 'Failed to update guest'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _saveCompanions() async {
+    final service = ref.read(attendeeServiceProvider);
+    final conflicts = await service.saveCompanions(
+      attendeeId: widget.attendee.id,
+      companions: [
+        for (final row in _companions)
+          Companion(
+            id: row.id,
+            name: row.name.text.trim(),
+            // Sent as typed (0712…, +255…, 255…); the server normalises it.
+            phone: row.phone.text.trim().isEmpty ? null : row.phone.text.trim(),
+          ),
+      ],
+    );
+
+    // The same person imported twice gets two invitations — offer to fold
+    // their separate guest into this card.
+    for (final conflict in conflicts) {
+      if (!mounted) return;
+      if (!conflict.isGuest) {
+        AppToast.info(
+          '${conflict.phone} is also on ${conflict.attendeeName}\'s card',
+        );
+        continue;
+      }
+      if (!conflict.canMerge) {
+        AppToast.info(
+          '${conflict.phone} is also the guest ${conflict.attendeeName}, '
+          'who has entries or payments — not merged',
+        );
+        continue;
+      }
+      final merge = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Merge ${conflict.attendeeName}?'),
+          content: Text(
+            '${conflict.phone} is already ${conflict.attendeeName}, a guest '
+            'with their own card, so they would get two invitations. Merge '
+            'them into this card as a companion?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Keep both'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Merge'),
+            ),
+          ],
+        ),
+      );
+      if (merge == true) {
+        await service.mergeGuestIntoCard(
+          cardId: widget.attendee.id,
+          guestId: conflict.attendeeId,
+        );
+      }
+    }
+  }
+
+  Widget _buildCompanions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Companions',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Others sharing this card. Anyone with a phone gets the same '
+          'invitation.',
+          style: TextStyle(color: AppColors.muted, fontSize: 12),
+        ),
+        for (final row in _companions)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: row.name,
+                    enabled: !_busy,
+                    onChanged: (_) => _companionsChanged = true,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: row.phone,
+                    enabled: !_busy,
+                    onChanged: (_) => _companionsChanged = true,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Phone',
+                      hintText: 'Optional',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Remove companion',
+                  onPressed: _busy
+                      ? null
+                      : () => setState(() {
+                          _companions.remove(row);
+                          row.dispose();
+                          _companionsChanged = true;
+                        }),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+        TextButton.icon(
+          onPressed: _busy
+              ? null
+              : () => setState(() {
+                  _companions.add(_CompanionRow.empty());
+                  _companionsChanged = true;
+                }),
+          icon: const Icon(Icons.person_add_alt_1_outlined),
+          label: const Text('Add companion'),
+        ),
+      ],
+    );
   }
 
   Widget _buildCategoryField(
@@ -198,6 +358,18 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                     _buildCategoryField(eventId ?? '', categories),
               ),
               const SizedBox(height: 12),
+              PeopleField(
+                controller: _peopleController,
+                enabled: !_busy,
+                label: 'People on this card',
+                minimum: widget.attendee.enteredCount,
+                helperText: widget.attendee.enteredCount > 0
+                    ? '${widget.attendee.enteredCount} already entered'
+                    : 'How many people this card lets in',
+              ),
+              const SizedBox(height: 16),
+              _buildCompanions(),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _amountController,
                 enabled: !_busy,
@@ -246,5 +418,27 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
         ),
       ),
     );
+  }
+}
+
+class _CompanionRow {
+  _CompanionRow(this.id, String? name, String? phone)
+    : name = TextEditingController(text: name ?? ''),
+      phone = TextEditingController(
+        text: phone == null ? '' : '0${TanzaniaPhoneField.localPartOf(phone)}',
+      );
+
+  factory _CompanionRow.from(Companion companion) =>
+      _CompanionRow(companion.id, companion.name, companion.phone);
+
+  factory _CompanionRow.empty() => _CompanionRow(null, null, null);
+
+  final String? id;
+  final TextEditingController name;
+  final TextEditingController phone;
+
+  void dispose() {
+    name.dispose();
+    phone.dispose();
   }
 }

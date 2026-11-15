@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/screens/dashboard_screen.dart';
-import '../scanner/screens/scanner_screen.dart';
+import '../scanner/screens/scan_hub_screen.dart';
+import '../scanner/services/sync_service.dart';
 import '../attendees/screens/attendees_screen.dart';
 import '../contributions/screens/contributions_screen.dart';
 import '../settings/screens/settings_screen.dart';
@@ -96,10 +97,12 @@ class MainShell extends ConsumerWidget {
       });
     });
 
+    ref.watch(syncCoordinatorProvider);
+
     final location = GoRouterState.of(context).uri.toString();
     final user = ref.watch(currentUserProvider);
-    final showOwnerTabs = user?.isEventOwner ?? false;
-    final showScanner = user?.roles.contains('scanner') ?? false;
+    final showOwnerTabs = user?.canManageEvent ?? false;
+    final showScanner = user?.canCheckIn ?? false;
     final tabs = _tabs(showOwnerTabs: showOwnerTabs, showScanner: showScanner);
 
     final matched = tabs.indexWhere((tab) => location.startsWith(tab.prefix));
@@ -132,7 +135,7 @@ class DashboardTab extends StatelessWidget {
 class ScannerTab extends StatelessWidget {
   const ScannerTab({super.key});
   @override
-  Widget build(BuildContext context) => const ScannerScreen();
+  Widget build(BuildContext context) => const ScanHubScreen();
 }
 
 class AttendeesTab extends StatelessWidget {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/hero_stats_card.dart';
 import '../../../shared/widgets/category_donut_chart.dart';
 import '../../../shared/widgets/day_bucket_bar_chart.dart';
 import '../../../shared/widgets/speed_dial_fab.dart';
@@ -244,7 +245,7 @@ class _ContributionsStatsCard extends ConsumerWidget {
     final attendeesAsync = ref.watch(attendeesProvider(eventId));
 
     return attendeesAsync.when(
-      loading: () => const _StatsCardShell(child: SizedBox(height: 120)),
+      loading: () => const HeroStatsCard(child: SizedBox(height: 120)),
       error: (_, _) => const SizedBox.shrink(),
       data: (attendees) {
         final tracked = attendees
@@ -271,7 +272,7 @@ class _ContributionsStatsCard extends ConsumerWidget {
             .where((a) => a.paymentStatus == ContributionPaymentStatus.partial)
             .length;
 
-        return _StatsCardShell(
+        return HeroStatsCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -337,21 +338,21 @@ class _ContributionsStatsCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _StatRow(
+              HeroStatRow(
                 labelColor: Colors.white.withValues(alpha: 0.75),
                 dividerColor: Colors.white.withValues(alpha: 0.25),
                 items: [
-                  _StatItem(
+                  HeroStatItem(
                     label: 'Fully paid',
                     value: '$paidCount',
                     color: Colors.white,
                   ),
-                  _StatItem(
+                  HeroStatItem(
                     label: 'Partial',
                     value: '$partialCount',
                     color: Colors.white,
                   ),
-                  _StatItem(
+                  HeroStatItem(
                     label: 'Outstanding',
                     value: formatCompactAmount(outstanding.toDouble()),
                     color: Colors.white,
@@ -362,139 +363,6 @@ class _ContributionsStatsCard extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// Matches the dashboard's countdown card — same gradient, same floating
-/// translucent circles — so the two "hero" cards read as one family.
-class _StatsCardShell extends StatelessWidget {
-  const _StatsCardShell({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.primaryDark],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Positioned(
-              top: -30,
-              right: -20,
-              child: _StatsCardBubble(size: 100, opacity: 0.14),
-            ),
-            const Positioned(
-              bottom: -36,
-              left: -16,
-              child: _StatsCardBubble(size: 90, opacity: 0.1),
-            ),
-            Padding(padding: const EdgeInsets.all(18), child: child),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatsCardBubble extends StatelessWidget {
-  const _StatsCardBubble({required this.size, required this.opacity});
-
-  final double size;
-  final double opacity;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: opacity),
-      ),
-    );
-  }
-}
-
-class _StatItem {
-  const _StatItem({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-}
-
-class _StatRow extends StatelessWidget {
-  const _StatRow({
-    required this.items,
-    this.labelColor = AppColors.muted,
-    this.dividerColor = AppColors.border,
-  });
-
-  final List<_StatItem> items;
-  final Color labelColor;
-  final Color dividerColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            if (i > 0)
-              SizedBox(
-                width: 16,
-                child: Center(
-                  child: FractionallySizedBox(
-                    heightFactor: 0.6,
-                    child: VerticalDivider(
-                      width: 1,
-                      thickness: 1,
-                      color: dividerColor,
-                    ),
-                  ),
-                ),
-              ),
-            Expanded(
-              child: Column(
-                children: [
-                  Text(
-                    items[i].value,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                      color: items[i].color,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    items[i].label,
-                    style: TextStyle(
-                      color: labelColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

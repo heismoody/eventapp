@@ -21,7 +21,9 @@ class EventService {
     final response = await dio.get(ApiConfig.eventsPath);
     final data = response.data as Map<String, dynamic>;
     final events = data['events'] as List<dynamic>;
-    return events.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
+    return events
+        .map((e) => EventModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<String> fetchEventKey(String eventId) async {

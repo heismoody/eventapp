@@ -13,6 +13,10 @@ class ApiConfig {
   static const String attendeesPath = '/api/mobile/attendees';
   static const String attendeesImportPath = '/api/mobile/attendees/import';
   static String attendeePatchPath(String id) => '/api/mobile/attendees/$id';
+  static String attendeeCompanionsPath(String id) =>
+      '/api/mobile/attendees/$id/companions';
+  static String attendeeMergePath(String id) =>
+      '/api/mobile/attendees/$id/merge';
   static const String membersPath = '/api/mobile/members';
   static const String contributionCategoriesPath =
       '/api/mobile/contribution-categories';

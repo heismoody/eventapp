@@ -1,12 +1,57 @@
-import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/api_config.dart';
+import '../../../local_db/cards_dao.dart';
 
 enum ContributionPaymentStatus { unpaid, partial, paid, none }
+
+/// Someone sharing a guest's card. With a phone they can be sent the same
+/// invitation; entry is still counted against the card's places.
+class Companion {
+  const Companion({this.id, this.name, this.phone});
+
+  final String? id;
+  final String? name;
+  final String? phone;
+
+  factory Companion.fromJson(Map<String, dynamic> json) => Companion(
+    id: json['id'] as String?,
+    name: json['name'] as String?,
+    phone: json['phone'] as String?,
+  );
+
+  Map<String, dynamic> toJson() => {'id': ?id, 'name': name, 'phone': phone};
+}
+
+/// A companion's number that someone else in the event already has.
+class PhoneConflict {
+  const PhoneConflict({
+    required this.phone,
+    required this.attendeeId,
+    required this.attendeeName,
+    required this.isGuest,
+    required this.canMerge,
+  });
+
+  final String phone;
+  final String attendeeId;
+  final String attendeeName;
+
+  /// A separate guest (true), or a companion on another card (false).
+  final bool isGuest;
+  final bool canMerge;
+
+  factory PhoneConflict.fromJson(Map<String, dynamic> json) => PhoneConflict(
+    phone: json['phone'] as String,
+    attendeeId: json['attendeeId'] as String,
+    attendeeName: json['attendeeName'] as String,
+    isGuest: json['kind'] == 'guest',
+    canMerge: json['canMerge'] as bool? ?? false,
+  );
+}
 
 class AttendeeRecord {
   const AttendeeRecord({
@@ -16,6 +61,9 @@ class AttendeeRecord {
     required this.qrToken,
     required this.checkedIn,
     this.checkedInAt,
+    this.admits = 1,
+    this.enteredCount = 0,
+    this.companions = const [],
     this.contributionAmount,
     this.categoryId,
     this.categoryName,
@@ -32,6 +80,11 @@ class AttendeeRecord {
   final String qrToken;
   final bool checkedIn;
   final DateTime? checkedInAt;
+
+  /// People this card admits, and people the server has counted in so far.
+  final int admits;
+  final int enteredCount;
+  final List<Companion> companions;
   final String? contributionAmount;
   final String? categoryId;
   final String? categoryName;
@@ -40,6 +93,9 @@ class AttendeeRecord {
   final bool fullyPaid;
   final DateTime? qrActivatedAt;
   final DateTime? createdAt;
+
+  int get placesLeft => math.max(0, admits - enteredCount);
+  bool get isPartlyEntered => enteredCount > 0 && placesLeft > 0;
 
   double get paidAmount => double.tryParse(contributionAmount ?? '') ?? 0;
   double get targetAmountValue => double.tryParse(targetAmount ?? '') ?? 0;
@@ -62,6 +118,15 @@ class AttendeeRecord {
       checkedInAt: json['checkedInAt'] != null
           ? DateTime.parse(json['checkedInAt'] as String)
           : null,
+      // Servers from before card places existed send neither: a card is
+      // then one person, entered once checked in.
+      admits: json['admits'] as int? ?? 1,
+      enteredCount:
+          json['enteredCount'] as int? ?? ((json['checkedIn'] as bool) ? 1 : 0),
+      companions: [
+        for (final item in (json['companions'] as List<dynamic>? ?? const []))
+          Companion.fromJson(item as Map<String, dynamic>),
+      ],
       contributionAmount: json['contributionAmount'] as String?,
       categoryId: json['categoryId'] as String?,
       categoryName: json['categoryName'] as String?,
@@ -98,50 +163,28 @@ class AttendeeService {
     final records = attendees
         .map((e) => AttendeeRecord.fromJson(e as Map<String, dynamic>))
         .toList();
-    await _cacheCategories(eventId, records);
+    await _cacheCards(eventId, records);
     return records;
   }
 
-  static String _categoryCacheKey(String eventId) =>
-      'guest_categories_$eventId';
-
-  Future<void> _cacheCategories(
-    String eventId,
-    List<AttendeeRecord> records,
-  ) async {
+  /// Keeps the phone's copy of the guest list, so a scan can show a card's
+  /// places with no network.
+  Future<void> _cacheCards(String eventId, List<AttendeeRecord> records) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final map = {for (final r in records) r.qrToken: r.categoryName ?? ''};
-      await prefs.setString(_categoryCacheKey(eventId), jsonEncode(map));
+      await CardsDao().replaceForEvent(eventId, [
+        for (final r in records)
+          {
+            'qr_token': r.qrToken,
+            'attendee_id': r.id,
+            'name': r.name,
+            'phone': r.phone,
+            'category': r.categoryName,
+            'admits': r.admits,
+            'server_entered': r.enteredCount,
+            'first_entry_at': r.checkedInAt?.toIso8601String(),
+          },
+      ]);
     } catch (_) {}
-  }
-
-  Future<String?> _cachedCategory(String eventId, String qrToken) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_categoryCacheKey(eventId));
-      if (raw == null) return null;
-      final map = jsonDecode(raw) as Map<String, dynamic>;
-      if (!map.containsKey(qrToken)) return null;
-      final name = map[qrToken] as String?;
-      return (name == null || name.isEmpty) ? '' : name;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Category for the door screen. Reads the on-phone cache first so scanning
-  /// works offline; if the guest isn't cached yet, refreshes the guest list
-  /// (short timeout) and reads the cache again. Returns null when unknown.
-  Future<String?> categoryFor(String eventId, String qrToken) async {
-    var cached = await _cachedCategory(eventId, qrToken);
-    if (cached == null) {
-      try {
-        await fetchAttendees(eventId).timeout(const Duration(seconds: 3));
-        cached = await _cachedCategory(eventId, qrToken);
-      } catch (_) {}
-    }
-    return (cached == null || cached.isEmpty) ? null : cached;
   }
 
   Future<void> updateAttendee({
@@ -151,6 +194,10 @@ class AttendeeService {
     String? categoryId,
     required String contributionAmount,
     required String pledgeAmount,
+
+    /// Sent only when changed by hand; otherwise a type change carries a
+    /// card on its old type's default over to the new type's default.
+    int? admits,
   }) async {
     final dio = _ref.read(apiClientProvider);
     await dio.patch(
@@ -159,9 +206,40 @@ class AttendeeService {
         'name': name,
         'phone': phone,
         'categoryId': categoryId,
+        'admits': ?admits,
         'contributionAmount': contributionAmount,
         'pledgeAmount': pledgeAmount,
       },
+    );
+  }
+
+  /// Replaces the card's companions. Returns numbers someone else in the
+  /// event already has, so the caller can offer to merge them.
+  Future<List<PhoneConflict>> saveCompanions({
+    required String attendeeId,
+    required List<Companion> companions,
+  }) async {
+    final dio = _ref.read(apiClientProvider);
+    final response = await dio.put(
+      ApiConfig.attendeeCompanionsPath(attendeeId),
+      data: {'companions': companions.map((c) => c.toJson()).toList()},
+    );
+    final data = response.data as Map<String, dynamic>;
+    return [
+      for (final item in (data['conflicts'] as List<dynamic>? ?? const []))
+        PhoneConflict.fromJson(item as Map<String, dynamic>),
+    ];
+  }
+
+  /// Folds the separate guest [guestId] into this card as a companion.
+  Future<void> mergeGuestIntoCard({
+    required String cardId,
+    required String guestId,
+  }) async {
+    final dio = _ref.read(apiClientProvider);
+    await dio.post(
+      ApiConfig.attendeeMergePath(cardId),
+      data: {'guestId': guestId},
     );
   }
 
@@ -173,6 +251,9 @@ class AttendeeService {
     required String name,
     required String phone,
     String? categoryId,
+
+    /// Omitted: the card type's default.
+    int? admits,
   }) async {
     final dio = _ref.read(apiClientProvider);
     final response = await dio.post(
@@ -181,7 +262,7 @@ class AttendeeService {
         'eventId': eventId,
         'categoryId': categoryId,
         'contacts': [
-          {'name': name, 'phone': phone},
+          {'name': name, 'phone': phone, 'admits': ?admits},
         ],
       },
     );
