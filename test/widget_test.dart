@@ -17,6 +17,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Cardly'), findsWidgets);
+    // First launch: the welcome screen and its two ways in.
+    expect(find.text('Plan an event with Cardly'), findsOneWidget);
+    expect(find.text('Sign in'), findsWidgets);
   });
 }

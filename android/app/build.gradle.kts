@@ -70,6 +70,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Signed like the real app when the key is on this machine, so
+            // `flutter run --flavor dev` installs over the Cardly Dev app from
+            // appdev (keeping its data) instead of failing on a key mismatch
+            // or adding a second, differently-signed app. CI never builds debug.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
         release {
             // Without key.properties (e.g. a fresh clone) fall back to the
             // debug key so `flutter run --release` still works — but such an

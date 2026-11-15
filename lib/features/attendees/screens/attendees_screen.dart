@@ -22,6 +22,7 @@ class AttendeesScreen extends ConsumerStatefulWidget {
 }
 
 class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
+  /// 'all', a category id, or [_noCategory].
   String _filter = 'all';
   String _search = '';
   bool _isOnline = true;
@@ -107,13 +108,12 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                      child: _GuestFilterBar(
+                    if (_isOnline)
+                      _CategoryFilterBar(
+                        eventId: eventId,
                         value: _filter,
                         onChanged: (value) => setState(() => _filter = value),
                       ),
-                    ),
                     if (!_isOnline)
                       const Padding(
                         padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -165,39 +165,81 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
   }
 }
 
-class _GuestFilterBar extends StatelessWidget {
-  const _GuestFilterBar({required this.value, required this.onChanged});
+const _noCategory = '__none__';
 
+/// "VIP DOUBLE" or "vip double" → "Vip Double", so every pill reads the
+/// same however the category was typed in the portal.
+String _titleCase(String value) => value
+    .trim()
+    .toLowerCase()
+    .split(RegExp(r'\s+'))
+    .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+    .join(' ');
+
+/// Filters the guest list by card category (Single, Double, VIP…), with a
+/// count on each. Built from the guests themselves, so it only lists
+/// categories that have guests. Check-in status shows on each guest row.
+class _CategoryFilterBar extends ConsumerWidget {
+  const _CategoryFilterBar({
+    required this.eventId,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String eventId;
   final String value;
   final ValueChanged<String> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    const options = [
-      ('all', 'All'),
-      ('checked', 'Checked in'),
-      ('partial', 'Partly in'),
-      ('pending', 'Pending'),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final attendees = ref.watch(attendeesProvider(eventId)).valueOrNull;
+    if (attendees == null || attendees.isEmpty) return const SizedBox.shrink();
+
+    final counts = <String, int>{};
+    final names = <String, String>{};
+    for (final a in attendees) {
+      final key = a.categoryId ?? _noCategory;
+      counts[key] = (counts[key] ?? 0) + 1;
+      names[key] = _titleCase(a.categoryName ?? 'No category');
+    }
+    // Nothing to choose between: every guest is in the same category.
+    if (counts.length < 2) return const SizedBox.shrink();
+
+    final keys = counts.keys.toList()
+      ..sort((x, y) {
+        // "No category" last, the rest by name.
+        if (x == _noCategory) return 1;
+        if (y == _noCategory) return -1;
+        return names[x]!.toLowerCase().compareTo(names[y]!.toLowerCase());
+      });
+    final options = [
+      ('all', 'All', attendees.length),
+      for (final k in keys) (k, names[k]!, counts[k]!),
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          for (final option in options)
-            Expanded(
-              child: _FilterTab(
-                label: option.$2,
-                selected: value == option.$1,
-                onTap: () => onChanged(option.$1),
-              ),
-            ),
-        ],
+    // A category that no longer has guests (after a refresh) falls back
+    // to showing everyone.
+    final selected = options.any((o) => o.$1 == value) ? value : 'all';
+
+    final pills = [
+      for (final option in options)
+        _FilterTab(
+          label: option.$2,
+          count: option.$3,
+          selected: selected == option.$1,
+          onTap: () => onChanged(option.$1),
+        ),
+    ];
+
+    // Pills in one row that scrolls sideways, running to the screen edges.
+    return SizedBox(
+      height: 52,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+        itemCount: pills.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (_, i) => pills[i],
       ),
     );
   }
@@ -206,33 +248,58 @@ class _GuestFilterBar extends StatelessWidget {
 class _FilterTab extends StatelessWidget {
   const _FilterTab({
     required this.label,
+    required this.count,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
+  final int count;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected
-          ? AppColors.primary.withValues(alpha: 0.1)
-          : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: selected ? AppColors.primary : AppColors.muted,
+    final foreground = selected ? Colors.white : AppColors.onSurface;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected ? AppColors.primary : Colors.white,
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const StadiumBorder(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Center(
+              widthFactor: 1,
+              child: Text.rich(
+                TextSpan(
+                  text: label,
+                  children: [
+                    TextSpan(
+                      text: '  $count',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? Colors.white.withValues(alpha: 0.75)
+                            : AppColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w800,
+                  color: foreground,
+                ),
+              ),
             ),
           ),
         ),
@@ -298,15 +365,13 @@ class _OnlineAttendeesList extends ConsumerWidget {
       ),
       data: (attendees) {
         var filtered = attendees;
-        if (filter == 'checked') {
-          filtered = filtered.where((a) => a.checkedIn).toList();
-        }
-        if (filter == 'partial') {
-          // Cards still waiting for someone, e.g. a partner coming later.
-          filtered = filtered.where((a) => a.isPartlyEntered).toList();
-        }
-        if (filter == 'pending') {
-          filtered = filtered.where((a) => !a.checkedIn).toList();
+        if (filter != 'all') {
+          final byCategory = filtered
+              .where((a) => (a.categoryId ?? _noCategory) == filter)
+              .toList();
+          // An empty result means the category is gone (the bar has
+          // already fallen back to All), so show everyone.
+          if (byCategory.isNotEmpty) filtered = byCategory;
         }
         if (search.isNotEmpty) {
           filtered = filtered

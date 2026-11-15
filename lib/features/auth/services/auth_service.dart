@@ -22,7 +22,8 @@ class AuthService {
   static const _tokenKey = 'auth_token';
   static const _userKey = 'auth_user';
 
-  Future<UserModel> login(String email, String password) async {
+  /// Signs in with an email or a phone number.
+  Future<UserModel> login(String identifier, String password) async {
     final dio = Dio(
       BaseOptions(
         connectTimeout: const Duration(seconds: 15),
@@ -36,10 +37,20 @@ class AuthService {
 
     final response = await dio.post(
       '$baseUrl${ApiConfig.authPath}',
-      data: {'email': email, 'password': password},
+      // `email` too, for servers from before phone sign-in, which only
+      // read that field.
+      data: {
+        'identifier': identifier,
+        'email': identifier,
+        'password': password,
+      },
     );
 
-    final data = response.data as Map<String, dynamic>;
+    return storeSession(response.data as Map<String, dynamic>);
+  }
+
+  /// Saves the token and user from a sign-in response (`{token, user}`).
+  Future<UserModel> storeSession(Map<String, dynamic> data) async {
     final token = data['token'] as String;
     final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
 
