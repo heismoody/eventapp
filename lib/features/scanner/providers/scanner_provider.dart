@@ -12,6 +12,7 @@ import '../../attendees/services/attendee_service.dart';
 import '../../events/providers/event_provider.dart';
 import '../../events/services/event_service.dart';
 import '../models/card_status.dart';
+import '../models/door_summary.dart';
 import '../models/scan_result.dart';
 
 final scannerProvider = Provider<ScannerController>((ref) {
@@ -362,3 +363,16 @@ final recentCheckinsProvider =
     ) async {
       return EntriesDao().recent(eventId: eventId);
     });
+
+/// The door's numbers for the event, from the phone's copy of the guest
+/// list and its own entries, so it works with no network.
+final doorSummaryProvider = FutureProvider.family<DoorSummary, String>((
+  ref,
+  eventId,
+) async {
+  final results = await Future.wait([
+    CardsDao().forEvent(eventId),
+    EntriesDao().forEvent(eventId),
+  ]);
+  return DoorSummary.build(cardRows: results[0], entryRows: results[1]);
+});

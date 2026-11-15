@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/screens/dashboard_screen.dart';
-import '../scanner/screens/scanner_screen.dart';
+import '../scanner/screens/scan_hub_screen.dart';
 import '../scanner/services/sync_service.dart';
 import '../attendees/screens/attendees_screen.dart';
 import '../contributions/screens/contributions_screen.dart';
@@ -135,7 +135,7 @@ class DashboardTab extends StatelessWidget {
 class ScannerTab extends StatelessWidget {
   const ScannerTab({super.key});
   @override
-  Widget build(BuildContext context) => const ScannerScreen();
+  Widget build(BuildContext context) => const ScanHubScreen();
 }
 
 class AttendeesTab extends StatelessWidget {

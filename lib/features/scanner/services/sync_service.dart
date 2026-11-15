@@ -119,6 +119,7 @@ class SyncService {
       _ref.invalidate(waitingPeopleProvider(eventId));
       _ref.invalidate(recentCheckinsProvider(eventId));
       _ref.invalidate(attendeesProvider(eventId));
+      _ref.invalidate(doorSummaryProvider(eventId));
     }
   }
 }

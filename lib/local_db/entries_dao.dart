@@ -53,6 +53,16 @@ class EntriesDao {
     );
   }
 
+  /// This phone's entries for the event, refused ones left out.
+  Future<List<Map<String, Object?>>> forEvent(String eventId) async {
+    final db = await _db;
+    return db.query(
+      'entries',
+      where: 'event_id = ? AND synced != ?',
+      whereArgs: [eventId, EntrySync.rejected],
+    );
+  }
+
   /// People admitted on this phone that the server hasn't counted yet.
   Future<int> waitingPeopleForCard(String qrToken, String eventId) async {
     final db = await _db;

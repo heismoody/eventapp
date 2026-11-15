@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -12,6 +13,9 @@ import '../../attendees/services/attendee_service.dart';
 import '../../events/providers/event_provider.dart';
 import '../providers/scanner_provider.dart';
 
+/// The camera, opened from the Scan tab. It keeps scanning after each guest,
+/// so the door can work through a queue; the close button goes back to the
+/// door's numbers.
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
 
@@ -23,20 +27,37 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   final _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.normal,
     facing: CameraFacing.back,
+    // Only QR codes: the scanner doesn't spend time looking for barcodes.
+    formats: const [BarcodeFormat.qrCode],
+    // Android otherwise analyses 640x480, too little detail for our dense
+    // card codes unless they fill the frame. Ignored on iOS, which already
+    // uses a high resolution.
+    cameraResolution: const Size(1920, 1080),
   );
   bool _processing = false;
+
+  /// Camera zoom, 0 (none) to 1 (the phone's maximum).
+  double _zoom = 0;
+  double _zoomAtPinchStart = 0;
+
+  /// What the Zoom button switches to: about 2x on most phones.
+  static const _buttonZoom = 0.5;
   bool _isOnline = true;
   bool _torchOn = false;
 
   Timer? _guestListRefresh;
+  StreamSubscription<bool>? _connectivity;
 
   @override
   void initState() {
     super.initState();
     _checkConnectivity();
-    ref.read(connectivityServiceProvider).onStatusChanged.listen((online) {
-      if (mounted) setState(() => _isOnline = online);
-    });
+    _connectivity = ref
+        .read(connectivityServiceProvider)
+        .onStatusChanged
+        .listen((online) {
+          if (mounted) setState(() => _isOnline = online);
+        });
     // Another gate's entries reach this phone through the guest list, so
     // keep it fresh while scanning.
     _guestListRefresh = Timer.periodic(
@@ -51,6 +72,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     if (eventId == null || !_isOnline) return;
     try {
       await ref.read(attendeeServiceProvider).fetchAttendees(eventId);
+      if (mounted) ref.invalidate(doorSummaryProvider(eventId));
     } catch (_) {}
   }
 
@@ -59,6 +81,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     ref.invalidate(waitingPeopleProvider(eventId));
     ref.invalidate(recentCheckinsProvider(eventId));
     ref.invalidate(attendeesProvider(eventId));
+    ref.invalidate(doorSummaryProvider(eventId));
   }
 
   Future<void> _checkConnectivity() async {
@@ -104,6 +127,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     if (mounted) setState(() => _processing = false);
   }
 
+  Future<void> _setZoom(double value) async {
+    final zoom = value.clamp(0.0, 1.0);
+    if ((zoom - _zoom).abs() < 0.01) return;
+    setState(() => _zoom = zoom);
+    try {
+      await _controller.setZoomScale(zoom);
+    } catch (_) {
+      // Camera not running yet; the next gesture tries again.
+    }
+  }
+
   Rect _scanFrameRect(Size size) {
     final frameSize = size.width * 0.68;
     final left = (size.width - frameSize) / 2;
@@ -114,6 +148,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   @override
   void dispose() {
     _guestListRefresh?.cancel();
+    _connectivity?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -122,13 +157,26 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final scanRect = _scanFrameRect(size);
+    final eventId = ref.watch(activeEventIdProvider);
+    final summary = eventId == null
+        ? null
+        : ref.watch(doorSummaryProvider(eventId)).value;
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(controller: _controller, onDetect: _onDetect),
+          // Pinch anywhere on the camera to zoom in on a small code.
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onScaleStart: (_) => _zoomAtPinchStart = _zoom,
+            onScaleUpdate: (details) {
+              if (details.pointerCount < 2) return;
+              _setZoom(_zoomAtPinchStart + (details.scale - 1) * 0.5);
+            },
+            child: MobileScanner(controller: _controller, onDetect: _onDetect),
+          ),
           CustomPaint(
             painter: _ScannerFramePainter(scanRect: scanRect),
             size: size,
@@ -157,25 +205,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.qr_code_scanner,
-                            color: AppColors.primary,
-                          ),
+                        _ScannerIconButton(
+                          icon: Icons.close,
+                          onPressed: () => context.pop(),
+                          tooltip: 'Back to the door overview',
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Scan',
+                              const Text(
+                                'Scan card',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -183,10 +224,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                                 ),
                               ),
                               Text(
-                                'Check in guests instantly',
-                                style: TextStyle(
+                                summary == null
+                                    ? 'Keeps scanning after each guest'
+                                    : '${summary.peopleIn} of '
+                                          '${summary.peopleExpected} people in',
+                                style: const TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 12,
+                                  fontFeatures: [FontFeature.tabularFigures()],
                                 ),
                               ),
                             ],
@@ -243,12 +288,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           child: Text(
                             _processing
                                 ? 'Checking card...'
-                                : 'Align the QR code inside the frame',
+                                : 'Align the QR code inside the frame. '
+                                      'Pinch to zoom.',
                             style: const TextStyle(
                               color: AppColors.onSurface,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                        ),
+                        const SizedBox(width: 10),
+                        _ZoomButton(
+                          zoomed: _zoom > 0,
+                          onPressed: () =>
+                              _setZoom(_zoom > 0 ? 0 : _buttonZoom),
                         ),
                       ],
                     ),
@@ -295,6 +347,53 @@ class _ScannerIconButton extends StatelessWidget {
               icon,
               color: active ? AppColors.accent : AppColors.onSurface,
               size: 22,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Switches between no zoom and about 2x, for small codes held at arm's
+/// length. Pinching sets any zoom in between.
+class _ZoomButton extends StatelessWidget {
+  const _ZoomButton({required this.zoomed, required this.onPressed});
+
+  final bool zoomed;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      toggled: zoomed,
+      label: zoomed ? 'Zoom out' : 'Zoom in',
+      child: Material(
+        color: zoomed ? AppColors.primary : AppColors.secondary,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  zoomed ? Icons.zoom_out : Icons.zoom_in,
+                  size: 20,
+                  color: zoomed ? Colors.white : AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  zoomed ? 'Zoom out' : 'Zoom',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: zoomed ? Colors.white : AppColors.primary,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

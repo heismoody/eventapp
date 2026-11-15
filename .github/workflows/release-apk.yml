@@ -2,8 +2,11 @@ name: Build & release app
 
 # development → Cardly Dev (APK)  → uploaded to appdev.cardly.co.tz, picked up by
 #                                    the dev app's own updater (latest-dev.json)
-# main        → Cardly (Play .aab) → signed bundle attached to the run as an
-#                                    artifact, uploaded to Google Play Console
+# main        → Cardly (Play .aab) → sent to Google Play as a DRAFT release on
+#                                    the closed testing track (alpha); someone
+#                                    rolls it out by hand in Play Console. The
+#                                    .aab is also attached to the run as a
+#                                    fallback for a manual upload.
 #
 # Keep this file's name: GitHub keys the run counter (our build number) to
 # the workflow file, and renaming it would restart build numbers at 1 —
@@ -98,14 +101,36 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Upload instructions
+      - name: Check Play upload key
+        if: env.FLAVOR == 'prod'
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_JSON" ]; then
+            echo "::error::PLAY_SERVICE_ACCOUNT_JSON secret is missing — the bundle is attached to this run for a manual upload"
+            exit 1
+          fi
+
+      # Draft only: nothing reaches testers until someone presses "Roll out"
+      # in Play Console → Testing → Closed testing - Alpha.
+      - name: Send to Google Play (closed testing, draft)
+        if: env.FLAVOR == 'prod'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: tz.co.cardly.app
+          releaseFiles: release/*.aab
+          releaseName: ${{ env.VERSION_NAME }} (${{ env.BUILD_NUMBER }})
+          track: alpha
+          status: draft
+
+      - name: Summary
         if: env.FLAVOR == 'prod'
         run: |
           {
-            echo "## Cardly $VERSION_NAME (version code $BUILD_NUMBER) — ready for Google Play"
+            echo "## Cardly $VERSION_NAME (version code $BUILD_NUMBER) is a draft on Google Play"
             echo ""
-            echo "1. Download the **cardly-$VERSION_NAME-$BUILD_NUMBER-play** artifact below (a zip with the .aab)."
-            echo "2. Play Console → Cardly → Testing (or Production) → Create new release → upload the .aab."
+            echo "Play Console → Cardly → Testing → Closed testing - Alpha → review the draft release → Roll out."
           } >> "$GITHUB_STEP_SUMMARY"
 
       # ───────────── development → self-hosted dev APK ─────────────

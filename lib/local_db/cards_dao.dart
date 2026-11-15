@@ -21,6 +21,12 @@ class CardsDao {
     });
   }
 
+  /// The event's cached guest list, for the door's numbers.
+  Future<List<Map<String, Object?>>> forEvent(String eventId) async {
+    final db = await _db;
+    return db.query('cards', where: 'event_id = ?', whereArgs: [eventId]);
+  }
+
   Future<Map<String, Object?>?> get(String qrToken, String eventId) async {
     final db = await _db;
     final rows = await db.query(

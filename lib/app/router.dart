@@ -7,6 +7,7 @@ import '../features/events/screens/event_picker_screen.dart';
 import '../features/contributions/screens/contribution_categories_screen.dart';
 import '../features/attendees/screens/guest_detail_screen.dart';
 import '../features/reports/screens/report_screen.dart';
+import '../features/scanner/screens/scanner_screen.dart';
 import '../features/shell/main_shell.dart';
 import '../features/settings/screens/edit_profile_screen.dart';
 
@@ -90,6 +91,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/shell/guests/:attendeeId',
         builder: (context, state) =>
             GuestDetailScreen(attendeeId: state.pathParameters['attendeeId']!),
+      ),
+      // Full screen, over the tabs, opened from the Scan tab.
+      GoRoute(
+        path: '/scan',
+        builder: (context, state) => const ScannerScreen(),
       ),
       GoRoute(
         path: '/shell/report',
