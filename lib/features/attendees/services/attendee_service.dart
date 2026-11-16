@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../local_db/cards_dao.dart';
+import '../../../l10n/l10n.dart';
 
 enum ContributionPaymentStatus { unpaid, partial, paid, none }
 
@@ -269,7 +270,7 @@ class AttendeeService {
     final data = response.data as Map<String, dynamic>;
     final inserted = data['inserted'] as int? ?? 0;
     if (inserted == 0) {
-      throw StateError('A guest with this phone number already exists');
+      throw StateError(appL10n.guestPhoneExists);
     }
   }
 }

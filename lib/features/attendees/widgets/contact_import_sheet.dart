@@ -10,6 +10,7 @@ import '../../../shared/services/connectivity_service.dart';
 import '../../../shared/widgets/guest_category_field.dart';
 import '../../contributions/services/contribution_service.dart';
 import '../../contributions/widgets/contribution_category_sheet.dart';
+import '../../../l10n/l10n.dart';
 
 Future<bool?> showContactImportSheet({
   required BuildContext context,
@@ -62,7 +63,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
       if (!granted) {
         setState(() {
           _loading = false;
-          _error = 'Contacts permission is required to import guests.';
+          _error = context.l10n.contactsPermissionNeeded;
         });
         return;
       }
@@ -80,7 +81,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
     } catch (_) {
       setState(() {
         _loading = false;
-        _error = 'Failed to load contacts.';
+        _error = context.l10n.loadContactsFailed;
       });
     }
   }
@@ -140,7 +141,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
     final online = await ref.read(connectivityServiceProvider).isOnline();
     if (!mounted) return;
     if (!online) {
-      AppToast.warning('Import requires an internet connection');
+      AppToast.warning(context.l10n.importNeedsInternet);
       return;
     }
 
@@ -176,12 +177,12 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
       final skipped = data['skipped'] as int? ?? 0;
 
       if (mounted) {
-        AppToast.success('$inserted added, $skipped skipped');
+        AppToast.success(context.l10n.importResult(inserted, skipped));
         Navigator.pop(context, true);
       }
     } catch (_) {
       if (mounted) {
-        AppToast.error('Import failed. Please try again.');
+        AppToast.error(context.l10n.importFailed);
       }
     } finally {
       if (mounted) setState(() => _importing = false);
@@ -219,7 +220,7 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    'Import contacts',
+                    context.l10n.importContacts,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -227,7 +228,9 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
                   TextButton(
                     onPressed: filtered.isEmpty ? null : _toggleSelectAll,
                     child: Text(
-                      _allFilteredSelected ? 'Deselect all' : 'Select all',
+                      _allFilteredSelected
+                          ? context.l10n.deselectAll
+                          : context.l10n.selectAll,
                     ),
                   ),
               ],
@@ -237,16 +240,16 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.border),
               ),
               child: TextField(
-                decoration: const InputDecoration(
-                  hintText: 'Search by name or phone',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  hintText: context.l10n.searchByNameOrPhone,
+                  prefixIcon: const Icon(Icons.search),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onChanged: (value) => setState(() => _search = value),
               ),
@@ -277,8 +280,8 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(28, 12, 24, 0),
               child: Text(
-                '${filtered.length} contacts • $selectedCount selected',
-                style: const TextStyle(
+                context.l10n.contactsSelected(filtered.length, selectedCount),
+                style: TextStyle(
                   color: AppColors.muted,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
@@ -299,16 +302,16 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
                           const SizedBox(height: 16),
                           FilledButton(
                             onPressed: _loadContacts,
-                            child: const Text('Try again'),
+                            child: Text(context.l10n.tryAgain),
                           ),
                         ],
                       ),
                     ),
                   )
                 : filtered.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'No contacts with phone numbers found',
+                      context.l10n.noContactsWithPhones,
                       style: TextStyle(color: AppColors.muted),
                     ),
                   )
@@ -339,7 +342,9 @@ class _ContactImportSheetState extends ConsumerState<ContactImportSheet> {
                     ? null
                     : _importSelected,
                 child: Text(
-                  _importing ? 'Importing...' : 'Import ($selectedCount)',
+                  _importing
+                      ? context.l10n.importing
+                      : context.l10n.importCount(selectedCount),
                 ),
               ),
             ),
@@ -368,7 +373,7 @@ class _ContactSelectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -389,7 +394,7 @@ class _ContactSelectCard extends StatelessWidget {
                 backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                 child: Text(
                   initials,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w800,
                   ),
@@ -402,7 +407,7 @@ class _ContactSelectCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
                       ),
@@ -410,10 +415,7 @@ class _ContactSelectCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       phone,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

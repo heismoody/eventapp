@@ -23,9 +23,9 @@ class ReportScreen extends ConsumerWidget {
     final eventId = ref.watch(activeEventIdProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -33,7 +33,7 @@ class ReportScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Event Report',
           style: TextStyle(
             fontWeight: FontWeight.w800,
@@ -63,7 +63,7 @@ class _ReportBody extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: AppColors.danger, size: 34),
+            Icon(Icons.error_outline, color: AppColors.danger, size: 34),
             const SizedBox(height: 12),
             const Text('Failed to load the report'),
             const SizedBox(height: 12),
@@ -177,7 +177,7 @@ class _ReportContentState extends ConsumerState<_ReportContent>
               children: [
                 Text(
                   report.event.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     color: AppColors.onSurface,
@@ -191,7 +191,7 @@ class _ReportContentState extends ConsumerState<_ReportContent>
                         report.event.venue!.isNotEmpty)
                       report.event.venue!,
                   ].join(' · '),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
               ],
             ),
@@ -226,7 +226,7 @@ class _ReportContentState extends ConsumerState<_ReportContent>
                     onChanged: (value) =>
                         setState(() => _includeParticipants = value ?? false),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Include all participants',
                       style: TextStyle(
@@ -252,7 +252,7 @@ class _ReportContentState extends ConsumerState<_ReportContent>
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.onPrimary,
                         ),
                       )
                     : const Icon(Icons.picture_as_pdf_outlined),
@@ -426,7 +426,7 @@ class _ReportSectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w800,
           fontSize: 15,
           color: AppColors.onSurface,
@@ -462,7 +462,7 @@ class _CategoryTable extends StatelessWidget {
                 Expanded(
                   child: Text(
                     categories[i].name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                       color: AppColors.onSurface,
@@ -472,7 +472,7 @@ class _CategoryTable extends StatelessWidget {
                 Text(
                   '${categories[i].peopleEntered}/${categories[i].peopleExpected}',
 
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                     color: AppColors.onSurface,
@@ -507,7 +507,7 @@ class _TimelineRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
@@ -525,7 +525,7 @@ class _TimelineRow extends StatelessWidget {
               first == null || last == null
                   ? 'No activity yet'
                   : '${dateFmt.format(first.toLocal())} — ${dateFmt.format(last.toLocal())}',
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ),
         ],
@@ -547,7 +547,7 @@ class _MessagingSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.border),
           ),
@@ -566,10 +566,7 @@ class _MessagingSection extends StatelessWidget {
                     Text(
                       '${channel.sent} sent · ${channel.failed} failed · '
                       '${channel.available} credits left',
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 12),
                     ),
                   ],
                 ),
@@ -577,7 +574,7 @@ class _MessagingSection extends StatelessWidget {
               ],
               Text(
                 '${messaging.peopleReached} people reached',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                   color: AppColors.primary,
@@ -589,7 +586,7 @@ class _MessagingSection extends StatelessWidget {
         const SizedBox(height: 24),
         _ReportSectionTitle('Recent messages'),
         if (messaging.messages.isEmpty)
-          const Text(
+          Text(
             'No messages sent yet',
             style: TextStyle(color: AppColors.muted, fontSize: 13),
           )
@@ -672,7 +669,7 @@ class _MessageRow extends StatelessWidget {
               children: [
                 Text(
                   message.recipientName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                     color: AppColors.onSurface,
@@ -681,17 +678,14 @@ class _MessageRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${message.type} · ${dateFmt.format(message.createdAt.toLocal())}',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                  style: TextStyle(color: AppColors.muted, fontSize: 11),
                 ),
                 if (message.status == 'failed' &&
                     message.failureReason != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     message.failureReason!,
-                    style: const TextStyle(
-                      color: AppColors.danger,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: AppColors.danger, fontSize: 11),
                   ),
                 ],
               ],
@@ -741,7 +735,7 @@ class _ContributionsSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.border),
           ),
@@ -838,7 +832,7 @@ class _ContributionsSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
             ),
@@ -872,7 +866,7 @@ class _ContributionStat extends StatelessWidget {
         Text(
           value,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 14,
             color: AppColors.onSurface,
@@ -882,7 +876,7 @@ class _ContributionStat extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 11, color: AppColors.muted),
+          style: TextStyle(fontSize: 11, color: AppColors.muted),
         ),
       ],
     );

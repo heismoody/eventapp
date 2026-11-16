@@ -13,6 +13,7 @@ import '../../contributions/services/contribution_service.dart';
 import '../../contributions/widgets/contribution_category_sheet.dart';
 import '../../events/providers/event_provider.dart';
 import '../services/attendee_service.dart';
+import '../../../l10n/l10n.dart';
 
 Future<void> showGuestEditSheet({
   required BuildContext context,
@@ -94,7 +95,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     if (value == null || value.trim().isEmpty) return null;
     final parsed = double.tryParse(value.trim());
     if (parsed == null || parsed < 0) {
-      return 'Enter a valid amount';
+      return context.l10n.enterValidAmount;
     }
     return null;
   }
@@ -131,11 +132,11 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
       ref.invalidate(attendeesProvider(eventId));
       if (mounted) {
         Navigator.pop(context);
-        AppToast.success('Guest updated');
+        AppToast.success(context.l10n.guestUpdated);
       }
     } catch (error) {
       if (mounted) {
-        AppToast.error(apiErrorMessage(error, 'Failed to update guest'));
+        AppToast.error(apiErrorMessage(error, context.l10n.updateGuestFailed));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -163,34 +164,34 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
       if (!mounted) return;
       if (!conflict.isGuest) {
         AppToast.info(
-          '${conflict.phone} is also on ${conflict.attendeeName}\'s card',
+          context.l10n.alsoOnCard(conflict.phone, conflict.attendeeName),
         );
         continue;
       }
       if (!conflict.canMerge) {
         AppToast.info(
-          '${conflict.phone} is also the guest ${conflict.attendeeName}, '
-          'who has entries or payments — not merged',
+          context.l10n.alsoGuestNotMerged(
+            conflict.phone,
+            conflict.attendeeName,
+          ),
         );
         continue;
       }
       final merge = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Merge ${conflict.attendeeName}?'),
+          title: Text(context.l10n.mergeTitle(conflict.attendeeName)),
           content: Text(
-            '${conflict.phone} is already ${conflict.attendeeName}, a guest '
-            'with their own card, so they would get two invitations. Merge '
-            'them into this card as a companion?',
+            context.l10n.mergeBody(conflict.phone, conflict.attendeeName),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Keep both'),
+              child: Text(context.l10n.keepBoth),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Merge'),
+              child: Text(context.l10n.merge),
             ),
           ],
         ),
@@ -208,14 +209,13 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Companions',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        Text(
+          context.l10n.companions,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
         ),
         const SizedBox(height: 2),
-        const Text(
-          'Others sharing this card. Anyone with a phone gets the same '
-          'invitation.',
+        Text(
+          context.l10n.companionsHint,
           style: TextStyle(color: AppColors.muted, fontSize: 12),
         ),
         for (final row in _companions)
@@ -230,7 +230,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                     onChanged: (_) => _companionsChanged = true,
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
-                      labelText: 'Name',
+                      labelText: context.l10n.name,
                       isDense: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -246,8 +246,8 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                     onChanged: (_) => _companionsChanged = true,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      labelText: 'Phone',
-                      hintText: 'Optional',
+                      labelText: context.l10n.phone,
+                      hintText: context.l10n.optional,
                       isDense: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -256,7 +256,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Remove companion',
+                  tooltip: context.l10n.removeCompanion,
                   onPressed: _busy
                       ? null
                       : () => setState(() {
@@ -277,7 +277,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                   _companionsChanged = true;
                 }),
           icon: const Icon(Icons.person_add_alt_1_outlined),
-          label: const Text('Add companion'),
+          label: Text(context.l10n.addCompanion),
         ),
       ],
     );
@@ -291,7 +291,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
       categories: categories,
       selectedCategoryId: _selectedCategoryId,
       enabled: !_busy,
-      label: 'Contribution category',
+      label: context.l10n.contributionCategory,
       onAddCategory: () => _openAddCategory(eventId),
       onChanged: (value) => setState(() => _selectedCategoryId = value),
     );
@@ -329,13 +329,16 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Edit guest', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                context.l10n.editGuest,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
                 enabled: !_busy,
                 decoration: InputDecoration(
-                  labelText: 'Name',
+                  labelText: context.l10n.name,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -343,7 +346,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                 textCapitalization: TextCapitalization.words,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
+                    return context.l10n.nameRequired;
                   }
                   return null;
                 },
@@ -361,11 +364,11 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
               PeopleField(
                 controller: _peopleController,
                 enabled: !_busy,
-                label: 'People on this card',
+                label: context.l10n.peopleOnCard,
                 minimum: widget.attendee.enteredCount,
                 helperText: widget.attendee.enteredCount > 0
-                    ? '${widget.attendee.enteredCount} already entered'
-                    : 'How many people this card lets in',
+                    ? context.l10n.alreadyEntered(widget.attendee.enteredCount)
+                    : context.l10n.peopleOnCardHint,
               ),
               const SizedBox(height: 16),
               _buildCompanions(),
@@ -374,7 +377,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                 controller: _amountController,
                 enabled: !_busy,
                 decoration: InputDecoration(
-                  labelText: 'Amount paid (TZS)',
+                  labelText: context.l10n.amountPaidTzs,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -390,8 +393,8 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                 controller: _pledgeController,
                 enabled: !_busy,
                 decoration: InputDecoration(
-                  labelText: 'Pledge (TZS, optional)',
-                  helperText: 'What this guest has promised to contribute',
+                  labelText: context.l10n.pledgeTzs,
+                  helperText: context.l10n.pledgeHelper,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -410,7 +413,7 @@ class _GuestEditSheetState extends ConsumerState<_GuestEditSheet> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: eventId == null ? null : () => _save(eventId),
-                    child: const Text('Save changes'),
+                    child: Text(context.l10n.saveChanges),
                   ),
                 ),
             ],

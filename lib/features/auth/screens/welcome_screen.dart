@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../l10n/l10n.dart';
+import '../../../shared/widgets/language_picker.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/login_form.dart';
 
@@ -17,25 +19,23 @@ class _WelcomeSlide {
   });
 
   final String imageAsset;
-  final String title;
-  final String subtitle;
+  final String Function(AppLocalizations) title;
+  final String Function(AppLocalizations) subtitle;
   final Color overlayColor;
 }
 
-const _slides = [
+final _slides = [
   _WelcomeSlide(
     imageAsset: 'assets/images/welcome_wedding.png',
-    title: 'Every guest. Every moment. Perfectly managed.',
-    subtitle:
-        'Digital invitation cards, check-in at the door and contributions, '
-        'all in one place.',
-    overlayColor: AppColors.primary,
+    title: (l) => l.welcomeSlide1Title,
+    subtitle: (l) => l.welcomeSlide1Body,
+    overlayColor: BrandColors.brown,
   ),
   _WelcomeSlide(
     imageAsset: 'assets/images/welcome_celebration.png',
-    title: 'Celebrate with confidence',
-    subtitle: 'Scan guests at the door, track check-ins and stay in control.',
-    overlayColor: AppColors.accent,
+    title: (l) => l.welcomeSlide2Title,
+    subtitle: (l) => l.welcomeSlide2Body,
+    overlayColor: BrandColors.copper,
   ),
 ];
 
@@ -59,6 +59,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   late final AnimationController _sheetController;
   late final Animation<Offset> _sheetSlide;
   late final Animation<double> _actionsFade;
+  late final Animation<double> _scrimFade;
 
   final PageController _pageController = PageController();
   Timer? _carouselTimer;
@@ -84,6 +85,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
         );
     _actionsFade = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(parent: _sheetController, curve: const Interval(0, 0.5)),
+    );
+    _scrimFade = CurvedAnimation(
+      parent: _sheetController,
+      curve: Curves.easeOut,
+      reverseCurve: Curves.easeIn,
     );
 
     if (widget.skipSplash) {
@@ -155,7 +161,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: AppColors.primaryDark,
+        backgroundColor: BrandColors.brownDark,
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -172,14 +178,23 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
               ),
             ),
 
-            // Tapping the photo above the sheet closes it.
-            if (_sheetVisible)
-              Positioned.fill(
+            // Dims the photo while the sign-in sheet is up, fading with the
+            // sheet, so the form has the focus. Tapping it closes the sheet.
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: !_sheetVisible,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: _closeSignIn,
+                  child: FadeTransition(
+                    opacity: _scrimFade,
+                    child: ColoredBox(
+                      color: BrandColors.brownDark.withValues(alpha: 0.7),
+                    ),
+                  ),
                 ),
               ),
+            ),
 
             Positioned(
               left: 24,
@@ -228,7 +243,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                             children: [
                               Semantics(
                                 button: true,
-                                label: 'Close sign in',
+                                label: context.l10n.closeSignIn,
                                 child: GestureDetector(
                                   onTap: _closeSignIn,
                                   onVerticalDragEnd: (details) {
@@ -265,7 +280,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                   crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
                                     Text(
-                                      'New to Cardly?',
+                                      context.l10n.newToCardly,
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -278,8 +293,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                           horizontal: 6,
                                         ),
                                       ),
-                                      child: const Text(
-                                        'Plan an event',
+                                      child: Text(
+                                        context.l10n.planAnEvent,
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
@@ -298,6 +313,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                   ),
                 ),
               ),
+            ),
+
+            // English or Kiswahili, before anything else is read. Last, so
+            // it stays tappable above the sign-in sheet's close area.
+            Positioned(
+              top: media.padding.top + 12,
+              right: 16,
+              child: const LanguageSwitch(),
             ),
           ],
         ),
@@ -322,6 +345,7 @@ class _WelcomeActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const buttonText = TextStyle(fontSize: 17, fontWeight: FontWeight.w700);
+    final l10n = context.l10n;
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
     );
@@ -335,36 +359,35 @@ class _WelcomeActions extends StatelessWidget {
         FilledButton(
           onPressed: onPlanEvent,
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.onPrimary,
             foregroundColor: AppColors.primary,
             minimumSize: const Size.fromHeight(54),
             textStyle: buttonText,
             shape: shape,
           ),
-          child: const Text('Plan an event with Cardly'),
+          child: Text(l10n.planEventWithCardly),
         ),
         const SizedBox(height: 12),
         OutlinedButton(
           onPressed: onSignIn,
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.onPrimary,
             minimumSize: const Size.fromHeight(54),
             textStyle: buttonText,
             shape: shape,
             side: BorderSide(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: AppColors.onPrimary.withValues(alpha: 0.6),
               width: 1.5,
             ),
           ),
-          child: const Text('Sign in'),
+          child: Text(l10n.signIn),
         ),
         const SizedBox(height: 16),
         Text(
-          "Invited to an event? Your card comes by SMS. You don't need an "
-          'account.',
+          l10n.invitedNote,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.75),
+            color: AppColors.onPrimary.withValues(alpha: 0.75),
             fontSize: 14,
             height: 1.4,
           ),
@@ -401,8 +424,8 @@ class _WelcomeHeroSlide extends StatelessWidget {
               colors: [
                 slide.overlayColor.withValues(alpha: 0.10),
                 slide.overlayColor.withValues(alpha: 0.55),
-                AppColors.primaryDark.withValues(alpha: 0.96),
-                AppColors.primaryDark,
+                BrandColors.brownDark.withValues(alpha: 0.96),
+                BrandColors.brownDark,
               ],
               stops: const [0.0, 0.4, 0.7, 1.0],
             ),
@@ -416,9 +439,9 @@ class _WelcomeHeroSlide extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                slide.title,
+                slide.title(context.l10n),
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.onPrimary,
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                   height: 1.08,
@@ -426,9 +449,9 @@ class _WelcomeHeroSlide extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                slide.subtitle,
+                slide.subtitle(context.l10n),
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.88),
+                  color: AppColors.onPrimary.withValues(alpha: 0.88),
                   fontSize: 16,
                   height: 1.45,
                 ),
@@ -458,7 +481,9 @@ class _PageIndicators extends StatelessWidget {
           width: active ? 22 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.white.withValues(alpha: 0.45),
+            color: active
+                ? AppColors.onPrimary
+                : AppColors.onPrimary.withValues(alpha: 0.45),
             borderRadius: BorderRadius.circular(999),
           ),
         );

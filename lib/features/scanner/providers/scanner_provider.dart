@@ -14,6 +14,7 @@ import '../../events/services/event_service.dart';
 import '../models/card_status.dart';
 import '../models/door_summary.dart';
 import '../models/scan_result.dart';
+import '../../../l10n/l10n.dart';
 
 final scannerProvider = Provider<ScannerController>((ref) {
   return ScannerController(ref);
@@ -151,7 +152,7 @@ class ScannerController {
           return AdmitResult(
             outcome: AdmitOutcome.refused,
             card: await _afterServerReply(card, body),
-            message: 'Already checked in',
+            message: appL10n.alreadyCheckedIn,
           );
         }
 
@@ -177,7 +178,7 @@ class ScannerController {
             ),
             message: body is Map && body['error'] is String
                 ? body['error'] as String
-                : 'The server refused this check-in',
+                : appL10n.serverRefusedCheckIn,
           );
         }
       } catch (_) {

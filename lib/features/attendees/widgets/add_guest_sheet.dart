@@ -11,6 +11,7 @@ import '../../contributions/models/contribution_models.dart';
 import '../../contributions/services/contribution_service.dart';
 import '../../contributions/widgets/contribution_category_sheet.dart';
 import '../services/attendee_service.dart';
+import '../../../l10n/l10n.dart';
 
 /// Lets the owner add one guest by hand (name + phone), as an alternative to
 /// picking them from the phone's contacts.
@@ -87,13 +88,11 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
           );
       if (mounted) {
         Navigator.pop(context, true);
-        AppToast.success('Guest added');
+        AppToast.success(appL10n.guestAdded);
       }
     } catch (e) {
       if (mounted) {
-        AppToast.error(
-          apiErrorMessage(e, 'Failed to add guest. Please try again.'),
-        );
+        AppToast.error(apiErrorMessage(e, context.l10n.addGuestFailed));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -131,10 +130,13 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Add guest', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                context.l10n.addGuest,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 4),
-              const Text(
-                'Enter their details by hand instead of picking from contacts.',
+              Text(
+                context.l10n.addGuestLead,
                 style: TextStyle(color: AppColors.muted, fontSize: 13),
               ),
               const SizedBox(height: 16),
@@ -143,7 +145,7 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
                 enabled: !_busy,
                 autofocus: true,
                 decoration: InputDecoration(
-                  labelText: 'Name',
+                  labelText: context.l10n.name,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -151,7 +153,7 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
                 textCapitalization: TextCapitalization.words,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
+                    return context.l10n.nameRequired;
                   }
                   return null;
                 },
@@ -186,11 +188,11 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
               PeopleField(
                 controller: _peopleController,
                 enabled: !_busy,
-                label: 'People on this card',
+                label: context.l10n.peopleOnCard,
                 hint: '${_typeDefault(categoriesAsync.valueOrNull)}',
-                helperText:
-                    'Leave empty for the category\'s '
-                    '${_typeDefault(categoriesAsync.valueOrNull)}',
+                helperText: context.l10n.leaveEmptyForDefault(
+                  _typeDefault(categoriesAsync.valueOrNull),
+                ),
               ),
               const SizedBox(height: 20),
               if (_busy)
@@ -200,7 +202,7 @@ class _AddGuestSheetState extends ConsumerState<_AddGuestSheet> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: _save,
-                    child: const Text('Add guest'),
+                    child: Text(context.l10n.addGuest),
                   ),
                 ),
             ],

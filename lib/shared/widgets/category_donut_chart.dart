@@ -18,19 +18,9 @@ class CategorySlice {
   final Color color;
 }
 
-/// A fixed, hand-rolled palette cycled across categories in the order
-/// they're given — distinct enough to tell apart at a glance without
-/// needing a design-time color picker per category.
-const List<Color> categoryPalette = [
-  AppColors.primary,
-  AppColors.accent,
-  AppColors.success,
-  AppColors.warning,
-  Color(0xFF6366F1),
-  Color(0xFFEC4899),
-  AppColors.danger,
-  Color(0xFF0EA5E9),
-];
+/// The palette's chart colors, cycled across categories in the order
+/// they're given. Distinct enough to tell apart at a glance.
+List<Color> get categoryPalette => AppColors.chartSeries;
 
 /// A donut chart for compositional data (each category's share of a total)
 /// — a ring rather than a filled pie so a total can sit in the center,
@@ -78,7 +68,7 @@ class CategoryDonutChart extends StatelessWidget {
                     Text(
                       centerValue!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 18,
                         color: AppColors.onSurface,
@@ -88,10 +78,7 @@ class CategoryDonutChart extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         centerLabel!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.muted,
-                        ),
+                        style: TextStyle(fontSize: 12, color: AppColors.muted),
                       ),
                     ],
                   ],
@@ -124,7 +111,7 @@ class CategoryDonutChart extends StatelessWidget {
                           slice.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: AppColors.onSurface,
@@ -135,7 +122,7 @@ class CategoryDonutChart extends StatelessWidget {
                         total > 0
                             ? '${(slice.value / total * 100).round()}%'
                             : '0%',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: AppColors.muted,

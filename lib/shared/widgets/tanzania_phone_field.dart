@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../l10n/l10n.dart';
 
 /// A phone field scoped to Tanzanian mobile numbers: shows a fixed 🇹🇿 +255
 /// prefix so the guest only ever types the 9-digit local number after it,
@@ -23,7 +24,7 @@ class TanzaniaPhoneField extends StatelessWidget {
   static String? validate(String? value) {
     final digits = (value ?? '').trim();
     if (digits.length != 9) {
-      return 'Enter a valid 9-digit number';
+      return appL10n.enterValidPhone;
     }
     return null;
   }
@@ -49,10 +50,10 @@ class TanzaniaPhoneField extends StatelessWidget {
       enabled: enabled,
       autofocus: autofocus,
       decoration: InputDecoration(
-        labelText: 'Phone',
+        labelText: context.l10n.phone,
         hintText: '712345678',
         prefixText: '🇹🇿 +255  ',
-        prefixStyle: const TextStyle(
+        prefixStyle: TextStyle(
           color: AppColors.onSurface,
           fontWeight: FontWeight.w600,
         ),

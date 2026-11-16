@@ -8,6 +8,7 @@ import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../l10n/l10n.dart';
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 
@@ -49,7 +50,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.isEmpty) {
-      AppToast.warning('Enter your email or phone number, and your password.');
+      AppToast.warning(context.l10n.loginMissingFields);
       return;
     }
 
@@ -82,14 +83,15 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   /// whether to fix their password, their account, or their connection.
   /// Server-URL hints only appear in dev builds, where the URL is editable.
   String _loginErrorMessage(Object error) {
+    final l10n = context.l10n;
     final checkUrl = AppEnvironment.allowsServerOverride
-        ? ' Check the server URL under Advanced.'
+        ? ' ${l10n.loginCheckServerUrl}'
         : '';
 
     if (error is! DioException) {
       // A 200 that isn't the login JSON — usually a URL pointing at some
       // other website.
-      return 'Unexpected response from the server.$checkUrl';
+      return '${l10n.loginUnexpected}$checkUrl';
     }
 
     switch (error.type) {
@@ -98,37 +100,35 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.transformTimeout:
       case DioExceptionType.connectionError:
-        return "Can't reach the server. Check your internet connection.$checkUrl";
+        return '${l10n.loginUnreachable}$checkUrl';
       case DioExceptionType.badCertificate:
-        return "The server's security certificate isn't valid.$checkUrl";
+        return '${l10n.loginBadCertificate}$checkUrl';
       case DioExceptionType.badResponse:
         return switch (error.response?.statusCode) {
-          400 => 'Enter your email or phone number, and your password.',
-          401 =>
-            "That password doesn't match this email or phone number. "
-                'Try again, or tap Forgot password.',
-          403 => "This account isn't allowed to use the Cardly app.",
-          404 => "Login service not found on this server.$checkUrl",
-          final code? when code >= 500 =>
-            'The server had a problem. Please try again shortly.',
-          _ => 'Login failed. Please try again.$checkUrl',
+          400 => l10n.loginMissingFields,
+          401 => l10n.loginWrongPassword,
+          403 => l10n.loginNotAllowed,
+          404 => '${l10n.loginNotFound}$checkUrl',
+          final code? when code >= 500 => l10n.serverProblem,
+          _ => '${l10n.loginFailed}$checkUrl',
         };
       case DioExceptionType.cancel:
       case DioExceptionType.unknown:
-        return 'Login failed. Please try again.$checkUrl';
+        return '${l10n.loginFailed}$checkUrl';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final fieldSpacing = widget.compact ? 12.0 : 16.0;
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Welcome back',
+          l10n.welcomeBack,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -136,7 +136,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Use the email or phone number Cardly set up for you.',
+          l10n.signInSubtitle,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -144,10 +144,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         SizedBox(height: widget.compact ? 16 : 24),
         TextField(
           controller: _emailController,
-          decoration: const InputDecoration(
-            labelText: 'Email or phone number',
-            hintText: 'you@example.com or 0712 345 678',
-            prefixIcon: Icon(Icons.person_outline),
+          decoration: InputDecoration(
+            labelText: l10n.emailOrPhone,
+            hintText: l10n.emailOrPhoneHint,
+            prefixIcon: const Icon(Icons.person_outline),
           ),
           keyboardType: TextInputType.emailAddress,
           autocorrect: false,
@@ -161,10 +161,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         TextField(
           controller: _passwordController,
           decoration: InputDecoration(
-            labelText: 'Password',
+            labelText: l10n.password,
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
-              tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+              tooltip: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
               onPressed: () =>
                   setState(() => _obscurePassword = !_obscurePassword),
               icon: Icon(
@@ -187,7 +187,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               TextButton(
                 onPressed: () =>
                     setState(() => _showServerField = !_showServerField),
-                child: Text(_showServerField ? 'Hide server URL' : 'Advanced'),
+                child: Text(
+                  _showServerField ? l10n.hideServerUrl : l10n.advanced,
+                ),
               ),
             const Spacer(),
             TextButton(
@@ -197,9 +199,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                       '/forgot-password',
                       extra: _emailController.text.trim(),
                     ),
-              child: const Text(
-                'Forgot password?',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              child: Text(
+                l10n.forgotPasswordLink,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -207,9 +209,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         if (AppEnvironment.allowsServerOverride && _showServerField) ...[
           TextField(
             controller: _serverController,
-            decoration: const InputDecoration(
-              labelText: 'Server URL',
-              prefixIcon: Icon(Icons.dns_outlined),
+            decoration: InputDecoration(
+              labelText: l10n.serverUrl,
+              prefixIcon: const Icon(Icons.dns_outlined),
             ),
             keyboardType: TextInputType.url,
           ),
@@ -220,7 +222,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           width: double.infinity,
           child: FilledButton(
             onPressed: _loading ? null : _login,
-            child: Text(_loading ? 'Signing in...' : 'Sign In'),
+            child: Text(_loading ? l10n.signingIn : l10n.signInButton),
           ),
         ),
       ],

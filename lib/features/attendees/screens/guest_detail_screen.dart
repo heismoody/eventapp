@@ -13,6 +13,7 @@ import '../../scanner/providers/scanner_provider.dart';
 import '../services/attendee_service.dart';
 import '../widgets/attendee_display.dart';
 import '../widgets/guest_edit_sheet.dart';
+import '../../../l10n/l10n.dart';
 
 class GuestDetailScreen extends ConsumerWidget {
   const GuestDetailScreen({super.key, required this.attendeeId});
@@ -24,7 +25,7 @@ class GuestDetailScreen extends ConsumerWidget {
     final eventId = ref.watch(activeEventIdProvider);
 
     if (eventId == null) {
-      return const Scaffold(body: Center(child: Text('Select an event first')));
+      return Scaffold(body: Center(child: Text(context.l10n.selectEventFirst)));
     }
 
     final attendeesAsync = ref.watch(attendeesProvider(eventId));
@@ -34,14 +35,14 @@ class GuestDetailScreen extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (_, __) => Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: AppColors.canvas,
           foregroundColor: AppColors.onSurface,
           elevation: 0,
         ),
         body: Center(
           child: OutlinedButton(
             onPressed: () => ref.invalidate(attendeesProvider(eventId)),
-            child: const Text('Try again'),
+            child: Text(context.l10n.tryAgain),
           ),
         ),
       ),
@@ -57,11 +58,11 @@ class GuestDetailScreen extends ConsumerWidget {
         if (attendee == null) {
           return Scaffold(
             appBar: AppBar(
-              backgroundColor: const Color(0xFFF8FAFC),
+              backgroundColor: AppColors.canvas,
               foregroundColor: AppColors.onSurface,
               elevation: 0,
             ),
-            body: const Center(child: Text('Guest not found')),
+            body: Center(child: Text(context.l10n.guestNotFound)),
           );
         }
 
@@ -133,7 +134,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
       );
       if (mounted) await _refresh();
     } catch (_) {
-      if (mounted) AppToast.error('Check-in failed. Try again.');
+      if (mounted) AppToast.error(context.l10n.checkInFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -142,7 +143,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
   Future<void> _copyPhone() async {
     await Clipboard.setData(ClipboardData(text: _attendee.phone));
     if (mounted) {
-      AppToast.info('Phone number copied');
+      AppToast.info(context.l10n.phoneCopied);
     }
   }
 
@@ -158,12 +159,12 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
     final statusLabel = contributionStatusLabel(status);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.canvas,
       floatingActionButton: FloatingActionButton(
         onPressed: _busy ? null : _editGuest,
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        tooltip: 'Edit guest',
+        foregroundColor: AppColors.onPrimary,
+        tooltip: context.l10n.editGuest,
         child: const Icon(Icons.edit_outlined),
       ),
       body: Column(
@@ -182,16 +183,18 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
               _attendee.placesLeft > 0)
             Container(
               width: double.infinity,
-              color: Colors.white,
+              color: AppColors.surface,
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
               child: FilledButton.icon(
                 onPressed: _busy ? null : _manualCheckIn,
                 icon: const Icon(Icons.how_to_reg_outlined),
                 label: Text(
                   _attendee.enteredCount == 0
-                      ? 'Check in guest'
-                      : 'Check in · ${_attendee.enteredCount} of '
-                            '${_attendee.admits} entered',
+                      ? context.l10n.checkInGuest
+                      : context.l10n.checkInProgress(
+                          _attendee.enteredCount,
+                          _attendee.admits,
+                        ),
                 ),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
@@ -200,7 +203,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
               ),
             ),
           Material(
-            color: Colors.white,
+            color: AppColors.surface,
             child: TabBar(
               controller: _tabController,
               labelColor: AppColors.primary,
@@ -208,9 +211,9 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody>
               indicatorColor: AppColors.primary,
               indicatorWeight: 3,
               labelStyle: const TextStyle(fontWeight: FontWeight.w700),
-              tabs: const [
-                Tab(text: 'Overview'),
-                Tab(text: 'Payment'),
+              tabs: [
+                Tab(text: context.l10n.tabOverview),
+                Tab(text: context.l10n.tabPayment),
               ],
             ),
           ),
@@ -268,10 +271,7 @@ class _GuestProfileHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            AppColors.primary.withValues(alpha: 0.14),
-            const Color(0xFFF8FAFC),
-          ],
+          colors: [AppColors.primary.withValues(alpha: 0.14), AppColors.canvas],
         ),
       ),
       child: SafeArea(
@@ -287,9 +287,9 @@ class _GuestProfileHeader extends StatelessWidget {
                     icon: const Icon(Icons.arrow_back),
                     color: AppColors.onSurface,
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Guest profile',
+                      context.l10n.guestProfile,
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
@@ -306,13 +306,13 @@ class _GuestProfileHeader extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 44,
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppColors.surface,
                   child: CircleAvatar(
                     radius: 40,
                     backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                     child: Text(
                       guestInitials(name),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
                         fontSize: 28,
@@ -329,7 +329,7 @@ class _GuestProfileHeader extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: checkedIn ? AppColors.success : AppColors.muted,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: AppColors.surface, width: 2),
                     ),
                   ),
                 ),
@@ -339,7 +339,7 @@ class _GuestProfileHeader extends StatelessWidget {
             Text(
               name,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: AppColors.onSurface,
@@ -369,7 +369,7 @@ class _GuestProfileHeader extends StatelessWidget {
                   Expanded(
                     child: _StatItem(
                       value: formatCompactAmount(amountPaid),
-                      label: 'Amount paid',
+                      label: context.l10n.amountPaid,
                     ),
                   ),
                   Container(width: 1, height: 36, color: AppColors.border),
@@ -377,8 +377,10 @@ class _GuestProfileHeader extends StatelessWidget {
                     child: _StatItem(
                       value: hasTarget
                           ? formatCompactAmount(balance)
-                          : (checkedIn ? 'Yes' : 'No'),
-                      label: hasTarget ? 'Balance' : 'Checked in',
+                          : (checkedIn ? context.l10n.yes : context.l10n.no),
+                      label: hasTarget
+                          ? context.l10n.balance
+                          : context.l10n.dashCheckedIn,
                     ),
                   ),
                 ],
@@ -403,7 +405,7 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -413,7 +415,7 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             color: AppColors.muted,
             fontWeight: FontWeight.w600,
@@ -444,14 +446,14 @@ class _OverviewTab extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
         children: [
           _SectionCard(
-            title: 'Contact',
+            title: context.l10n.contact,
             icon: Icons.phone_outlined,
             children: [
               _DetailRow(
-                label: 'Mobile number',
+                label: context.l10n.mobileNumber,
                 value: '+${attendee.phone}',
                 trailing: IconButton(
-                  tooltip: 'Copy number',
+                  tooltip: context.l10n.copyNumber,
                   onPressed: onCopyPhone,
                   icon: const Icon(Icons.copy_outlined, size: 20),
                 ),
@@ -460,12 +462,14 @@ class _OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _SectionCard(
-            title: 'Check-in',
+            title: context.l10n.checkInSection,
             icon: Icons.qr_code_scanner_outlined,
             children: [
               _DetailRow(
-                label: 'Status',
-                value: attendee.checkedIn ? 'Checked in' : 'Not checked in',
+                label: context.l10n.status,
+                value: attendee.checkedIn
+                    ? context.l10n.dashCheckedIn
+                    : context.l10n.notCheckedIn,
                 valueColor: attendee.checkedIn
                     ? AppColors.success
                     : AppColors.muted,
@@ -473,7 +477,7 @@ class _OverviewTab extends StatelessWidget {
               if (attendee.checkedInAt != null) ...[
                 const SizedBox(height: 12),
                 _DetailRow(
-                  label: 'Checked in at',
+                  label: context.l10n.checkedInAt,
                   value: DateFormatter.formatDateTime(attendee.checkedInAt),
                 ),
               ],
@@ -481,17 +485,17 @@ class _OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _SectionCard(
-            title: 'Contribution',
+            title: context.l10n.contribution,
             icon: Icons.category_outlined,
             children: [
               _DetailRow(
-                label: 'Category',
-                value: attendee.categoryName ?? 'Not assigned',
+                label: context.l10n.category,
+                value: attendee.categoryName ?? context.l10n.notAssigned,
               ),
               if (attendee.targetAmountValue > 0) ...[
                 const SizedBox(height: 12),
                 _DetailRow(
-                  label: 'Target amount',
+                  label: context.l10n.targetAmount,
                   value: formatTzsAmount(attendee.targetAmountValue),
                 ),
               ],
@@ -499,12 +503,14 @@ class _OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _SectionCard(
-            title: 'QR card',
+            title: context.l10n.qrCard,
             icon: Icons.qr_code_2_outlined,
             children: [
               _DetailRow(
-                label: 'QR card message',
-                value: attendee.qrActivatedAt != null ? 'Sent' : 'Not sent yet',
+                label: context.l10n.qrCardMessage,
+                value: attendee.qrActivatedAt != null
+                    ? context.l10n.sent
+                    : context.l10n.notSentYet,
                 valueColor: attendee.qrActivatedAt != null
                     ? AppColors.success
                     : AppColors.muted,
@@ -512,7 +518,7 @@ class _OverviewTab extends StatelessWidget {
               if (attendee.qrActivatedAt != null) ...[
                 const SizedBox(height: 12),
                 _DetailRow(
-                  label: 'Sent at',
+                  label: context.l10n.sentAt,
                   value: DateFormatter.formatDateTime(attendee.qrActivatedAt),
                 ),
               ],
@@ -548,23 +554,23 @@ class _PaymentTab extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
         children: [
           _SectionCard(
-            title: 'Payment summary',
+            title: context.l10n.paymentSummary,
             icon: Icons.payments_outlined,
             children: [
               _DetailRow(
-                label: 'Amount paid',
+                label: context.l10n.amountPaid,
                 value: formatTzsAmount(attendee.paidAmount),
                 valueColor: AppColors.primary,
               ),
               if (attendee.targetAmountValue > 0) ...[
                 const SizedBox(height: 12),
                 _DetailRow(
-                  label: 'Target amount',
+                  label: context.l10n.targetAmount,
                   value: formatTzsAmount(attendee.targetAmountValue),
                 ),
                 const SizedBox(height: 12),
                 _DetailRow(
-                  label: 'Balance remaining',
+                  label: context.l10n.balanceRemaining,
                   value: formatTzsAmount(attendee.balanceAmount),
                   valueColor: attendee.balanceAmount > 0
                       ? AppColors.warning
@@ -582,13 +588,13 @@ class _PaymentTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${(progress * 100).round()}% of target paid',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                  context.l10n.percentOfTargetPaid((progress * 100).round()),
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
               ],
               const SizedBox(height: 12),
               _DetailRow(
-                label: 'Payment status',
+                label: context.l10n.paymentStatus,
                 value: statusLabel,
                 valueColor: statusColor,
               ),
@@ -617,7 +623,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
@@ -630,7 +636,7 @@ class _SectionCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
                   color: AppColors.onSurface,
@@ -670,7 +676,7 @@ class _DetailRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
               ),
               const SizedBox(height: 4),
               Text(

@@ -8,6 +8,7 @@ import '../../../shared/widgets/people_field.dart';
 import '../models/contribution_models.dart';
 import '../services/contribution_service.dart';
 import '../../attendees/services/attendee_service.dart';
+import '../../../l10n/l10n.dart';
 
 Future<ContributionCategory?> showContributionCategorySheet({
   required BuildContext context,
@@ -65,19 +66,16 @@ class _ContributionCategorySheetState
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Update existing cards?'),
-        content: Text(
-          'Cards of this type that still admit $from can change to $to too. '
-          'Cards set to another number by hand keep theirs.',
-        ),
+        title: Text(context.l10n.updateExistingCardsTitle),
+        content: Text(context.l10n.updateExistingCardsBody(from, to)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Only new cards'),
+            child: Text(context.l10n.onlyNewCards),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Update cards'),
+            child: Text(context.l10n.updateCards),
           ),
         ],
       ),
@@ -88,7 +86,7 @@ class _ContributionCategorySheetState
     if (!_formKey.currentState!.validate()) return;
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      AppToast.error('Enter a category name');
+      AppToast.error(context.l10n.enterCategoryName);
       return;
     }
     final people = int.parse(_peopleController.text.trim());
@@ -127,17 +125,17 @@ class _ContributionCategorySheetState
       if (mounted) {
         AppToast.success(
           existing == null
-              ? 'Category saved'
+              ? context.l10n.categorySaved
               : cardsUpdated > 0
-              ? 'Category updated · $cardsUpdated cards now admit $people'
-              : 'Category updated',
+              ? context.l10n.categoryUpdatedCards(cardsUpdated, people)
+              : context.l10n.categoryUpdated,
         );
         Navigator.pop(context, saved);
       }
     } catch (error) {
       if (mounted) {
         setState(() => _submitting = false);
-        AppToast.error(apiErrorMessage(error, 'Failed to save category'));
+        AppToast.error(apiErrorMessage(error, context.l10n.saveCategoryFailed));
       }
     }
   }
@@ -168,14 +166,16 @@ class _ContributionCategorySheetState
             ),
             const SizedBox(height: 20),
             Text(
-              widget.category == null ? 'Add category' : 'Edit category',
+              widget.category == null
+                  ? context.l10n.addCategory
+                  : context.l10n.editCategory,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _nameController,
               enabled: !_submitting,
-              decoration: const InputDecoration(labelText: 'Category name'),
+              decoration: InputDecoration(labelText: context.l10n.categoryName),
             ),
             const SizedBox(height: 16),
             Form(
@@ -183,10 +183,8 @@ class _ContributionCategorySheetState
               child: PeopleField(
                 controller: _peopleController,
                 enabled: !_submitting,
-                label: 'People per card',
-                helperText:
-                    'How many people one card of this type lets in, e.g. 2 '
-                    'for a couple. Each card can still be changed.',
+                label: context.l10n.peoplePerCardLabel,
+                helperText: context.l10n.peoplePerCardHelper,
               ),
             ),
             const SizedBox(height: 20),
@@ -194,7 +192,9 @@ class _ContributionCategorySheetState
               width: double.infinity,
               child: FilledButton(
                 onPressed: _submitting ? null : _save,
-                child: Text(_submitting ? 'Saving...' : 'Save category'),
+                child: Text(
+                  _submitting ? context.l10n.saving : context.l10n.saveCategory,
+                ),
               ),
             ),
           ],

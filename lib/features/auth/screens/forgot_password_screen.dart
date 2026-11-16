@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../l10n/l10n.dart';
 import '../../event_request/services/event_request_service.dart';
 import '../providers/auth_provider.dart';
 import '../services/password_reset_service.dart';
@@ -90,7 +91,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       setState(() => _error = error.message);
       if (error.retryAfter != null) _startResendTimer(error.retryAfter!);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Something went wrong. Try again.');
+      if (mounted) setState(() => _error = context.l10n.genericError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -99,7 +100,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _sendCode() => _run(() async {
     final identifier = _identifier.text.trim();
     if (identifier.isEmpty) {
-      setState(() => _error = 'Enter your email or phone number.');
+      setState(() => _error = context.l10n.enterIdentifier);
       return;
     }
     final sent = await _service.requestCode(identifier);
@@ -119,13 +120,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (!mounted) return;
     _code.clear();
     _startResendTimer(sent.resendAfter);
-    AppToast.success('New code sent.');
+    AppToast.success(context.l10n.newCodeSent);
   });
 
   Future<void> _verify() => _run(() async {
     final code = _code.text;
     if (code.length != 6) {
-      setState(() => _error = 'Enter the 6-digit code.');
+      setState(() => _error = context.l10n.enterSixDigitCode);
       return;
     }
     final verified = await _service.verifyCode(_sentTo, code);
@@ -140,11 +141,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _save() => _run(() async {
     final password = _password.text;
     if (password.length < 8) {
-      setState(() => _error = 'Use at least 8 characters.');
+      setState(() => _error = context.l10n.passwordTooShort);
       return;
     }
     if (password != _confirm.text) {
-      setState(() => _error = "The two passwords don't match.");
+      setState(() => _error = context.l10n.passwordsDontMatch);
       return;
     }
     final user = await _service.complete(_resetToken, password);
@@ -152,7 +153,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     await publishSession(ref, user);
     final route = await homeRouteAfterSignIn(ref, user);
     if (!mounted) return;
-    AppToast.success('Password changed. You are signed in.');
+    AppToast.success(context.l10n.passwordChangedSignedIn);
     context.go(route);
   });
 
@@ -178,9 +179,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   String get _title => switch (_step) {
-    _Step.find => 'Forgot password',
-    _Step.code => 'Enter code',
-    _Step.password => 'New password',
+    _Step.find => context.l10n.forgotTitle,
+    _Step.code => context.l10n.enterCodeTitle,
+    _Step.password => context.l10n.newPasswordTitle,
   };
 
   @override
@@ -197,7 +198,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           surfaceTintColor: Colors.transparent,
           foregroundColor: AppColors.primary,
           leading: IconButton(
-            tooltip: 'Back',
+            tooltip: context.l10n.back,
             icon: const Icon(Icons.arrow_back),
             onPressed: _back,
           ),
@@ -267,11 +268,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          "Enter the email or phone number on your account. We'll send you "
-          'a 6-digit code.',
-          style: _lead(context),
-        ),
+        Text(context.l10n.forgotLead, style: _lead(context)),
         const SizedBox(height: 20),
         TextField(
           controller: _identifier,
@@ -284,42 +281,35 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ],
           textInputAction: TextInputAction.send,
           onSubmitted: (_) => _sendCode(),
-          decoration: const InputDecoration(
-            labelText: 'Email or phone number',
-            hintText: 'you@example.com or 0712 345 678',
-            prefixIcon: Icon(Icons.person_outline),
+          decoration: InputDecoration(
+            labelText: context.l10n.emailOrPhone,
+            hintText: context.l10n.emailOrPhoneHint,
+            prefixIcon: const Icon(Icons.person_outline),
           ),
         ),
         _errorLine(),
         const SizedBox(height: 20),
-        _primary('Send code', 'Sending...', _sendCode),
+        _primary(context.l10n.sendCode, context.l10n.sending, _sendCode),
       ],
     );
   }
 
   Widget _buildCode(BuildContext context) {
-    final where = _channel == ResetChannel.sms ? 'number' : 'email';
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text.rich(
           TextSpan(
             style: _lead(context),
-            children: [
-              const TextSpan(text: 'If '),
-              TextSpan(
-                text: _sentTo,
-                style: const TextStyle(
-                  color: AppColors.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
+            children: spansWith(
+              l10n.codeSentLead,
+              _sentTo,
+              TextStyle(
+                color: AppColors.onSurface,
+                fontWeight: FontWeight.w700,
               ),
-              TextSpan(
-                text:
-                    " is on a Cardly account, we've sent it a 6-digit code. "
-                    'It works for 10 minutes.',
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 20),
@@ -339,9 +329,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             Expanded(
               child: _resendIn > 0
                   ? Text(
-                      "Didn't get it? Send again in "
-                      '${_resendIn ~/ 60}:${(_resendIn % 60).toString().padLeft(2, '0')}',
-                      style: const TextStyle(color: AppColors.muted),
+                      l10n.resendIn(
+                        '${_resendIn ~/ 60}:${(_resendIn % 60).toString().padLeft(2, '0')}',
+                      ),
+                      style: TextStyle(color: AppColors.muted),
                     )
                   : TextButton(
                       style: TextButton.styleFrom(
@@ -349,30 +340,33 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         alignment: Alignment.centerLeft,
                       ),
                       onPressed: _busy ? null : _resend,
-                      child: const Text(
-                        'Send the code again',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      child: Text(
+                        l10n.sendCodeAgain,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
             ),
             TextButton(
               onPressed: _busy ? null : _back,
               child: Text(
-                'Change $where',
+                _channel == ResetChannel.sms
+                    ? l10n.changeNumber
+                    : l10n.changeEmail,
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        _primary('Continue', 'Checking...', _verify),
+        _primary(l10n.continueButton, l10n.checking, _verify),
       ],
     );
   }
 
   Widget _buildPassword(BuildContext context) {
+    final l10n = context.l10n;
     final visibility = IconButton(
-      tooltip: _obscure ? 'Show password' : 'Hide password',
+      tooltip: _obscure ? l10n.showPassword : l10n.hidePassword,
       onPressed: () => setState(() => _obscure = !_obscure),
       icon: Icon(
         _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -385,20 +379,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Text.rich(
             TextSpan(
               style: _lead(context),
-              children: [
-                const TextSpan(text: 'Choose a new password'),
-                if (_name.isNotEmpty) ...[
-                  const TextSpan(text: ' for '),
-                  TextSpan(
-                    text: _name,
-                    style: const TextStyle(
-                      color: AppColors.onSurface,
-                      fontWeight: FontWeight.w700,
+              children: _name.isEmpty
+                  ? [TextSpan(text: l10n.chooseNewPassword)]
+                  : spansWith(
+                      l10n.chooseNewPasswordFor,
+                      _name,
+                      TextStyle(
+                        color: AppColors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
-                const TextSpan(text: '.'),
-              ],
             ),
           ),
           const SizedBox(height: 20),
@@ -409,8 +399,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             autofillHints: const [AutofillHints.newPassword],
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
-              labelText: 'New password',
-              helperText: 'At least 8 characters.',
+              labelText: l10n.newPasswordLabel,
+              helperText: l10n.passwordHelper,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: visibility,
             ),
@@ -422,14 +412,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             autofillHints: const [AutofillHints.newPassword],
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _save(),
-            decoration: const InputDecoration(
-              labelText: 'Type it again',
-              prefixIcon: Icon(Icons.lock_outline),
+            decoration: InputDecoration(
+              labelText: l10n.typeItAgain,
+              prefixIcon: const Icon(Icons.lock_outline),
             ),
           ),
           _errorLine(),
           const SizedBox(height: 20),
-          _primary('Save and sign in', 'Saving...', _save),
+          _primary(l10n.saveAndSignIn, l10n.saving, _save),
         ],
       ),
     );
@@ -454,7 +444,7 @@ class _CodeBoxes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: '6-digit code',
+      label: context.l10n.sixDigitCode,
       child: SizedBox(
         height: 60,
         child: Stack(
@@ -489,7 +479,7 @@ class _CodeBoxes extends StatelessWidget {
                           ),
                           child: Text(
                             i < text.length ? text[i] : '',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
                               color: AppColors.onSurface,
@@ -538,7 +528,7 @@ class _HelpCard extends StatelessWidget {
     );
     if (!opened) {
       AppToast.error(
-        'WhatsApp us on ${CardlyContact.display(CardlyContact.whatsapp)}.',
+        appL10n.whatsAppUsOn(CardlyContact.display(CardlyContact.whatsapp)),
       );
     }
   }
@@ -558,24 +548,25 @@ class _HelpCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'No longer have that number or email?',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          Text(
+            context.l10n.lostAccessTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
           const SizedBox(height: 4),
           Text(
-            "WhatsApp us on ${CardlyContact.display(CardlyContact.whatsapp)} "
-            "and we'll help you back in.",
-            style: const TextStyle(color: AppColors.muted, height: 1.45),
+            context.l10n.lostAccessBody(
+              CardlyContact.display(CardlyContact.whatsapp),
+            ),
+            style: TextStyle(color: AppColors.muted, height: 1.45),
           ),
           const SizedBox(height: 8),
           TextButton.icon(
             style: TextButton.styleFrom(padding: EdgeInsets.zero),
             onPressed: _openWhatsApp,
             icon: const Icon(Icons.chat_outlined, size: 18),
-            label: const Text(
-              'Open WhatsApp',
-              style: TextStyle(fontWeight: FontWeight.w700),
+            label: Text(
+              context.l10n.openWhatsApp,
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
         ],

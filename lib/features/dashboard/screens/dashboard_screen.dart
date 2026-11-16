@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/services/connectivity_service.dart';
 import '../../../shared/widgets/day_bucket_bar_chart.dart';
 import '../../../shared/widgets/skeleton_box.dart';
@@ -60,15 +61,28 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _isOnline = true;
+  StreamSubscription<bool>? _connectivitySub;
 
   @override
   void initState() {
     super.initState();
     _checkConnectivity();
-    ref.read(connectivityServiceProvider).onStatusChanged.listen((online) {
-      if (mounted) setState(() => _isOnline = online);
-      if (online) ref.read(syncServiceProvider).drainQueue();
-    });
+    // Cancelled in dispose: left running, every visit to the dashboard
+    // added a listener that later used `ref` on a disposed screen.
+    _connectivitySub = ref
+        .read(connectivityServiceProvider)
+        .onStatusChanged
+        .listen((online) {
+          if (!mounted) return;
+          setState(() => _isOnline = online);
+          if (online) ref.read(syncServiceProvider).drainQueue();
+        });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySub?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkConnectivity() async {
@@ -110,7 +124,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _ActivityEntry(
             time: guest.checkedInAt!,
             title: guest.name,
-            subtitle: 'Checked in',
+            subtitle: context.l10n.dashCheckedIn,
             icon: Icons.login_rounded,
             iconColor: AppColors.primary,
           ),
@@ -122,12 +136,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         if (time == null) continue;
         final synced = (item['synced'] as int?) == 1;
         final people = item['count'] as int? ?? 1;
-        final label = people > 1 ? 'Checked in · $people people' : 'Checked in';
+        final label = people > 1
+            ? context.l10n.dashCheckedInPeople(people)
+            : context.l10n.dashCheckedIn;
         entries.add(
           _ActivityEntry(
             time: time,
-            title: item['name'] as String? ?? 'Guest',
-            subtitle: synced ? label : '$label · queued',
+            title: item['name'] as String? ?? context.l10n.guestFallback,
+            subtitle: synced ? label : context.l10n.dashQueued(label),
             icon: Icons.login_rounded,
             iconColor: AppColors.primary,
           ),
@@ -142,8 +158,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       entries.add(
         _ActivityEntry(
           time: contribution.createdAt,
-          title: attendee?.name ?? 'Guest',
-          subtitle: 'Contributed',
+          title: attendee?.name ?? context.l10n.guestFallback,
+          subtitle: context.l10n.dashContributed,
           icon: Icons.payments_outlined,
           iconColor: AppColors.success,
           trailing: 'TZS ${compactAmount(contribution.amountValue)}',
@@ -157,7 +173,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         _ActivityEntry(
           time: guest.createdAt!,
           title: guest.name,
-          subtitle: 'Added as guest',
+          subtitle: context.l10n.dashAddedAsGuest,
           icon: Icons.person_add_alt_1,
           iconColor: AppColors.accent,
         ),
@@ -273,29 +289,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: AppColors.canvas,
           appBar: AppBar(
-            backgroundColor: const Color(0xFFF8FAFC),
+            backgroundColor: AppColors.canvas,
             foregroundColor: AppColors.onSurface,
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
-            title: const Text(
-              'Dashboard',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+            title: Text(
+              context.l10n.navDashboard,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
             ),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: IconButton(
-                  tooltip: 'Settings',
+                  tooltip: context.l10n.navSettings,
                   onPressed: () => context.go('/shell/settings'),
                   icon: CircleAvatar(
                     radius: 18,
                     backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                     child: Text(
                       _userInitials(user?.name),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
@@ -340,7 +356,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                           ),
                         ),
-                      _sectionLabel('Summary', topPadding: 28),
+                      _sectionLabel(context.l10n.dashSummary, topPadding: 28),
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
@@ -348,7 +364,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             items: [
                               SummaryStatItem(
                                 icon: Icons.people_outline,
-                                label: 'Guests',
+                                label: context.l10n.navGuests,
                                 value: '$totalGuests',
                                 accent: AppColors.primary,
                                 isLoading: guestsLoading,
@@ -356,7 +372,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               if (teamCount != null || teamLoading)
                                 SummaryStatItem(
                                   icon: Icons.groups_outlined,
-                                  label: 'Team',
+                                  label: context.l10n.navTeam,
                                   value: '${teamCount ?? 0}',
                                   accent: AppColors.accent,
                                   isLoading: teamLoading,
@@ -364,7 +380,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               if (canManageEvent)
                                 SummaryStatItem(
                                   icon: Icons.payments_outlined,
-                                  label: 'Contributions',
+                                  label: context.l10n.navContributions,
                                   value: '$unpaidCount',
                                   accent: !usesContributions
                                       ? AppColors.muted
@@ -374,15 +390,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   caption: !usesContributions
                                       ? null
                                       : unpaidCount == 0
-                                      ? 'All settled'
-                                      : 'unpaid',
+                                      ? context.l10n.dashAllSettled
+                                      : context.l10n.dashUnpaid,
                                   isLoading: guestsLoading,
                                 ),
                             ],
                           ),
                         ),
                       ),
-                      _sectionLabel('Recent activity', topPadding: 24),
+                      _sectionLabel(
+                        context.l10n.dashRecentActivity,
+                        topPadding: 24,
+                      ),
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
@@ -397,7 +416,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                       ),
-                      _sectionLabel('Trends'),
+                      _sectionLabel(context.l10n.dashTrends),
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
@@ -416,7 +435,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                       if (phase == _DashboardPhase.preparation) ...[
                         if (usesContributions && canManageEvent) ...[
-                          _sectionLabel('Contributions'),
+                          _sectionLabel(context.l10n.navContributions),
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -434,15 +453,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                               child: _NeedsAttentionCard(
-                                text:
-                                    '$unpaidCount guest${unpaidCount == 1 ? '' : 's'} still '
-                                    '${unpaidCount == 1 ? 'owes' : 'owe'} a balance',
+                                text: context.l10n.dashOwesBalance(unpaidCount),
                                 onTap: () => context.go('/shell/attendees'),
                               ),
                             ),
                           ),
                         if (usesContributions && canManageEvent) ...[
-                          _sectionLabel('Contributions'),
+                          _sectionLabel(context.l10n.navContributions),
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -460,15 +477,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                               child: _NeedsAttentionCard(
-                                text:
-                                    '$unpaidCount guest${unpaidCount == 1 ? '' : 's'} still '
-                                    '${unpaidCount == 1 ? 'owes' : 'owe'} a balance',
+                                text: context.l10n.dashOwesBalance(unpaidCount),
                                 onTap: () => context.go('/shell/attendees'),
                               ),
                             ),
                           ),
                         if (usesContributions && canManageEvent) ...[
-                          _sectionLabel('Contributions'),
+                          _sectionLabel(context.l10n.navContributions),
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -493,25 +508,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               actions: [
                 SpeedDialAction(
                   icon: Icons.people_outline,
-                  label: 'View guests',
+                  label: context.l10n.dashViewGuests,
                   onTap: () => context.go('/shell/attendees'),
                 ),
                 if (canManageEvent)
                   SpeedDialAction(
                     icon: Icons.payments_outlined,
-                    label: 'Contributions',
+                    label: context.l10n.navContributions,
                     onTap: () => context.go('/shell/contributions'),
                   ),
                 if (canManageEvent)
                   SpeedDialAction(
                     icon: Icons.groups_outlined,
-                    label: 'Manage team',
+                    label: context.l10n.dashManageTeam,
                     onTap: () => context.go('/shell/team'),
                   ),
                 if (canManageEvent)
                   SpeedDialAction(
                     icon: Icons.summarize_outlined,
-                    label: 'View report',
+                    label: context.l10n.dashViewReport,
                     onTap: () => context.push('/shell/report'),
                   ),
               ],
@@ -527,7 +542,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         padding: EdgeInsets.fromLTRB(24, topPadding, 20, 10),
         child: Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.onSurface,
             fontWeight: FontWeight.w800,
             fontSize: 15,
@@ -548,8 +563,8 @@ class _SyncAlertBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isOnline ? AppColors.warning : AppColors.danger;
     final text = isOnline
-        ? '$pendingCount check-in${pendingCount == 1 ? '' : 's'} waiting to sync'
-        : 'Offline — $pendingCount check-in${pendingCount == 1 ? '' : 's'} queued';
+        ? context.l10n.dashSyncWaiting(pendingCount)
+        : context.l10n.dashOfflineQueued(pendingCount);
 
     return Container(
       width: double.infinity,
@@ -655,7 +670,7 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [AppColors.primary, AppColors.primaryDark],
             begin: Alignment.topLeft,
@@ -696,7 +711,7 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.onPrimary,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 18,
                               ),
@@ -706,7 +721,9 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                               '${DateFormatter.formatDate(eventDate)}, '
                               '${DateFormatter.formatTime(eventDate)}',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: AppColors.onPrimary.withValues(
+                                  alpha: 0.8,
+                                ),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -724,7 +741,9 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
+                              color: AppColors.onPrimary.withValues(
+                                alpha: 0.18,
+                              ),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Row(
@@ -732,7 +751,7 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                               children: [
                                 const Icon(
                                   Icons.location_on_outlined,
-                                  color: Colors.white,
+                                  color: AppColors.onPrimary,
                                   size: 14,
                                 ),
                                 const SizedBox(width: 4),
@@ -742,7 +761,7 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.onPrimary,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -757,12 +776,12 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
+                            color: AppColors.onPrimary.withValues(alpha: 0.18),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.celebration_rounded,
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                             size: 20,
                           ),
                         ),
@@ -775,26 +794,26 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                       children: [
                         _SnapshotStat(
                           value: _twoDigits(totalGuests),
-                          label: 'People',
+                          label: context.l10n.dashPeople,
                           isLoading: isLoading,
                         ),
                         const _StatDivider(),
                         _SnapshotStat(
                           value: _twoDigits(checkedIn),
-                          label: 'Entered',
+                          label: context.l10n.dashEntered,
                           isLoading: isLoading,
                         ),
                         const _StatDivider(),
                         _SnapshotStat(
                           value: _twoDigits(pending),
-                          label: 'Pending',
+                          label: context.l10n.dashPending,
                           isLoading: isLoading,
                         ),
                         const _StatDivider(),
                         _SnapshotStat(
                           value: '${_twoDigits(checkInRate)}%',
                           isLoading: isLoading,
-                          label: 'Rate',
+                          label: context.l10n.dashRate,
                         ),
                       ],
                     )
@@ -802,21 +821,24 @@ class _EventSnapshotCardState extends State<_EventSnapshotCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _CountdownUnit(value: _remaining.inDays, label: 'days'),
+                        _CountdownUnit(
+                          value: _remaining.inDays,
+                          label: context.l10n.dashDays,
+                        ),
                         const _CountdownColon(),
                         _CountdownUnit(
                           value: _remaining.inHours % 24,
-                          label: 'hrs',
+                          label: context.l10n.dashHours,
                         ),
                         const _CountdownColon(),
                         _CountdownUnit(
                           value: _remaining.inMinutes % 60,
-                          label: 'mins',
+                          label: context.l10n.dashMinutes,
                         ),
                         const _CountdownColon(),
                         _CountdownUnit(
                           value: _remaining.inSeconds % 60,
-                          label: 'secs',
+                          label: context.l10n.dashSeconds,
                         ),
                       ],
                     ),
@@ -843,7 +865,7 @@ class _CountdownUnit extends StatelessWidget {
         Text(
           value.toString().padLeft(2, '0'),
           style: const TextStyle(
-            color: Colors.white,
+            color: AppColors.onPrimary,
             fontSize: 30,
             fontWeight: FontWeight.w800,
             height: 1,
@@ -854,7 +876,7 @@ class _CountdownUnit extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: AppColors.onPrimary.withValues(alpha: 0.7),
             fontSize: 11,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.5,
@@ -875,7 +897,7 @@ class _CountdownColon extends StatelessWidget {
       child: Text(
         ':',
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.6),
+          color: AppColors.onPrimary.withValues(alpha: 0.6),
           fontSize: 26,
           fontWeight: FontWeight.w800,
         ),
@@ -895,7 +917,7 @@ class _StatDivider extends StatelessWidget {
         width: 2.5,
         height: 32,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.3),
+          color: AppColors.onPrimary.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(1),
         ),
       ),
@@ -925,13 +947,13 @@ class _SnapshotStat extends StatelessWidget {
             width: 30,
             height: 28,
             borderRadius: 6,
-            color: Colors.white.withValues(alpha: 0.4),
+            color: AppColors.onPrimary.withValues(alpha: 0.4),
           )
         else
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.onPrimary,
               fontSize: 30,
               fontWeight: FontWeight.w800,
               height: 1,
@@ -942,7 +964,7 @@ class _SnapshotStat extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: AppColors.onPrimary.withValues(alpha: 0.7),
             fontSize: 11,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.5,
@@ -966,7 +988,7 @@ class _Bubble extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: opacity),
+        color: AppColors.onPrimary.withValues(alpha: opacity),
       ),
     );
   }
@@ -1001,34 +1023,38 @@ class _TrendChartsCardState extends State<_TrendChartsCard>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  /// Guests, plus Team and Contributions for owners. Counted without
+  /// [_tabs] because initState can't read translations yet.
+  int get _tabCount => widget.canManageEvent ? 3 : 1;
+
   List<_TrendTab> get _tabs {
     return [
       _TrendTab(
-        label: 'Guests',
+        label: context.l10n.navGuests,
         accent: AppColors.primary,
         highlight: AppColors.accent,
-        emptyLabel: 'No guests added yet',
-        ctaLabel: 'Add guests',
+        emptyLabel: context.l10n.dashNoGuestsAdded,
+        ctaLabel: context.l10n.dashAddGuests,
         onCta: () => context.go('/shell/attendees'),
         dates: widget.guestDates,
       ),
       if (widget.canManageEvent)
         _TrendTab(
-          label: 'Team',
+          label: context.l10n.navTeam,
           accent: AppColors.accent,
           highlight: AppColors.primary,
-          emptyLabel: 'No team members yet',
-          ctaLabel: 'Add team member',
+          emptyLabel: context.l10n.dashNoTeam,
+          ctaLabel: context.l10n.dashAddTeamMember,
           onCta: () => context.go('/shell/team'),
           dates: widget.teamMembers?.map((m) => m.createdAt).toList() ?? [],
         ),
       if (widget.canManageEvent)
         _TrendTab(
-          label: 'Contributions',
+          label: context.l10n.navContributions,
           accent: AppColors.success,
           highlight: AppColors.warning,
-          emptyLabel: 'No contributions recorded yet',
-          ctaLabel: 'Set up contributions',
+          emptyLabel: context.l10n.dashNoContributions,
+          ctaLabel: context.l10n.dashSetUpContributions,
           onCta: () => context.go('/shell/contributions'),
           dates: widget.contributions?.map((c) => c.createdAt).toList() ?? [],
           amounts: widget.contributions?.map((c) => c.amountValue).toList(),
@@ -1039,13 +1065,13 @@ class _TrendChartsCardState extends State<_TrendChartsCard>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(length: _tabCount, vsync: this);
   }
 
   @override
   void didUpdateWidget(covariant _TrendChartsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newLength = _tabs.length;
+    final newLength = _tabCount;
     if (_tabController.length != newLength) {
       final index = _tabController.index.clamp(0, newLength - 1);
       _tabController.dispose();
@@ -1141,7 +1167,7 @@ class _TrendTabBody extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               tab.emptyLabel,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 14),
             FilledButton(onPressed: tab.onCta, child: Text(tab.ctaLabel)),
@@ -1182,27 +1208,19 @@ class _NeedsAttentionCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.info_outline,
-                size: 18,
-                color: AppColors.warning,
-              ),
+              Icon(Icons.info_outline, size: 18, color: AppColors.warning),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.warning,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: AppColors.warning,
-              ),
+              Icon(Icons.chevron_right, size: 18, color: AppColors.warning),
             ],
           ),
         ),
@@ -1232,7 +1250,7 @@ class _EventOverviewSection extends StatelessWidget {
       totalCollected += a.paidAmount;
       totalTarget += a.targetAmountValue;
 
-      final cat = a.categoryName ?? 'No category';
+      final cat = a.categoryName ?? context.l10n.dashNoCategory;
       final stats = categoryMap[cat] ?? _CategoryStats(name: cat);
       categoryMap[cat] = stats.add(a.paidAmount, a.targetAmountValue);
     }
@@ -1255,8 +1273,8 @@ class _EventOverviewSection extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Contributions collected',
+                  Text(
+                    context.l10n.dashContributionsCollected,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppColors.onSurface,
@@ -1289,18 +1307,12 @@ class _EventOverviewSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'TZS ${_compact(totalCollected)} collected',
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 13,
-                    ),
+                    context.l10n.dashCollectedAmount(_compact(totalCollected)),
+                    style: TextStyle(color: AppColors.muted, fontSize: 13),
                   ),
                   Text(
-                    'Target: TZS ${_compact(totalTarget)}',
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 13,
-                    ),
+                    context.l10n.dashTargetAmount(_compact(totalTarget)),
+                    style: TextStyle(color: AppColors.muted, fontSize: 13),
                   ),
                 ],
               ),
@@ -1313,8 +1325,8 @@ class _EventOverviewSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'By category',
+                Text(
+                  context.l10n.dashByCategory,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -1329,15 +1341,15 @@ class _EventOverviewSection extends StatelessWidget {
                         Expanded(
                           child: Text(
                             cat.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.onSurface,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                         Text(
-                          '${cat.guestCount} guest${cat.guestCount == 1 ? '' : 's'}',
-                          style: const TextStyle(
+                          context.l10n.dashGuestCount(cat.guestCount),
+                          style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 13,
                           ),
@@ -1345,7 +1357,7 @@ class _EventOverviewSection extends StatelessWidget {
                         const SizedBox(width: 16),
                         Text(
                           'TZS ${_compact(cat.collected)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
@@ -1365,11 +1377,11 @@ class _EventOverviewSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 28),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 Icon(
                   Icons.group_add_outlined,
@@ -1378,7 +1390,7 @@ class _EventOverviewSection extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'No guests yet',
+                  context.l10n.dashNoGuestsYet,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -1386,7 +1398,7 @@ class _EventOverviewSection extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Import guests to start tracking contributions',
+                  context.l10n.dashImportGuests,
                   style: TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
               ],
@@ -1441,7 +1453,7 @@ class _OverviewCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
@@ -1485,7 +1497,7 @@ class _RecentActivitySection extends StatelessWidget {
             Icon(Icons.history, size: 18, color: AppColors.muted),
             const SizedBox(width: 8),
             Text(
-              'No recent activity yet',
+              context.l10n.dashNoActivity,
               style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
           ],
@@ -1502,7 +1514,7 @@ class _RecentActivitySection extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < entries.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: AppColors.border),
+            if (i > 0) Divider(height: 1, color: AppColors.border),
             _ActivityRow(entry: entries[i]),
           ],
         ],
@@ -1540,7 +1552,7 @@ class _ActivityRow extends StatelessWidget {
                   entry.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                     color: AppColors.onSurface,
@@ -1549,7 +1561,7 @@ class _ActivityRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   entry.subtitle,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
               ],
             ),
@@ -1569,7 +1581,7 @@ class _ActivityRow extends StatelessWidget {
                 ),
               Text(
                 _timeAgo(entry.time),
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: AppColors.muted, fontSize: 11),
               ),
             ],
           ),
@@ -1581,10 +1593,10 @@ class _ActivityRow extends StatelessWidget {
 
 String _timeAgo(DateTime time) {
   final diff = DateTime.now().difference(time.toLocal());
-  if (diff.inSeconds < 60) return 'now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24) return '${diff.inHours}h ago';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
+  if (diff.inSeconds < 60) return appL10n.timeNow;
+  if (diff.inMinutes < 60) return appL10n.timeMinutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return appL10n.timeHoursAgo(diff.inHours);
+  if (diff.inDays < 7) return appL10n.timeDaysAgo(diff.inDays);
   return DateFormatter.formatDate(time);
 }
 
@@ -1601,7 +1613,7 @@ class _DashboardSkeleton extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColors.primary, AppColors.primaryDark],
                   begin: Alignment.topLeft,
@@ -1622,13 +1634,13 @@ class _DashboardSkeleton extends StatelessWidget {
                             SkeletonBox(
                               width: 160,
                               height: 18,
-                              color: Colors.white.withValues(alpha: 0.4),
+                              color: AppColors.onPrimary.withValues(alpha: 0.4),
                             ),
                             const SizedBox(height: 8),
                             SkeletonBox(
                               width: 120,
                               height: 13,
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: AppColors.onPrimary.withValues(alpha: 0.3),
                             ),
                           ],
                         ),
@@ -1638,7 +1650,7 @@ class _DashboardSkeleton extends StatelessWidget {
                         width: 40,
                         height: 40,
                         borderRadius: 20,
-                        color: Colors.white.withValues(alpha: 0.25),
+                        color: AppColors.onPrimary.withValues(alpha: 0.25),
                       ),
                     ],
                   ),
@@ -1652,20 +1664,20 @@ class _DashboardSkeleton extends StatelessWidget {
                             width: 2.5,
                             height: 32,
                             borderRadius: 1,
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: AppColors.onPrimary.withValues(alpha: 0.25),
                           ),
                         Column(
                           children: [
                             SkeletonBox(
                               width: 34,
                               height: 26,
-                              color: Colors.white.withValues(alpha: 0.4),
+                              color: AppColors.onPrimary.withValues(alpha: 0.4),
                             ),
                             const SizedBox(height: 6),
                             SkeletonBox(
                               width: 44,
                               height: 10,
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: AppColors.onPrimary.withValues(alpha: 0.3),
                             ),
                           ],
                         ),
@@ -1708,7 +1720,7 @@ class _DashboardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(32),
         child: Column(
@@ -1717,7 +1729,7 @@ class _DashboardEmptyState extends StatelessWidget {
             Icon(Icons.event_busy_outlined, size: 56, color: AppColors.muted),
             SizedBox(height: 16),
             Text(
-              'Select an event to view your dashboard',
+              context.l10n.dashSelectEvent,
               textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),

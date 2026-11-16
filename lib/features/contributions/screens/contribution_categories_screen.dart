@@ -7,6 +7,7 @@ import '../../events/providers/event_provider.dart';
 import '../models/contribution_models.dart';
 import '../services/contribution_service.dart';
 import '../widgets/contribution_category_sheet.dart';
+import '../../../l10n/l10n.dart';
 
 class ContributionCategoriesScreen extends ConsumerStatefulWidget {
   const ContributionCategoriesScreen({super.key});
@@ -38,20 +39,20 @@ class _ContributionCategoriesScreenState
   Widget build(BuildContext context) {
     final eventId = ref.watch(activeEventIdProvider);
     if (eventId == null) {
-      return const Scaffold(body: Center(child: Text('Select an event first')));
+      return Scaffold(body: Center(child: Text(context.l10n.selectEventFirst)));
     }
 
     final categoriesAsync = ref.watch(contributionCategoriesProvider(eventId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
-          'Contribution categories',
+        title: Text(
+          context.l10n.contributionCategories,
           style: TextStyle(
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -61,7 +62,7 @@ class _ContributionCategoriesScreenState
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCategorySheet(eventId: eventId),
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.onPrimary,
         child: const Icon(Icons.add),
       ),
       body: categoriesAsync.when(
@@ -69,7 +70,7 @@ class _ContributionCategoriesScreenState
         error: (_, __) => Center(
           child: OutlinedButton(
             onPressed: () => _refresh(eventId),
-            child: const Text('Try again'),
+            child: Text(context.l10n.tryAgain),
           ),
         ),
         data: (categories) {
@@ -78,11 +79,11 @@ class _ContributionCategoriesScreenState
               onRefresh: () => _refresh(eventId),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
+                children: [
                   SizedBox(height: 120),
                   Center(
                     child: Text(
-                      'No categories yet.\nTap + to add Single, Double, Family, etc.',
+                      context.l10n.noCategoriesTapPlus,
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.muted, height: 1.5),
                     ),
@@ -103,7 +104,7 @@ class _ContributionCategoriesScreenState
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: AppColors.border),
                   ),
@@ -115,17 +116,17 @@ class _ContributionCategoriesScreenState
                           children: [
                             Text(
                               category.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.onSurface,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              category.defaultAdmits == 1
-                                  ? '1 person per card'
-                                  : '${category.defaultAdmits} people per card',
-                              style: const TextStyle(
+                              context.l10n.peoplePerCard(
+                                category.defaultAdmits,
+                              ),
+                              style: TextStyle(
                                 color: AppColors.muted,
                                 fontSize: 13,
                               ),
@@ -134,7 +135,7 @@ class _ContributionCategoriesScreenState
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Edit',
+                        tooltip: context.l10n.edit,
                         onPressed: () => _showCategorySheet(
                           eventId: eventId,
                           category: category,
@@ -142,7 +143,7 @@ class _ContributionCategoriesScreenState
                         icon: const Icon(Icons.edit_outlined),
                       ),
                       IconButton(
-                        tooltip: 'Delete',
+                        tooltip: context.l10n.delete,
                         onPressed: () async {
                           try {
                             await ref
@@ -153,11 +154,11 @@ class _ContributionCategoriesScreenState
                             );
                           } catch (_) {
                             if (context.mounted) {
-                              AppToast.error('Failed to delete category');
+                              AppToast.error(context.l10n.deleteCategoryFailed);
                             }
                           }
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.delete_outline,
                           color: AppColors.danger,
                         ),

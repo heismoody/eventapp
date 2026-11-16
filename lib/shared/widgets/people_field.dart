@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../l10n/l10n.dart';
 
 /// Most people one card can admit — matches the server's cap.
 const maxPeoplePerCard = 50;
@@ -42,13 +43,15 @@ class PeopleField extends StatelessWidget {
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       validator: (value) {
         final text = value?.trim() ?? '';
-        if (text.isEmpty) return hint == null ? 'Enter how many people' : null;
+        if (text.isEmpty) {
+          return hint == null ? context.l10n.enterHowManyPeople : null;
+        }
         final people = int.tryParse(text);
         if (people == null || people < 1 || people > maxPeoplePerCard) {
-          return 'From 1 to $maxPeoplePerCard';
+          return context.l10n.fromOneTo(maxPeoplePerCard);
         }
         if (people < minimum) {
-          return '$minimum already entered — can\'t be fewer';
+          return context.l10n.cantBeFewer(minimum);
         }
         return null;
       },

@@ -12,6 +12,7 @@ import '../../attendees/widgets/attendee_display.dart';
 import '../../events/providers/event_provider.dart';
 import '../services/contribution_service.dart';
 import '../widgets/add_contribution_sheet.dart';
+import '../../../l10n/l10n.dart';
 
 /// Mirrors the Guests screen's layout (search + filter bar + card list) but
 /// scoped to contribution status instead of check-in status.
@@ -54,7 +55,7 @@ class _ContributionsScreenState extends ConsumerState<ContributionsScreen>
               actions: [
                 SpeedDialAction(
                   icon: Icons.add_card_outlined,
-                  label: 'Add contribution',
+                  label: context.l10n.addContribution,
                   onTap: () => showAddContributionSheet(
                     context: context,
                     ref: ref,
@@ -70,14 +71,14 @@ class _ContributionsScreenState extends ConsumerState<ContributionsScreen>
 
   Widget _buildScaffold(String? eventId) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
-          'Contributions',
+        title: Text(
+          context.l10n.navContributions,
           style: TextStyle(
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -106,9 +107,9 @@ class _ContributionsScreenState extends ConsumerState<ContributionsScreen>
                       fontWeight: FontWeight.w900,
                       fontSize: 15,
                     ),
-                    tabs: const [
-                      Tab(text: 'Stats'),
-                      Tab(text: 'List'),
+                    tabs: [
+                      Tab(text: context.l10n.tabStats),
+                      Tab(text: context.l10n.tabList),
                     ],
                   ),
                 ),
@@ -197,14 +198,14 @@ class _ContributionsListTab extends StatelessWidget {
                 sliver: SliverToBoxAdapter(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Search by name',
-                        prefixIcon: Icon(Icons.search),
+                      decoration: InputDecoration(
+                        hintText: context.l10n.searchByName,
+                        prefixIcon: const Icon(Icons.search),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -284,9 +285,9 @@ class _ContributionsStatsCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Collected',
+                          context.l10n.collected,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: AppColors.onPrimary.withValues(alpha: 0.8),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -297,7 +298,7 @@ class _ContributionsStatsCard extends ConsumerWidget {
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                           ),
                         ),
                       ],
@@ -307,9 +308,9 @@ class _ContributionsStatsCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'Expected',
+                        context.l10n.expected,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: AppColors.onPrimary.withValues(alpha: 0.8),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -320,7 +321,7 @@ class _ContributionsStatsCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: AppColors.onPrimary.withValues(alpha: 0.85),
                         ),
                       ),
                     ],
@@ -333,29 +334,29 @@ class _ContributionsStatsCard extends ConsumerWidget {
                 child: LinearProgressIndicator(
                   value: progress.toDouble(),
                   minHeight: 8,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  color: Colors.white,
+                  backgroundColor: AppColors.onPrimary.withValues(alpha: 0.2),
+                  color: AppColors.onPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               HeroStatRow(
-                labelColor: Colors.white.withValues(alpha: 0.75),
-                dividerColor: Colors.white.withValues(alpha: 0.25),
+                labelColor: AppColors.onPrimary.withValues(alpha: 0.75),
+                dividerColor: AppColors.onPrimary.withValues(alpha: 0.25),
                 items: [
                   HeroStatItem(
-                    label: 'Fully paid',
+                    label: context.l10n.statusFullyPaid,
                     value: '$paidCount',
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                   ),
                   HeroStatItem(
-                    label: 'Partial',
+                    label: context.l10n.partial,
                     value: '$partialCount',
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                   ),
                   HeroStatItem(
-                    label: 'Outstanding',
+                    label: context.l10n.outstanding,
                     value: formatCompactAmount(outstanding.toDouble()),
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                   ),
                 ],
               ),
@@ -387,7 +388,7 @@ class _ChartCardShell extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
@@ -396,7 +397,7 @@ class _ChartCardShell extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 14,
               color: AppColors.onSurface,
@@ -420,24 +421,24 @@ class _CategoryBreakdownCard extends ConsumerWidget {
     final attendeesAsync = ref.watch(attendeesProvider(eventId));
 
     return _ChartCardShell(
-      title: 'By Category',
+      title: context.l10n.byCategoryTitle,
       contentHeight: 176,
       child: attendeesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) =>
-            const _ChartEmptyState(message: 'Failed to load category data'),
+            _ChartEmptyState(message: context.l10n.loadCategoryDataFailed),
         data: (attendees) {
           final tracked = attendees.where((a) => a.paidAmount > 0).toList();
 
           if (tracked.isEmpty) {
-            return const _ChartEmptyState(
-              message: 'No contributions collected yet',
+            return _ChartEmptyState(
+              message: context.l10n.noContributionsCollected,
             );
           }
 
           final byCategory = <String, double>{};
           for (final a in tracked) {
-            final label = a.categoryName ?? 'Uncategorized';
+            final label = a.categoryName ?? context.l10n.uncategorized;
             byCategory[label] = (byCategory[label] ?? 0) + a.paidAmount;
           }
           final sortedEntries = byCategory.entries.toList()
@@ -457,7 +458,7 @@ class _CategoryBreakdownCard extends ConsumerWidget {
             child: CategoryDonutChart(
               slices: slices,
               centerValue: formatCompactAmount(total),
-              centerLabel: 'Collected',
+              centerLabel: context.l10n.collected,
             ),
           );
         },
@@ -476,16 +477,14 @@ class _ContributionsOverTimeCard extends ConsumerWidget {
     final contributionsAsync = ref.watch(contributionsProvider(eventId));
 
     return _ChartCardShell(
-      title: 'Over Time',
+      title: context.l10n.overTime,
       child: contributionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) =>
-            const _ChartEmptyState(message: 'Failed to load contributions'),
+            _ChartEmptyState(message: context.l10n.loadContributionsFailed),
         data: (records) {
           if (records.isEmpty) {
-            return const _ChartEmptyState(
-              message: 'No contributions recorded yet',
-            );
+            return _ChartEmptyState(message: context.l10n.dashNoContributions);
           }
 
           return DayBucketBarChart(
@@ -512,12 +511,12 @@ class _ChartEmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.pie_chart_outline, size: 28, color: AppColors.muted),
+          Icon(Icons.pie_chart_outline, size: 28, color: AppColors.muted),
           const SizedBox(height: 10),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
           ),
         ],
       ),
@@ -533,17 +532,18 @@ class _ContributionFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const options = [
-      ('all', 'All'),
-      ('unpaid', 'Unpaid'),
-      ('partial', 'Partial'),
-      ('full', 'Full'),
+    final l10n = context.l10n;
+    final options = [
+      ('all', l10n.filterAll),
+      ('unpaid', l10n.filterUnpaid),
+      ('partial', l10n.filterPartial),
+      ('full', l10n.filterFull),
     ];
 
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
@@ -697,7 +697,7 @@ class _ContributionCard extends StatelessWidget {
     final status = attendee.paymentStatus;
 
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -715,7 +715,7 @@ class _ContributionCard extends StatelessWidget {
                 backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                 child: Text(
                   guestInitials(attendee.name),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w800,
                   ),
@@ -728,7 +728,7 @@ class _ContributionCard extends StatelessWidget {
                   children: [
                     Text(
                       attendee.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
                       ),
@@ -739,10 +739,7 @@ class _ContributionCard extends StatelessWidget {
                     Text(
                       '${formatTzsAmount(attendee.paidAmount)} / '
                       '${formatTzsAmount(attendee.targetAmountValue)}',
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -782,7 +779,7 @@ class _ContributionsEmptySelectionState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(32),
         child: Column(
@@ -791,7 +788,7 @@ class _ContributionsEmptySelectionState extends StatelessWidget {
             Icon(Icons.event_busy_outlined, size: 56, color: AppColors.muted),
             SizedBox(height: 16),
             Text(
-              'Select an event first',
+              context.l10n.selectEventFirst,
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
           ],
@@ -815,15 +812,15 @@ class _ContributionsEmptyState extends StatelessWidget {
             color: AppColors.primary.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.payments_outlined,
             size: 42,
             color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 20),
-        const Text(
-          'No contributions found',
+        Text(
+          context.l10n.noContributionsFound,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -831,8 +828,8 @@ class _ContributionsEmptyState extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Try a different filter, or set a pledge on a guest to track it here.',
+        Text(
+          context.l10n.noContributionsFoundHint,
           textAlign: TextAlign.center,
           style: TextStyle(color: AppColors.muted, height: 1.5),
         ),
@@ -859,19 +856,18 @@ class _ContributionsErrorState extends StatelessWidget {
               color: AppColors.danger.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.error_outline,
-              color: AppColors.danger,
-              size: 34,
-            ),
+            child: Icon(Icons.error_outline, color: AppColors.danger, size: 34),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Failed to load contributions',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          Text(
+            context.l10n.loadContributionsFailed,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 16),
-          OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+          OutlinedButton(
+            onPressed: onRetry,
+            child: Text(context.l10n.tryAgain),
+          ),
         ],
       ),
     );

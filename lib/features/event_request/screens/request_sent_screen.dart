@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../l10n/l10n.dart';
 import '../services/event_request_service.dart';
 
 class RequestSentDetails {
@@ -26,7 +27,13 @@ class RequestSentScreen extends StatelessWidget {
 
   Future<void> _open(Uri uri) async {
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened) AppToast.error("Couldn't open that. Call us on 0618 298 314.");
+    if (!opened) {
+      AppToast.error(
+        appL10n.couldntOpenCallUs(
+          CardlyContact.display(CardlyContact.callNumbers.first),
+        ),
+      );
+    }
   }
 
   Future<void> _call(BuildContext context) async {
@@ -54,6 +61,7 @@ class RequestSentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final d = details;
     final firstName = d?.name.trim().split(RegExp(r'\s+')).first;
 
@@ -73,13 +81,13 @@ class RequestSentScreen extends StatelessWidget {
                 child: Container(
                   width: 72,
                   height: 72,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.check_rounded,
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                     size: 40,
                   ),
                 ),
@@ -87,8 +95,8 @@ class RequestSentScreen extends StatelessWidget {
               const SizedBox(height: 28),
               Text(
                 firstName == null
-                    ? 'Your request is with us.'
-                    : 'Thanks, $firstName. Your request is with us.',
+                    ? l10n.requestWithUs
+                    : l10n.thanksRequestWithUs(firstName),
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   height: 1.12,
@@ -102,22 +110,19 @@ class RequestSentScreen extends StatelessWidget {
                     height: 1.5,
                   ),
                   children: [
-                    const TextSpan(text: "We'll call you"),
-                    if (d != null) ...[
-                      const TextSpan(text: ' on '),
-                      TextSpan(
-                        text: CardlyContact.display(d.phone),
-                        style: const TextStyle(
+                    if (d == null)
+                      TextSpan(text: l10n.callYouSoon)
+                    else
+                      ...spansWith(
+                        l10n.callYouOn,
+                        CardlyContact.display(d.phone),
+                        TextStyle(
                           color: AppColors.onSurface,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
-                    const TextSpan(text: ' within one working day.'),
                     if (d?.email != null)
-                      TextSpan(
-                        text: " We've also emailed a copy to ${d!.email}.",
-                      ),
+                      TextSpan(text: ' ${l10n.emailedCopyTo(d!.email!)}'),
                   ],
                 ),
               ),
@@ -134,32 +139,22 @@ class RequestSentScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'What happens next',
+                        l10n.whatHappensNext,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const _Step(
-                        1,
-                        'We call to agree on the cards, the guest list and the price.',
-                      ),
-                      const _Step(
-                        2,
-                        'We set up your event and send you an SMS and email to choose a password.',
-                      ),
-                      const _Step(
-                        3,
-                        'Sign in here and your event is ready.',
-                        last: true,
-                      ),
+                      _Step(1, l10n.nextStep1),
+                      _Step(2, l10n.nextStep2),
+                      _Step(3, l10n.nextStep3, last: true),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 32),
               Text(
-                "Can't wait? Reach us now.",
+                l10n.cantWait,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.muted,
@@ -174,7 +169,7 @@ class RequestSentScreen extends StatelessWidget {
                         Uri.parse('https://wa.me/${CardlyContact.whatsapp}'),
                       ),
                       icon: const Icon(Icons.chat_outlined),
-                      label: const Text('WhatsApp'),
+                      label: Text(l10n.whatsApp),
                       style: _contactStyle,
                     ),
                   ),
@@ -183,7 +178,7 @@ class RequestSentScreen extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => _call(context),
                       icon: const Icon(Icons.call_outlined),
-                      label: const Text('Call us'),
+                      label: Text(l10n.callUs),
                       style: _contactStyle,
                     ),
                   ),
@@ -195,9 +190,12 @@ class RequestSentScreen extends StatelessWidget {
                 style: TextButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                 ),
-                child: const Text(
-                  'Done',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                child: Text(
+                  l10n.done,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ],
@@ -212,7 +210,7 @@ final _contactStyle = OutlinedButton.styleFrom(
   minimumSize: const Size.fromHeight(52),
   foregroundColor: AppColors.primary,
   backgroundColor: AppColors.surface,
-  side: const BorderSide(color: AppColors.border),
+  side: BorderSide(color: AppColors.border),
   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
 );
@@ -234,13 +232,13 @@ class _Step extends StatelessWidget {
           width: 24,
           height: 24,
           alignment: Alignment.center,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.secondaryAlt,
             shape: BoxShape.circle,
           ),
           child: Text(
             '$number',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.w700,
               fontSize: 13,

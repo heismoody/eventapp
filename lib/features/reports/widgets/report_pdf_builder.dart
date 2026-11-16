@@ -2,14 +2,19 @@ import 'dart:typed_data';
 
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
+import 'package:flutter/painting.dart' show Color;
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../core/constants/app_colors.dart';
 import '../../attendees/services/attendee_service.dart';
 import '../models/event_report.dart';
 
-const _brandPrimary = PdfColor.fromInt(0xFF541E06);
-const _brandMuted = PdfColor.fromInt(0xFF7C6A5C);
-const _brandBorder = PdfColor.fromInt(0xFFE3D7C9);
+// A printed report always uses the light palette, whatever the app's theme.
+PdfColor _pdf(Color color) => PdfColor.fromInt(color.toARGB32());
+final _brandPrimary = _pdf(AppPalette.light.primary);
+final _brandMuted = _pdf(AppPalette.light.muted);
+final _brandBorder = _pdf(AppPalette.light.border);
+final _paperFill = _pdf(AppPalette.light.secondary);
 
 String _formatTzs(double amount) {
   final rounded = amount.round();
@@ -67,7 +72,7 @@ Future<Uint8List> buildEventReportPdf(
               if (report.event.venue != null && report.event.venue!.isNotEmpty)
                 report.event.venue!,
             ].join(' · '),
-            style: const pw.TextStyle(fontSize: 11, color: _brandMuted),
+            style: pw.TextStyle(fontSize: 11, color: _brandMuted),
           ),
           pw.SizedBox(height: 8),
           pw.Divider(color: _brandBorder, thickness: 1),
@@ -77,13 +82,13 @@ Future<Uint8List> buildEventReportPdf(
         alignment: pw.Alignment.centerRight,
         child: pw.Text(
           'Page ${context.pageNumber} of ${context.pagesCount}',
-          style: const pw.TextStyle(fontSize: 9, color: _brandMuted),
+          style: pw.TextStyle(fontSize: 9, color: _brandMuted),
         ),
       ),
       build: (context) => [
         pw.Text(
           'Generated ${dateFmt.format(report.generatedAt.toLocal())}',
-          style: const pw.TextStyle(fontSize: 9, color: _brandMuted),
+          style: pw.TextStyle(fontSize: 9, color: _brandMuted),
         ),
         pw.SizedBox(height: 16),
 
@@ -147,7 +152,7 @@ pw.Widget _sectionTitle(String text) {
       style: pw.TextStyle(
         fontSize: 13,
         fontWeight: pw.FontWeight.bold,
-        color: PdfColors.black,
+        color: _pdf(AppPalette.light.onSurface),
       ),
     ),
   );
@@ -180,7 +185,7 @@ pw.Widget _kpiGrid(Map<String, String> items) {
               pw.SizedBox(height: 2),
               pw.Text(
                 entry.key,
-                style: const pw.TextStyle(fontSize: 9, color: _brandMuted),
+                style: pw.TextStyle(fontSize: 9, color: _brandMuted),
               ),
             ],
           ),
@@ -193,9 +198,7 @@ pw.Widget _categoryTable(List<ReportCategoryRow> categories) {
   return pw.TableHelper.fromTextArray(
     headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
     cellStyle: const pw.TextStyle(fontSize: 10),
-    headerDecoration: const pw.BoxDecoration(
-      color: PdfColor.fromInt(0xFFF6EFE8),
-    ),
+    headerDecoration: pw.BoxDecoration(color: _paperFill),
     cellAlignments: const {
       0: pw.Alignment.centerLeft,
       1: pw.Alignment.centerRight,
@@ -240,7 +243,7 @@ pw.Widget _timelineSummary(
           first == null || last == null
               ? 'No activity yet'
               : '${dateFmt.format(first.toLocal())} — ${dateFmt.format(last.toLocal())}',
-          style: const pw.TextStyle(fontSize: 10, color: _brandMuted),
+          style: pw.TextStyle(fontSize: 10, color: _brandMuted),
         ),
       ),
     ],
@@ -254,9 +257,7 @@ pw.Widget _messagingSection(ReportMessaging messaging) {
       pw.TableHelper.fromTextArray(
         headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
         cellStyle: const pw.TextStyle(fontSize: 10),
-        headerDecoration: const pw.BoxDecoration(
-          color: PdfColor.fromInt(0xFFF6EFE8),
-        ),
+        headerDecoration: pw.BoxDecoration(color: _paperFill),
         headers: const ['Channel', 'Sent', 'Failed', 'Pending', 'Credits left'],
         data: [
           for (final c in messaging.channels)
@@ -272,7 +273,7 @@ pw.Widget _messagingSection(ReportMessaging messaging) {
       pw.SizedBox(height: 6),
       pw.Text(
         '${messaging.peopleReached} people reached',
-        style: const pw.TextStyle(fontSize: 10, color: _brandMuted),
+        style: pw.TextStyle(fontSize: 10, color: _brandMuted),
       ),
       if (messaging.messages.isNotEmpty) ...[
         pw.SizedBox(height: 10),
@@ -282,9 +283,7 @@ pw.Widget _messagingSection(ReportMessaging messaging) {
             fontSize: 9,
           ),
           cellStyle: const pw.TextStyle(fontSize: 9),
-          headerDecoration: const pw.BoxDecoration(
-            color: PdfColor.fromInt(0xFFF6EFE8),
-          ),
+          headerDecoration: pw.BoxDecoration(color: _paperFill),
           headers: const ['Recipient', 'Channel', 'Type', 'Status'],
           data: [
             for (final m in messaging.messages)
@@ -320,9 +319,7 @@ pw.Widget _contributionsSection(ReportContributions contributions) {
             fontSize: 10,
           ),
           cellStyle: const pw.TextStyle(fontSize: 10),
-          headerDecoration: const pw.BoxDecoration(
-            color: PdfColor.fromInt(0xFFF6EFE8),
-          ),
+          headerDecoration: pw.BoxDecoration(color: _paperFill),
           cellAlignments: const {
             0: pw.Alignment.centerLeft,
             1: pw.Alignment.centerRight,
@@ -347,9 +344,7 @@ pw.Widget _participantsTable(
   return pw.TableHelper.fromTextArray(
     headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
     cellStyle: const pw.TextStyle(fontSize: 9),
-    headerDecoration: const pw.BoxDecoration(
-      color: PdfColor.fromInt(0xFFF6EFE8),
-    ),
+    headerDecoration: pw.BoxDecoration(color: _paperFill),
     cellAlignments: {
       0: pw.Alignment.centerLeft,
       1: pw.Alignment.centerLeft,

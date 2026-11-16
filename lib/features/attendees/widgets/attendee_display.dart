@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../services/attendee_service.dart';
+import '../../../l10n/l10n.dart';
 
 String contributionStatusLabel(ContributionPaymentStatus status) {
   return switch (status) {
-    ContributionPaymentStatus.paid => 'Fully paid',
-    ContributionPaymentStatus.partial => 'Partially paid',
-    ContributionPaymentStatus.unpaid => 'Unpaid',
-    ContributionPaymentStatus.none => 'No category',
+    ContributionPaymentStatus.paid => appL10n.statusFullyPaid,
+    ContributionPaymentStatus.partial => appL10n.statusPartiallyPaid,
+    ContributionPaymentStatus.unpaid => appL10n.statusUnpaid,
+    ContributionPaymentStatus.none => appL10n.dashNoCategory,
   };
 }
 

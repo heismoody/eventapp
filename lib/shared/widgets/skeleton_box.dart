@@ -12,13 +12,15 @@ class SkeletonBox extends StatefulWidget {
     this.width,
     required this.height,
     this.borderRadius = 8,
-    this.color = AppColors.border,
-  });
+    Color? color,
+  }) : _color = color;
 
   final double? width;
   final double height;
   final double borderRadius;
-  final Color color;
+  final Color? _color;
+
+  Color get color => _color ?? AppColors.border;
 
   @override
   State<SkeletonBox> createState() => _SkeletonBoxState();
