@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/l10n.dart';
+
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/screens/dashboard_screen.dart';
 import '../scanner/screens/scan_hub_screen.dart';
@@ -14,7 +16,7 @@ import '../update/services/update_service.dart';
 import '../update/widgets/update_dialog.dart';
 
 class _ShellTab {
-  const _ShellTab({
+  _ShellTab({
     required this.route,
     required this.prefix,
     required this.icon,
@@ -34,55 +36,56 @@ class MainShell extends ConsumerWidget {
 
   final Widget child;
 
-  List<_ShellTab> _tabs({
+  List<_ShellTab> _tabs(
+    AppLocalizations l10n, {
     required bool showOwnerTabs,
     required bool showScanner,
   }) {
     return [
-      const _ShellTab(
+      _ShellTab(
         route: '/shell/dashboard',
         prefix: '/shell/dashboard',
         icon: Icons.dashboard_outlined,
         selectedIcon: Icons.dashboard,
-        label: 'Dashboard',
+        label: l10n.navDashboard,
       ),
       if (showScanner)
-        const _ShellTab(
+        _ShellTab(
           route: '/shell/scanner',
           prefix: '/shell/scanner',
           icon: Icons.qr_code_scanner_outlined,
           selectedIcon: Icons.qr_code_scanner,
-          label: 'Scan',
+          label: l10n.navScan,
         ),
-      const _ShellTab(
+      _ShellTab(
         route: '/shell/attendees',
         prefix: '/shell/attendees',
         icon: Icons.people_outline,
         selectedIcon: Icons.people,
-        label: 'Guests',
+        label: l10n.navGuests,
       ),
       if (showOwnerTabs)
-        const _ShellTab(
+        _ShellTab(
           route: '/shell/contributions',
           prefix: '/shell/contributions',
           icon: Icons.payments_outlined,
           selectedIcon: Icons.payments,
-          label: 'Contributions',
+          label: l10n.navContributions,
         ),
       if (showOwnerTabs)
-        const _ShellTab(
+        _ShellTab(
           route: '/shell/team',
           prefix: '/shell/team',
           icon: Icons.groups_outlined,
           selectedIcon: Icons.groups,
-          label: 'Team',
+          label: l10n.navTeam,
         ),
-      const _ShellTab(
+      _ShellTab(
         route: '/shell/settings',
         prefix: '/shell/settings',
         icon: Icons.settings_outlined,
         selectedIcon: Icons.settings,
-        label: 'Settings',
+        label: l10n.navSettings,
       ),
     ];
   }
@@ -103,7 +106,11 @@ class MainShell extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final showOwnerTabs = user?.canManageEvent ?? false;
     final showScanner = user?.canCheckIn ?? false;
-    final tabs = _tabs(showOwnerTabs: showOwnerTabs, showScanner: showScanner);
+    final tabs = _tabs(
+      context.l10n,
+      showOwnerTabs: showOwnerTabs,
+      showScanner: showScanner,
+    );
 
     final matched = tabs.indexWhere((tab) => location.startsWith(tab.prefix));
     final currentIndex = matched < 0 ? 0 : matched;

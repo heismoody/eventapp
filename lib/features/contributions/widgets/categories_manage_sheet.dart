@@ -6,6 +6,7 @@ import '../../../core/utils/app_toast.dart';
 import '../models/contribution_models.dart';
 import '../services/contribution_service.dart';
 import 'contribution_category_sheet.dart';
+import '../../../l10n/l10n.dart';
 
 Future<void> showCategoriesManageSheet({
   required BuildContext context,
@@ -53,20 +54,17 @@ class _CategoriesManageSheet extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete "${category.name}"?'),
-        content: const Text(
-          'Guests in this category will be left without a category. '
-          'Their pledges and payments are not affected.',
-        ),
+        title: Text(context.l10n.deleteCategoryTitle(category.name)),
+        content: Text(context.l10n.deleteCategoryBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -77,7 +75,7 @@ class _CategoriesManageSheet extends ConsumerWidget {
       await ref.read(contributionServiceProvider).deleteCategory(category.id);
       ref.invalidate(contributionCategoriesProvider(eventId));
     } catch (_) {
-      AppToast.error('Failed to delete category');
+      AppToast.error(appL10n.deleteCategoryFailed);
     }
   }
 
@@ -111,12 +109,12 @@ class _CategoriesManageSheet extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Categories',
+                  context.l10n.categories,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
               Tooltip(
-                message: 'Add category',
+                message: context.l10n.addCategory,
                 child: IconButton.filled(
                   onPressed: () => _add(context, ref),
                   style: IconButton.styleFrom(
@@ -140,19 +138,19 @@ class _CategoriesManageSheet extends ConsumerWidget {
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (_, _) => const Padding(
+              error: (_, _) => Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'Could not load categories.',
+                  context.l10n.loadCategoriesFailed,
                   style: TextStyle(color: AppColors.muted),
                 ),
               ),
               data: (categories) {
                 if (categories.isEmpty) {
-                  return const Padding(
+                  return Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Text(
-                      'No categories yet. Use the + button to create one.',
+                      context.l10n.noCategoriesUsePlus,
                       style: TextStyle(color: AppColors.muted),
                     ),
                   );
@@ -167,29 +165,27 @@ class _CategoriesManageSheet extends ConsumerWidget {
                       contentPadding: EdgeInsets.zero,
                       title: Text(
                         category.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: AppColors.onSurface,
                         ),
                       ),
                       subtitle: Text(
-                        category.defaultAdmits == 1
-                            ? '1 person per card'
-                            : '${category.defaultAdmits} people per card',
-                        style: const TextStyle(color: AppColors.muted),
+                        context.l10n.peoplePerCard(category.defaultAdmits),
+                        style: TextStyle(color: AppColors.muted),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            tooltip: 'Edit',
+                            tooltip: context.l10n.edit,
                             onPressed: () => _edit(context, ref, category),
                             icon: const Icon(Icons.edit_outlined),
                           ),
                           IconButton(
-                            tooltip: 'Delete',
+                            tooltip: context.l10n.delete,
                             onPressed: () => _delete(context, ref, category),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.delete_outline,
                               color: AppColors.danger,
                             ),

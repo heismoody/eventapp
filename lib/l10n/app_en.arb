@@ -1,0 +1,950 @@
+{
+  "@@locale": "en",
+  "languageName": "English",
+  "language": "Language",
+  "languageSheetTitle": "Choose language",
+  "appearance": "Appearance",
+  "themeSystem": "Same as phone",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "back": "Back",
+  "cancel": "Cancel",
+  "save": "Save",
+  "done": "Done",
+  "genericError": "Something went wrong. Try again.",
+  "couldNotOpenPage": "Could not open the page",
+  "navDashboard": "Dashboard",
+  "navScan": "Scan",
+  "navGuests": "Guests",
+  "navContributions": "Contributions",
+  "navTeam": "Team",
+  "navSettings": "Settings",
+  "welcomeSlide1Title": "Every guest. Every moment. Perfectly managed.",
+  "welcomeSlide1Body": "Digital invitation cards, check-in at the door and contributions, all in one place.",
+  "welcomeSlide2Title": "Celebrate with confidence",
+  "welcomeSlide2Body": "Scan guests at the door, track check-ins and stay in control.",
+  "planEventWithCardly": "Plan an event with Cardly",
+  "signIn": "Sign in",
+  "invitedNote": "Invited to an event? Your card comes by SMS. You don't need an account.",
+  "closeSignIn": "Close sign in",
+  "newToCardly": "New to Cardly?",
+  "planAnEvent": "Plan an event",
+  "welcomeBack": "Welcome back",
+  "signInSubtitle": "Use the email or phone number Cardly set up for you.",
+  "emailOrPhone": "Email or phone number",
+  "emailOrPhoneHint": "you@example.com or 0712 345 678",
+  "password": "Password",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "advanced": "Advanced",
+  "hideServerUrl": "Hide server URL",
+  "serverUrl": "Server URL",
+  "forgotPasswordLink": "Forgot password?",
+  "signingIn": "Signing in...",
+  "signInButton": "Sign In",
+  "loginMissingFields": "Enter your email or phone number, and your password.",
+  "loginCheckServerUrl": "Check the server URL under Advanced.",
+  "loginUnexpected": "Unexpected response from the server.",
+  "loginUnreachable": "Can't reach the server. Check your internet connection.",
+  "loginBadCertificate": "The server's security certificate isn't valid.",
+  "loginWrongPassword": "That password doesn't match this email or phone number. Try again, or tap Forgot password.",
+  "loginNotAllowed": "This account isn't allowed to use the Cardly app.",
+  "loginNotFound": "Login service not found on this server.",
+  "serverProblem": "The server had a problem. Please try again shortly.",
+  "loginFailed": "Login failed. Please try again.",
+  "forgotTitle": "Forgot password",
+  "enterCodeTitle": "Enter code",
+  "newPasswordTitle": "New password",
+  "enterIdentifier": "Enter your email or phone number.",
+  "newCodeSent": "New code sent.",
+  "enterSixDigitCode": "Enter the 6-digit code.",
+  "passwordTooShort": "Use at least 8 characters.",
+  "passwordsDontMatch": "The two passwords don't match.",
+  "passwordChangedSignedIn": "Password changed. You are signed in.",
+  "forgotLead": "Enter the email or phone number on your account. We'll send you a 6-digit code.",
+  "sendCode": "Send code",
+  "sending": "Sending...",
+  "codeSentLead": "If {destination} is on a Cardly account, we've sent it a 6-digit code. It works for 10 minutes.",
+  "@codeSentLead": {
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "resendIn": "Didn't get it? Send again in {time}",
+  "@resendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sendCodeAgain": "Send the code again",
+  "changeNumber": "Change number",
+  "changeEmail": "Change email",
+  "continueButton": "Continue",
+  "checking": "Checking...",
+  "chooseNewPasswordFor": "Choose a new password for {name}.",
+  "@chooseNewPasswordFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseNewPassword": "Choose a new password.",
+  "newPasswordLabel": "New password",
+  "passwordHelper": "At least 8 characters.",
+  "typeItAgain": "Type it again",
+  "saveAndSignIn": "Save and sign in",
+  "saving": "Saving...",
+  "sixDigitCode": "6-digit code",
+  "lostAccessTitle": "No longer have that number or email?",
+  "lostAccessBody": "WhatsApp us on {number} and we'll help you back in.",
+  "@lostAccessBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "openWhatsApp": "Open WhatsApp",
+  "whatsAppUsOn": "WhatsApp us on {number}.",
+  "@whatsAppUsOn": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "planYourEvent": "Plan your event",
+  "stepOfTotal": "Step {current} of {total}",
+  "@stepOfTotal": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "stepEventHeading": "What are you planning?",
+  "stepYouHeading": "How can we reach you?",
+  "stepReviewHeading": "Check and send",
+  "edit": "Edit",
+  "yourEvent": "Your event",
+  "guests": "Guests",
+  "name": "Name",
+  "email": "Email",
+  "noEmail": "No email",
+  "eventLabel": "Event",
+  "dateOfEvent": "Date of the event",
+  "fillHighlighted": "Fill in the highlighted parts.",
+  "aboutYou": "About you",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "enterFirstName": "Enter your first name",
+  "enterLastName": "Enter your last name",
+  "phone": "Phone",
+  "enterValidPhone": "Enter a valid 9-digit number",
+  "phoneContactHint": "We'll call or WhatsApp this number.",
+  "emailOptional": "Email (optional)",
+  "emailCopyHelper": "We'll email you a copy of your request.",
+  "emailInvalid": "This email doesn't look right",
+  "typeOfEvent": "Type of event",
+  "chooseEventType": "Choose the type of event",
+  "eventTypeWedding": "Wedding",
+  "eventTypeSendOff": "Send-off",
+  "eventTypeKitchenParty": "Kitchen party",
+  "eventTypeBirthday": "Birthday",
+  "eventTypeCorporate": "Corporate",
+  "eventTypeOther": "Something else",
+  "venue": "Venue",
+  "venueHint": "Hall, hotel or town",
+  "enterVenue": "Enter the venue",
+  "chooseDateOrNotSure": "Choose a date, or tick “Not sure”",
+  "notSureOfDate": "Not sure of the date yet",
+  "howManyGuests": "How many guests?",
+  "chooseGuestRange": "Choose roughly how many guests",
+  "guestsUnder100": "Under 100",
+  "anythingElse": "Anything else? (optional)",
+  "sendRequest": "Send request",
+  "requestDisclaimer": "Free, no commitment. We only use your details to contact you about this event.",
+  "date": "Date",
+  "notSureYet": "Not sure yet",
+  "requestUnreachable": "Can't reach Cardly. Check your internet connection and try again.",
+  "requestCheckFields": "Check the highlighted fields.",
+  "requestTooMany": "Too many requests right now. Please try again in an hour.",
+  "requestFailed": "We couldn't send your request. Please try again.",
+  "couldntOpenCallUs": "Couldn't open that. Call us on {number}.",
+  "@couldntOpenCallUs": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "requestWithUs": "Your request is with us.",
+  "thanksRequestWithUs": "Thanks, {name}. Your request is with us.",
+  "@thanksRequestWithUs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callYouOn": "We'll call you on {phone} within one working day.",
+  "@callYouOn": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "callYouSoon": "We'll call you within one working day.",
+  "emailedCopyTo": "We've also emailed a copy to {email}.",
+  "@emailedCopyTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "whatHappensNext": "What happens next",
+  "nextStep1": "We call to agree on the cards, the guest list and the price.",
+  "nextStep2": "We set up your event and send you an SMS and email to choose a password.",
+  "nextStep3": "Sign in here and your event is ready.",
+  "cantWait": "Can't wait? Reach us now.",
+  "whatsApp": "WhatsApp",
+  "callUs": "Call us",
+  "settingsTitle": "Settings",
+  "syncNow": "Sync now",
+  "activeEvent": "Active event",
+  "noEventSelected": "No event selected",
+  "syncCheckIns": "Sync check-ins",
+  "waitingToSync": "{count} waiting to sync",
+  "@waitingToSync": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allSynced": "All synced",
+  "serverConnection": "Server connection",
+  "serverConnectionSubtitle": "Manage API server URL",
+  "encryptionKey": "Encryption key",
+  "encryptionKeySubtitle": "QR code decryption key",
+  "faq": "FAQ",
+  "faqSubtitle": "Common questions about Cardly",
+  "terms": "Terms of service",
+  "termsSubtitle": "The rules for using Cardly",
+  "userPolicy": "User policy",
+  "userPolicySubtitle": "How your data is handled",
+  "logOut": "Log out",
+  "logOutQuestion": "Log out?",
+  "logOutBody": "You will need to sign in again to use the app.",
+  "serverUrlSaved": "Server URL saved",
+  "keyMustBe64": "Key must be 64 hex characters",
+  "eventKeySaved": "Event key saved",
+  "keyRedownloaded": "Key re-downloaded",
+  "keyDownloadFailed": "Failed to download key",
+  "syncedSomeWaiting": "Synced {synced}. {waiting} still waiting, check the network.",
+  "@syncedSomeWaiting": {
+    "placeholders": {
+      "synced": {
+        "type": "int"
+      },
+      "waiting": {
+        "type": "int"
+      }
+    }
+  },
+  "everythingSynced": "Everything is synced",
+  "syncedCheckIns": "Synced {count} check-ins",
+  "@syncedCheckIns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectEventFirst": "Select an event first",
+  "pasteKeyHelp": "Paste the 64-character key for decrypting guest QR codes.",
+  "eventKey": "Event key",
+  "eventKeyHint": "64-character hex key",
+  "saveKey": "Save key",
+  "redownload": "Re-download",
+  "dashCheckedIn": "Checked in",
+  "dashCheckedInPeople": "Checked in · {count} people",
+  "@dashCheckedInPeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashQueued": "{label} · queued",
+  "@dashQueued": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "guestFallback": "Guest",
+  "dashContributed": "Contributed",
+  "dashAddedAsGuest": "Added as guest",
+  "dashSummary": "Summary",
+  "dashAllSettled": "All settled",
+  "dashUnpaid": "unpaid",
+  "dashRecentActivity": "Recent activity",
+  "dashTrends": "Trends",
+  "dashOwesBalance": "{count, plural, =1{1 guest still owes a balance} other{{count} guests still owe a balance}}",
+  "@dashOwesBalance": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashViewGuests": "View guests",
+  "dashManageTeam": "Manage team",
+  "dashViewReport": "View report",
+  "dashSyncWaiting": "{count, plural, =1{1 check-in waiting to sync} other{{count} check-ins waiting to sync}}",
+  "@dashSyncWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashOfflineQueued": "{count, plural, =1{Offline · 1 check-in queued} other{Offline · {count} check-ins queued}}",
+  "@dashOfflineQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashPeople": "People",
+  "dashEntered": "Entered",
+  "dashPending": "Pending",
+  "dashRate": "Rate",
+  "dashDays": "days",
+  "dashHours": "hrs",
+  "dashMinutes": "mins",
+  "dashSeconds": "secs",
+  "dashNoGuestsAdded": "No guests added yet",
+  "dashAddGuests": "Add guests",
+  "dashNoTeam": "No team members yet",
+  "dashAddTeamMember": "Add team member",
+  "dashNoContributions": "No contributions recorded yet",
+  "dashSetUpContributions": "Set up contributions",
+  "dashNoCategory": "No category",
+  "dashContributionsCollected": "Contributions collected",
+  "dashCollectedAmount": "TZS {amount} collected",
+  "@dashCollectedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dashTargetAmount": "Target: TZS {amount}",
+  "@dashTargetAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dashByCategory": "By category",
+  "dashGuestCount": "{count, plural, =1{1 guest} other{{count} guests}}",
+  "@dashGuestCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashNoGuestsYet": "No guests yet",
+  "dashImportGuests": "Import guests to start tracking contributions",
+  "dashNoActivity": "No recent activity yet",
+  "timeNow": "now",
+  "timeMinutesAgo": "{count}m ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count}h ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count}d ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashSelectEvent": "Select an event to view your dashboard",
+  "tryAgain": "Try again",
+  "guestNotFound": "Guest not found",
+  "checkInFailed": "Check-in failed. Try again.",
+  "phoneCopied": "Phone number copied",
+  "editGuest": "Edit guest",
+  "checkInGuest": "Check in guest",
+  "checkInProgress": "Check in · {entered} of {admits} entered",
+  "@checkInProgress": {
+    "placeholders": {
+      "entered": {
+        "type": "int"
+      },
+      "admits": {
+        "type": "int"
+      }
+    }
+  },
+  "tabOverview": "Overview",
+  "tabPayment": "Payment",
+  "guestProfile": "Guest profile",
+  "amountPaid": "Amount paid",
+  "balance": "Balance",
+  "yes": "Yes",
+  "no": "No",
+  "contact": "Contact",
+  "mobileNumber": "Mobile number",
+  "copyNumber": "Copy number",
+  "checkInSection": "Check-in",
+  "status": "Status",
+  "notCheckedIn": "Not checked in",
+  "checkedInAt": "Checked in at",
+  "contribution": "Contribution",
+  "category": "Category",
+  "notAssigned": "Not assigned",
+  "targetAmount": "Target amount",
+  "qrCard": "QR card",
+  "qrCardMessage": "QR card message",
+  "sent": "Sent",
+  "notSentYet": "Not sent yet",
+  "sentAt": "Sent at",
+  "paymentSummary": "Payment summary",
+  "balanceRemaining": "Balance remaining",
+  "percentOfTargetPaid": "{percent}% of target paid",
+  "@percentOfTargetPaid": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "paymentStatus": "Payment status",
+  "statusFullyPaid": "Fully paid",
+  "statusPartiallyPaid": "Partially paid",
+  "statusUnpaid": "Unpaid",
+  "enterValidAmount": "Enter a valid amount",
+  "guestUpdated": "Guest updated",
+  "updateGuestFailed": "Failed to update guest",
+  "alsoOnCard": "{phone} is also on {name}'s card",
+  "@alsoOnCard": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoGuestNotMerged": "{phone} is also the guest {name}, who has entries or payments, so they weren't merged",
+  "@alsoGuestNotMerged": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mergeTitle": "Merge {name}?",
+  "@mergeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mergeBody": "{phone} is already {name}, a guest with their own card, so they would get two invitations. Merge them into this card as a companion?",
+  "@mergeBody": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "keepBoth": "Keep both",
+  "merge": "Merge",
+  "companions": "Companions",
+  "companionsHint": "Others sharing this card. Anyone with a phone gets the same invitation.",
+  "optional": "Optional",
+  "removeCompanion": "Remove companion",
+  "addCompanion": "Add companion",
+  "contributionCategory": "Contribution category",
+  "nameRequired": "Name is required",
+  "peopleOnCard": "People on this card",
+  "alreadyEntered": "{count} already entered",
+  "@alreadyEntered": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "peopleOnCardHint": "How many people this card lets in",
+  "amountPaidTzs": "Amount paid (TZS)",
+  "pledgeTzs": "Pledge (TZS, optional)",
+  "pledgeHelper": "What this guest has promised to contribute",
+  "saveChanges": "Save changes",
+  "categoryOptional": "Category (optional)",
+  "selectedCategory": "Selected category",
+  "enterHowManyPeople": "Enter how many people",
+  "fromOneTo": "From 1 to {max}",
+  "@fromOneTo": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "cantBeFewer": "{count} already entered, so it can't be fewer",
+  "@cantBeFewer": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "admitPeople": "{count, plural, =1{Admit 1 person} other{Admit {count} people}}",
+  "@admitPeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "continueScanning": "Continue scanning",
+  "cardUnknownNote": "This card isn't in the phone's guest list yet, so its places are unknown. Admitting one person. Refresh the guest list when the network is back.",
+  "manualCheckInNote": "Confirm this is the person at the door. This is recorded as a manual check-in.",
+  "cardFullyUsed": "Card fully used",
+  "notAdmitted": "Not admitted",
+  "admitted": "Admitted",
+  "savedOnPhoneNote": "Saved on this phone. It will sync automatically when the network allows.",
+  "overBy": "Over by {count}",
+  "@overBy": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noPlacesLeft": "No places left",
+  "placesLeft": "{count, plural, =1{1 place left} other{{count} places left}}",
+  "@placesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "enteredOf": "{entered} of {admits}",
+  "@enteredOf": {
+    "placeholders": {
+      "entered": {
+        "type": "int"
+      },
+      "admits": {
+        "type": "int"
+      }
+    }
+  },
+  "enteredWord": "entered",
+  "firstEntry": "First entry",
+  "peopleCount": "{count, plural, =1{1 person} other{{count} people}}",
+  "@peopleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingToSyncShort": "waiting to sync",
+  "peopleEnteringNow": "People entering now",
+  "oneFewer": "One fewer",
+  "oneMore": "One more",
+  "noCategoryAssigned": "No category assigned",
+  "invalidQr": "Invalid QR code",
+  "invalidQrBody": "Could not decrypt this code. Check your event key in Settings.",
+  "addContribution": "Add contribution",
+  "addContributionSelected": "Add contribution ({count} selected)",
+  "@addContributionSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tabStats": "Stats",
+  "tabList": "List",
+  "searchByName": "Search by name",
+  "collected": "Collected",
+  "expected": "Expected",
+  "partial": "Partial",
+  "outstanding": "Outstanding",
+  "byCategoryTitle": "By category",
+  "loadCategoryDataFailed": "Failed to load category data",
+  "noContributionsCollected": "No contributions collected yet",
+  "uncategorized": "Uncategorized",
+  "overTime": "Over time",
+  "loadContributionsFailed": "Failed to load contributions",
+  "filterAll": "All",
+  "filterUnpaid": "Unpaid",
+  "filterPartial": "Partial",
+  "filterFull": "Full",
+  "noContributionsFound": "No contributions found",
+  "noContributionsFoundHint": "Try a different filter, or set a pledge on a guest to track it here.",
+  "contributionCategories": "Contribution categories",
+  "noCategoriesTapPlus": "No categories yet.\nTap + to add Single, Double, Family and so on.",
+  "peoplePerCard": "{count, plural, =1{1 person per card} other{{count} people per card}}",
+  "@peoplePerCard": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "Delete",
+  "deleteCategoryFailed": "Failed to delete category",
+  "noGuestsFound": "No guests found",
+  "clearAll": "Clear all",
+  "selectAll": "Select all",
+  "pickAtLeastOneGuest": "Pick at least one guest",
+  "enterPledgeOrPaid": "Enter a pledge, an amount paid, or both",
+  "updatedGuests": "{count, plural, =1{Updated 1 guest} other{Updated {count} guests}}",
+  "@updatedGuests": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatedSomeFailed": "Updated {succeeded}, failed for {failed}",
+  "@updatedSomeFailed": {
+    "placeholders": {
+      "succeeded": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "updateContributionFailed": "Failed to update contribution",
+  "searchGuestByName": "Search guest by name",
+  "loadGuestsFailed": "Could not load guests",
+  "pledgePerGuest": "Pledge per guest (TZS)",
+  "pledgePerGuestHelper": "What they committed to give",
+  "paidPerGuest": "Paid per guest (TZS)",
+  "paidPerGuestHelper": "Money received now",
+  "saveForGuests": "Save for {count} guests",
+  "@saveForGuests": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteCategoryTitle": "Delete \"{name}\"?",
+  "@deleteCategoryTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCategoryBody": "Guests in this category will be left without a category. Their pledges and payments are not affected.",
+  "categories": "Categories",
+  "addCategory": "Add category",
+  "loadCategoriesFailed": "Could not load categories.",
+  "noCategoriesUsePlus": "No categories yet. Use the + button to create one.",
+  "updateExistingCardsTitle": "Update existing cards?",
+  "updateExistingCardsBody": "Cards of this type that still admit {from} can change to {to} too. Cards set to another number by hand keep theirs.",
+  "@updateExistingCardsBody": {
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
+    }
+  },
+  "onlyNewCards": "Only new cards",
+  "updateCards": "Update cards",
+  "enterCategoryName": "Enter a category name",
+  "categorySaved": "Category saved",
+  "categoryUpdatedCards": "Category updated · {count} cards now admit {people}",
+  "@categoryUpdatedCards": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "people": {
+        "type": "int"
+      }
+    }
+  },
+  "categoryUpdated": "Category updated",
+  "saveCategoryFailed": "Failed to save category",
+  "editCategory": "Edit category",
+  "categoryName": "Category name",
+  "peoplePerCardLabel": "People per card",
+  "peoplePerCardHelper": "How many people one card of this type lets in, for example 2 for a couple. Each card can still be changed.",
+  "saveCategory": "Save category",
+  "createMemberFailed": "Failed to create member account",
+  "loadTeamFailed": "Failed to load team",
+  "nameAndEmailRequired": "Name and email are required",
+  "passwordMin6": "Password must be at least 6 characters",
+  "memberCreated": "Member account created",
+  "addKamatiMember": "Add kamati member",
+  "addKamatiMemberLead": "Create an account for a committee member to help monitor your event.",
+  "fullName": "Full name",
+  "atLeast6Chars": "At least 6 characters",
+  "creating": "Creating…",
+  "createMember": "Create member",
+  "members": "Members",
+  "addedOn": "Added {date}",
+  "@addedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noKamatiMembers": "No kamati members yet",
+  "noKamatiMembersHint": "Tap + to add committee members who can help scan guests and monitor your event.",
+  "scanCard": "Scan card",
+  "pickEventToCheckIn": "Pick an event to start checking guests in.",
+  "loadGuestListFailed": "Couldn't load the guest list",
+  "pullToRetry": "Pull down to try again.",
+  "noGuestsOnEvent": "No guests on this event yet",
+  "noGuestListOnPhone": "This phone doesn't have the guest list yet",
+  "noGuestsOnEventHint": "Guests added in the portal or on the Guests tab show up here.",
+  "noGuestListOnPhoneHint": "Connect to the internet once to download it. Scanning still works offline.",
+  "tabArrived": "Arrived",
+  "tabStillToCome": "Still to come",
+  "peopleIn": "People in",
+  "cardsUsed": "Cards used",
+  "partlyIn": "Partly in",
+  "waitingSyncPeople": "{count, plural, =1{1 person admitted on this phone is waiting to sync} other{{count} people admitted on this phone are waiting to sync}}",
+  "@waitingSyncPeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "byCardType": "By card type",
+  "everyoneIsIn": "Everyone is in",
+  "categoryProgress": "{toCome} still to come, {arrived} of {cards} cards used",
+  "@categoryProgress": {
+    "placeholders": {
+      "toCome": {
+        "type": "int"
+      },
+      "arrived": {
+        "type": "int"
+      },
+      "cards": {
+        "type": "int"
+      }
+    }
+  },
+  "filterArrived": "Filter guests who arrived",
+  "filterToCome": "Filter guests still to come",
+  "allCardTypes": "All card types",
+  "cardTypeCards": "{type} cards",
+  "@cardTypeCards": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "showAllCardTypes": "Show all card types",
+  "searchByNameOrPhone": "Search by name or phone",
+  "filterByCardType": "Filter by card type",
+  "cardType": "Card type",
+  "typeAtTime": "{type}, {time}",
+  "@typeAtTime": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "typePartlyIn": "{type}, {entered} of {admits} in",
+  "@typePartlyIn": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "entered": {
+        "type": "int"
+      },
+      "admits": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingSyncTooltip": "Admitted on this phone, waiting to sync",
+  "placesLeftShort": "{count} left",
+  "@placesLeftShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "enteredShort": "{entered}/{admits} in",
+  "@enteredShort": {
+    "placeholders": {
+      "entered": {
+        "type": "int"
+      },
+      "admits": {
+        "type": "int"
+      }
+    }
+  },
+  "noSearchMatch": "No guests match your search",
+  "noSearchMatchHint": "Check the spelling or clear it.",
+  "noOneInYet": "No one is in yet",
+  "noOneOfTypeInYet": "No one with a {type} card is in yet",
+  "@noOneOfTypeInYet": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "tapScanWhenArrives": "Tap Scan card when the first guest arrives.",
+  "everyTypeIn": "Every {type} card is in",
+  "@everyTypeIn": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "noPlacesToFill": "No places left to fill.",
+  "online": "Online",
+  "offline": "Offline",
+  "noCardType": "No card type",
+  "backToDoor": "Back to the door overview",
+  "keepsScanning": "Keeps scanning after each guest",
+  "peopleInOf": "{peopleIn} of {expected} people in",
+  "@peopleInOf": {
+    "placeholders": {
+      "peopleIn": {
+        "type": "int"
+      },
+      "expected": {
+        "type": "int"
+      }
+    }
+  },
+  "flashlightOff": "Turn off flashlight",
+  "flashlightOn": "Turn on flashlight",
+  "checkingCard": "Checking card…",
+  "alignQr": "Align the QR code inside the frame. Pinch to zoom.",
+  "zoomOut": "Zoom out",
+  "zoomIn": "Zoom in",
+  "zoom": "Zoom",
+  "alreadyCheckedIn": "Already checked in",
+  "serverRefusedCheckIn": "The server refused this check-in",
+  "addGuestManually": "Add guest manually",
+  "importFromContacts": "Import from contacts",
+  "offlineLocalGuests": "Offline · showing locally scanned guests only",
+  "pending": "Pending",
+  "noGuestsFoundHint": "Try a different filter or tap + to add a guest.",
+  "loadGuestsFailedTitle": "Failed to load guests",
+  "guestAdded": "Guest added",
+  "addGuestFailed": "Failed to add guest. Please try again.",
+  "addGuest": "Add guest",
+  "addGuestLead": "Enter their details by hand instead of picking from contacts.",
+  "leaveEmptyForDefault": "Leave empty for the category's {count}",
+  "@leaveEmptyForDefault": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactsPermissionNeeded": "Contacts permission is required to import guests.",
+  "loadContactsFailed": "Failed to load contacts.",
+  "importNeedsInternet": "Import requires an internet connection",
+  "importResult": "{inserted} added, {skipped} skipped",
+  "@importResult": {
+    "placeholders": {
+      "inserted": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "Import failed. Please try again.",
+  "importContacts": "Import contacts",
+  "deselectAll": "Deselect all",
+  "contactsSelected": "{count} contacts · {selected} selected",
+  "@contactsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "selected": {
+        "type": "int"
+      }
+    }
+  },
+  "noContactsWithPhones": "No contacts with phone numbers found",
+  "importing": "Importing…",
+  "importCount": "Import ({count})",
+  "@importCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "guestPhoneExists": "A guest with this phone number already exists"
+}

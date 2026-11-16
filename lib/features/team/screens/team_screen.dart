@@ -8,6 +8,7 @@ import '../../../core/utils/date_formatter.dart';
 import '../../events/providers/event_provider.dart';
 import '../models/team_member_model.dart';
 import '../providers/team_provider.dart';
+import '../../../l10n/l10n.dart';
 
 String _memberErrorMessage(Object error) {
   if (error is DioException) {
@@ -16,7 +17,7 @@ String _memberErrorMessage(Object error) {
       return data['error'] as String;
     }
   }
-  return 'Failed to create member account';
+  return appL10n.createMemberFailed;
 }
 
 class TeamScreen extends ConsumerWidget {
@@ -43,14 +44,14 @@ class TeamScreen extends ConsumerWidget {
     final membersAsync = ref.watch(teamMembersProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
-          'Team',
+        title: Text(
+          context.l10n.navTeam,
           style: TextStyle(
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -60,13 +61,13 @@ class TeamScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddMemberSheet(context, ref),
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.onPrimary,
         child: const Icon(Icons.person_add_outlined),
       ),
       body: membersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _TeamErrorState(
-          message: 'Failed to load team',
+          message: context.l10n.loadTeamFailed,
           onRetry: () => ref.invalidate(teamMembersProvider),
         ),
         data: (members) {
@@ -123,11 +124,11 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     if (name.isEmpty || email.isEmpty) {
-      AppToast.error('Name and email are required');
+      AppToast.error(context.l10n.nameAndEmailRequired);
       return;
     }
     if (password.length < 6) {
-      AppToast.error('Password must be at least 6 characters');
+      AppToast.error(context.l10n.passwordMin6);
       return;
     }
 
@@ -144,7 +145,7 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
       ref.invalidate(teamMembersProvider);
       if (mounted) {
         Navigator.pop(context);
-        AppToast.success('Member account created');
+        AppToast.success(appL10n.memberCreated);
       }
     } catch (e) {
       if (mounted) {
@@ -179,33 +180,35 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Add kamati member',
+            context.l10n.addKamatiMember,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Create an account for a committee member to help monitor your event.',
+          Text(
+            context.l10n.addKamatiMemberLead,
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 20),
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Full name'),
+            decoration: InputDecoration(labelText: context.l10n.fullName),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _emailController,
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(labelText: context.l10n.email),
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _passwordController,
             decoration: InputDecoration(
-              labelText: 'Password',
-              helperText: 'At least 6 characters',
+              labelText: context.l10n.password,
+              helperText: context.l10n.atLeast6Chars,
               suffixIcon: IconButton(
-                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                tooltip: _obscurePassword
+                    ? context.l10n.showPassword
+                    : context.l10n.hidePassword,
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
                 icon: Icon(
@@ -222,7 +225,9 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
             width: double.infinity,
             child: FilledButton(
               onPressed: _submitting ? null : _submit,
-              child: Text(_submitting ? 'Creating...' : 'Create member'),
+              child: Text(
+                _submitting ? context.l10n.creating : context.l10n.createMember,
+              ),
             ),
           ),
         ],
@@ -249,10 +254,10 @@ class _TeamMembersSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 4, bottom: 10),
           child: Text(
-            'Members',
+            context.l10n.members,
             style: TextStyle(
               color: AppColors.muted,
               fontWeight: FontWeight.w600,
@@ -262,7 +267,7 @@ class _TeamMembersSection extends StatelessWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppColors.border),
           ),
@@ -277,7 +282,7 @@ class _TeamMembersSection extends StatelessWidget {
                   createdAt: members[i].createdAt,
                 ),
                 if (i < members.length - 1)
-                  const Divider(height: 1, indent: 72, color: AppColors.border),
+                  Divider(height: 1, indent: 72, color: AppColors.border),
               ],
             ],
           ),
@@ -313,7 +318,7 @@ class _TeamMemberTile extends StatelessWidget {
             backgroundColor: AppColors.primary.withValues(alpha: 0.12),
             child: Text(
               initials,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w800,
               ),
@@ -326,7 +331,7 @@ class _TeamMemberTile extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                   ),
@@ -334,14 +339,14 @@ class _TeamMemberTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   email,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Added ${DateFormatter.formatDate(createdAt)}',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  context.l10n.addedOn(DateFormatter.formatDate(createdAt)),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
               ],
             ),
@@ -354,7 +359,7 @@ class _TeamMemberTile extends StatelessWidget {
             ),
             child: Text(
               status,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.success,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -384,15 +389,15 @@ class _EmptyTeamState extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.group_add_outlined,
               size: 42,
               color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'No kamati members yet',
+          Text(
+            context.l10n.noKamatiMembers,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -400,8 +405,8 @@ class _EmptyTeamState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Tap + to add committee members who can help scan guests and monitor your event.',
+          Text(
+            context.l10n.noKamatiMembersHint,
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.muted, height: 1.5),
           ),
@@ -432,7 +437,7 @@ class _TeamErrorState extends StatelessWidget {
                 color: AppColors.danger.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.error_outline,
                 color: AppColors.danger,
                 size: 34,
@@ -441,7 +446,10 @@ class _TeamErrorState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(message, style: const TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
-            OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: Text(context.l10n.tryAgain),
+            ),
           ],
         ),
       ),

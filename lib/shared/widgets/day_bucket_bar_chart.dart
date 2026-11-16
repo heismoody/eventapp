@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
 
@@ -232,7 +233,7 @@ class ChartTooltip extends StatelessWidget {
       child: Text(
         text,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.onPrimary,
           fontSize: 11,
           fontWeight: FontWeight.w800,
         ),
@@ -314,21 +315,6 @@ class TrendBucket {
   final double value;
 }
 
-const _monthShortNames = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
 /// Groups [dates] by the actual calendar day they fall on — days with no
 /// record are simply absent, not shown as empty bars. Only the most recent
 /// [maxPoints] distinct days are kept, so the chart stays readable on a
@@ -357,7 +343,8 @@ List<TrendBucket> bucketByActualDates(
     for (final day in recentDays)
       TrendBucket(
         date: day,
-        label: '${day.day} ${_monthShortNames[day.month - 1]}',
+        // Month names follow the app language (Intl.defaultLocale).
+        label: DateFormat('d MMM').format(day),
         value: byDay[day]!,
       ),
   ];

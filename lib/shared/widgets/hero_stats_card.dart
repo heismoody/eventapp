@@ -16,7 +16,7 @@ class HeroStatsCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [AppColors.primary, AppColors.primaryDark],
             begin: Alignment.topLeft,
@@ -56,7 +56,7 @@ class _HeroBubble extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: opacity),
+        color: AppColors.onPrimary.withValues(alpha: opacity),
       ),
     );
   }
@@ -78,13 +78,17 @@ class HeroStatRow extends StatelessWidget {
   const HeroStatRow({
     super.key,
     required this.items,
-    this.labelColor = AppColors.muted,
-    this.dividerColor = AppColors.border,
-  });
+    Color? labelColor,
+    Color? dividerColor,
+  }) : _labelColor = labelColor,
+       _dividerColor = dividerColor;
 
   final List<HeroStatItem> items;
-  final Color labelColor;
-  final Color dividerColor;
+  final Color? _labelColor;
+  final Color? _dividerColor;
+
+  Color get labelColor => _labelColor ?? AppColors.muted;
+  Color get dividerColor => _dividerColor ?? AppColors.border;
 
   @override
   Widget build(BuildContext context) {

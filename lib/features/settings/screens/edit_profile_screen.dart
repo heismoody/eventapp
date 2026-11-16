@@ -129,14 +129,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Edit Profile',
           style: TextStyle(
             fontWeight: FontWeight.w800,
@@ -162,7 +162,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             child: Text(
                               _initials,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 28,
@@ -217,7 +217,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             onPressed: _saving ? null : _openChangePassword,
                             style: OutlinedButton.styleFrom(
                               shape: const StadiumBorder(),
-                              side: const BorderSide(color: AppColors.border),
+                              side: BorderSide(color: AppColors.border),
                               foregroundColor: AppColors.onSurface,
                             ),
                             child: const Text(

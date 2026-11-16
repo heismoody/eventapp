@@ -14,6 +14,7 @@ import '../../attendees/widgets/attendee_display.dart';
 import '../../events/providers/event_provider.dart';
 import '../models/door_summary.dart';
 import '../providers/scanner_provider.dart';
+import '../../../l10n/l10n.dart';
 
 /// The Scan tab, laid out like Contributions: the door's numbers in the
 /// brown card, then Overview, Arrived and Still to come tabs, with the
@@ -27,7 +28,6 @@ class ScanHubScreen extends ConsumerStatefulWidget {
 
 enum _ListMode { arrived, toCome }
 
-const _pageBackground = Color(0xFFF8FAFC);
 const _tabular = [FontFeature.tabularFigures()];
 
 class _ScanHubScreenState extends ConsumerState<ScanHubScreen>
@@ -98,14 +98,14 @@ class _ScanHubScreenState extends ConsumerState<ScanHubScreen>
         : ref.watch(doorSummaryProvider(eventId));
 
     return Scaffold(
-      backgroundColor: _pageBackground,
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: _pageBackground,
+        backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
-          'Scan',
+        title: Text(
+          context.l10n.navScan,
           style: TextStyle(
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -124,25 +124,28 @@ class _ScanHubScreenState extends ConsumerState<ScanHubScreen>
               heroTag: 'scan-card',
               onPressed: _openScanner,
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.onPrimary,
               elevation: 3,
               icon: const Icon(Icons.qr_code_scanner),
-              label: const Text(
-                'Scan card',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              label: Text(
+                context.l10n.scanCard,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
       body: switch (summaryAsync) {
-        null => const _Message(
+        null => _Message(
           icon: Icons.event_outlined,
-          title: 'No event selected',
-          body: 'Pick an event to start checking guests in.',
+          title: context.l10n.noEventSelected,
+          body: context.l10n.pickEventToCheckIn,
         ),
         AsyncValue(:final value?) => _buildBody(value),
         AsyncError() => _Message(
           icon: Icons.error_outline,
-          title: "Couldn't load the guest list",
-          body: 'Pull down to try again.',
+          title: context.l10n.loadGuestListFailed,
+          body: context.l10n.pullToRetry,
           onRefresh: _refresh,
         ),
         _ => const Center(child: CircularProgressIndicator()),
@@ -155,12 +158,11 @@ class _ScanHubScreenState extends ConsumerState<ScanHubScreen>
       return _Message(
         icon: _isOnline ? Icons.group_add_outlined : Icons.cloud_off_outlined,
         title: _isOnline
-            ? 'No guests on this event yet'
-            : "This phone doesn't have the guest list yet",
+            ? context.l10n.noGuestsOnEvent
+            : context.l10n.noGuestListOnPhone,
         body: _isOnline
-            ? 'Guests added in the portal or on the Guests tab show up here.'
-            : 'Connect to the internet once to download it. Scanning still '
-                  'works offline.',
+            ? context.l10n.noGuestsOnEventHint
+            : context.l10n.noGuestListOnPhoneHint,
         onRefresh: _refresh,
       );
     }
@@ -192,10 +194,10 @@ class _ScanHubScreenState extends ConsumerState<ScanHubScreen>
               fontWeight: FontWeight.w900,
               fontSize: 15,
             ),
-            tabs: const [
-              Tab(text: 'Overview'),
-              Tab(text: 'Arrived'),
-              Tab(text: 'Still to come'),
+            tabs: [
+              Tab(text: context.l10n.tabOverview),
+              Tab(text: context.l10n.tabArrived),
+              Tab(text: context.l10n.tabStillToCome),
             ],
           ),
         ),
@@ -239,7 +241,7 @@ class _DoorStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final soft = Colors.white.withValues(alpha: 0.8);
+    final soft = AppColors.onPrimary.withValues(alpha: 0.8);
     return HeroStatsCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,7 +254,7 @@ class _DoorStatsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'People in',
+                      context.l10n.peopleIn,
                       style: TextStyle(
                         color: soft,
                         fontSize: 12,
@@ -265,7 +267,7 @@ class _DoorStatsCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: AppColors.onPrimary,
                         fontFeatures: _tabular,
                       ),
                     ),
@@ -276,7 +278,7 @@ class _DoorStatsCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Expected',
+                    context.l10n.expected,
                     style: TextStyle(
                       color: soft,
                       fontSize: 12,
@@ -289,7 +291,7 @@ class _DoorStatsCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: AppColors.onPrimary.withValues(alpha: 0.85),
                       fontFeatures: _tabular,
                     ),
                   ),
@@ -303,29 +305,29 @@ class _DoorStatsCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: summary.progress,
               minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              color: Colors.white,
+              backgroundColor: AppColors.onPrimary.withValues(alpha: 0.2),
+              color: AppColors.onPrimary,
             ),
           ),
           const SizedBox(height: 16),
           HeroStatRow(
-            labelColor: Colors.white.withValues(alpha: 0.75),
-            dividerColor: Colors.white.withValues(alpha: 0.25),
+            labelColor: AppColors.onPrimary.withValues(alpha: 0.75),
+            dividerColor: AppColors.onPrimary.withValues(alpha: 0.25),
             items: [
               HeroStatItem(
-                label: 'Still to come',
+                label: context.l10n.tabStillToCome,
                 value: '${summary.peopleToCome}',
-                color: Colors.white,
+                color: AppColors.onPrimary,
               ),
               HeroStatItem(
-                label: 'Cards used',
+                label: context.l10n.cardsUsed,
                 value: '${summary.cardsArrived}/${summary.cards.length}',
-                color: Colors.white,
+                color: AppColors.onPrimary,
               ),
               HeroStatItem(
-                label: 'Partly in',
+                label: context.l10n.partlyIn,
                 value: '${summary.cardsPartlyIn}',
-                color: Colors.white,
+                color: AppColors.onPrimary,
               ),
             ],
           ),
@@ -337,10 +339,7 @@ class _DoorStatsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    summary.waitingSync == 1
-                        ? '1 person admitted on this phone is waiting to sync'
-                        : '${summary.waitingSync} people admitted on this '
-                              'phone are waiting to sync',
+                    context.l10n.waitingSyncPeople(summary.waitingSync),
                     style: TextStyle(color: soft, fontSize: 12),
                   ),
                 ),
@@ -378,7 +377,7 @@ class _OverviewTab extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 104),
         children: [
           _CardShell(
-            title: 'By card type',
+            title: context.l10n.byCardType,
             child: Column(
               children: [
                 for (var i = 0; i < summary.categories.length; i++) ...[
@@ -410,7 +409,7 @@ class _CardShell extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
@@ -419,7 +418,7 @@ class _CardShell extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 14,
               color: AppColors.onSurface,
@@ -460,7 +459,7 @@ class _CardTypeRow extends StatelessWidget {
                   category.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -472,7 +471,7 @@ class _CardTypeRow extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: '${category.peopleIn}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: AppColors.onSurface,
@@ -480,7 +479,7 @@ class _CardTypeRow extends StatelessWidget {
                     ),
                     TextSpan(
                       text: ' / ${category.peopleExpected}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         color: AppColors.muted,
                         fontWeight: FontWeight.w600,
@@ -505,10 +504,12 @@ class _CardTypeRow extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             allIn
-                ? 'Everyone is in'
-                : '${category.peopleToCome} still to come, '
-                      '${category.cardsArrived} of ${category.cards} '
-                      'cards used',
+                ? context.l10n.everyoneIsIn
+                : context.l10n.categoryProgress(
+                    category.peopleToCome,
+                    category.cardsArrived,
+                    category.cards,
+                  ),
             style: TextStyle(
               fontSize: 12.5,
               color: allIn ? AppColors.success : AppColors.muted,
@@ -559,12 +560,12 @@ class _GuestListTab extends StatelessWidget {
       ),
       builder: (context) => _FilterSheet(
         title: mode == _ListMode.arrived
-            ? 'Filter guests who arrived'
-            : 'Filter guests still to come',
+            ? context.l10n.filterArrived
+            : context.l10n.filterToCome,
         options: [
           _FilterOption(
             value: null,
-            label: 'All card types',
+            label: context.l10n.allCardTypes,
             count: _countFor(null),
           ),
           for (final type in summary.categories)
@@ -620,17 +621,17 @@ class _GuestListTab extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: InputChip(
-                    label: Text('$category cards'),
+                    label: Text(context.l10n.cardTypeCards(category!)),
                     avatar: CircleAvatar(
                       backgroundColor: colors[category],
                       radius: 5,
                     ),
                     onPressed: () => _showFilterSheet(context),
                     onDeleted: () => onCategoryChanged(null),
-                    deleteButtonTooltipMessage: 'Show all card types',
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: AppColors.border),
-                    labelStyle: const TextStyle(
+                    deleteButtonTooltipMessage: context.l10n.showAllCardTypes,
+                    backgroundColor: AppColors.surface,
+                    side: BorderSide(color: AppColors.border),
+                    labelStyle: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppColors.onSurface,
                     ),
@@ -715,7 +716,7 @@ class _SearchFieldState extends State<_SearchField> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
@@ -725,13 +726,13 @@ class _SearchFieldState extends State<_SearchField> {
             child: TextField(
               controller: _controller,
               textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                hintText: 'Search by name or phone',
+              decoration: InputDecoration(
+                hintText: context.l10n.searchByNameOrPhone,
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 filled: false,
-                contentPadding: EdgeInsets.fromLTRB(16, 14, 8, 14),
+                contentPadding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
               ),
               onChanged: widget.onChanged,
             ),
@@ -739,7 +740,7 @@ class _SearchFieldState extends State<_SearchField> {
           Container(width: 1, height: 24, color: AppColors.border),
           IconButton(
             onPressed: widget.onFilterTap,
-            tooltip: 'Filter by card type',
+            tooltip: context.l10n.filterByCardType,
             icon: Badge(
               isLabelVisible: widget.filterActive,
               backgroundColor: AppColors.primary,
@@ -815,8 +816,8 @@ class _FilterSheet extends StatelessWidget {
             const SizedBox(height: 20),
             Text(title, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
-            const Text(
-              'Card type',
+            Text(
+              context.l10n.cardType,
               style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 12),
@@ -863,7 +864,7 @@ class _FilterSheetRow extends StatelessWidget {
         child: Material(
           color: selected
               ? AppColors.primary.withValues(alpha: 0.08)
-              : Colors.white,
+              : AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
             side: BorderSide(
@@ -887,11 +888,7 @@ class _FilterSheetRow extends StatelessWidget {
                       ),
                     )
                   else
-                    const Icon(
-                      Icons.select_all,
-                      size: 16,
-                      color: AppColors.muted,
-                    ),
+                    Icon(Icons.select_all, size: 16, color: AppColors.muted),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -906,8 +903,8 @@ class _FilterSheetRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    option.count == 1 ? '1 guest' : '${option.count} guests',
-                    style: const TextStyle(
+                    context.l10n.dashGuestCount(option.count),
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 13,
                       fontFeatures: _tabular,
@@ -950,13 +947,18 @@ class _GuestCard extends StatelessWidget {
       _ListMode.arrived =>
         card.lastEntryAt == null
             ? type
-            : '$type, ${DateFormatter.formatTime(card.lastEntryAt)}',
+            : context.l10n.typeAtTime(
+                type,
+                DateFormatter.formatTime(card.lastEntryAt),
+              ),
       _ListMode.toCome =>
-        card.partlyIn ? '$type, ${card.entered} of ${card.admits} in' : type,
+        card.partlyIn
+            ? context.l10n.typePartlyIn(type, card.entered, card.admits)
+            : type,
     };
 
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: card.attendeeId == null
@@ -988,7 +990,7 @@ class _GuestCard extends StatelessWidget {
                       card.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
                       ),
@@ -998,17 +1000,14 @@ class _GuestCard extends StatelessWidget {
                       detail,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                   ],
                 ),
               ),
               if (card.waiting > 0) ...[
-                const Tooltip(
-                  message: 'Admitted on this phone, waiting to sync',
+                Tooltip(
+                  message: context.l10n.waitingSyncTooltip,
                   child: Icon(
                     Icons.cloud_upload_outlined,
                     size: 18,
@@ -1036,11 +1035,11 @@ class _PeopleBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (text, color) = switch (mode) {
       _ListMode.toCome => (
-        card.placesLeft == 1 ? '1 left' : '${card.placesLeft} left',
+        context.l10n.placesLeftShort(card.placesLeft),
         card.partlyIn ? AppColors.warning : AppColors.accent,
       ),
       _ListMode.arrived => (
-        '${card.entered}/${card.admits} in',
+        context.l10n.enteredShort(card.entered, card.admits),
         card.entered > card.admits
             ? AppColors.danger
             : card.partlyIn
@@ -1081,19 +1080,19 @@ class _EmptyList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (title, body) = searching
-        ? ('No guests match your search', 'Check the spelling or clear it.')
+        ? (context.l10n.noSearchMatch, context.l10n.noSearchMatchHint)
         : switch (mode) {
             _ListMode.arrived => (
               category == null
-                  ? 'No one is in yet'
-                  : 'No one with a $category card is in yet',
-              'Tap Scan card when the first guest arrives.',
+                  ? context.l10n.noOneInYet
+                  : context.l10n.noOneOfTypeInYet(category!),
+              context.l10n.tapScanWhenArrives,
             ),
             _ListMode.toCome => (
               category == null
-                  ? 'Everyone is in'
-                  : 'Every $category card is in',
-              'No places left to fill.',
+                  ? context.l10n.everyoneIsIn
+                  : context.l10n.everyTypeIn(category!),
+              context.l10n.noPlacesToFill,
             ),
           };
     return Column(
@@ -1120,7 +1119,7 @@ class _EmptyList extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -1130,7 +1129,7 @@ class _EmptyList extends StatelessWidget {
         Text(
           body,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14, color: AppColors.muted),
+          style: TextStyle(fontSize: 14, color: AppColors.muted),
         ),
       ],
     );
@@ -1161,7 +1160,7 @@ class _Message extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -1171,7 +1170,7 @@ class _Message extends StatelessWidget {
         Text(
           body,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14, color: AppColors.muted),
+          style: TextStyle(fontSize: 14, color: AppColors.muted),
         ),
       ],
     );
@@ -1202,7 +1201,7 @@ class _ConnectionPill extends StatelessWidget {
           Icon(isOnline ? Icons.wifi : Icons.wifi_off, size: 14, color: color),
           const SizedBox(width: 6),
           Text(
-            isOnline ? 'Online' : 'Offline',
+            isOnline ? context.l10n.online : context.l10n.offline,
             style: TextStyle(
               color: color,
               fontSize: 12,

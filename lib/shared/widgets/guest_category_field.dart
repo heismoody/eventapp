@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../features/contributions/models/contribution_models.dart';
+import '../../l10n/l10n.dart';
 
 const _fieldHeight = 58.0;
 
@@ -17,7 +18,7 @@ class GuestCategoryField extends StatelessWidget {
     required this.onChanged,
     required this.onAddCategory,
     this.enabled = true,
-    this.label = 'Category (optional)',
+    this.label,
   });
 
   final List<ContributionCategory> categories;
@@ -25,7 +26,9 @@ class GuestCategoryField extends StatelessWidget {
   final ValueChanged<String?> onChanged;
   final VoidCallback onAddCategory;
   final bool enabled;
-  final String label;
+
+  /// Defaults to "Category (optional)" in the app language.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +39,7 @@ class GuestCategoryField extends StatelessWidget {
             height: _fieldHeight,
             child: InputDecorator(
               decoration: InputDecoration(
-                labelText: label,
+                labelText: label ?? context.l10n.categoryOptional,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -51,9 +54,9 @@ class GuestCategoryField extends StatelessWidget {
                   value: selectedCategoryId,
                   isExpanded: true,
                   items: [
-                    const DropdownMenuItem<String?>(
+                    DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('No category'),
+                      child: Text(context.l10n.dashNoCategory),
                     ),
                     ...categories.map(
                       (category) => DropdownMenuItem<String?>(
@@ -68,7 +71,7 @@ class GuestCategoryField extends StatelessWidget {
                         !categories.any((c) => c.id == selectedCategoryId))
                       DropdownMenuItem<String?>(
                         value: selectedCategoryId,
-                        child: const Text('Selected category'),
+                        child: Text(context.l10n.selectedCategory),
                       ),
                   ],
                   onChanged: enabled ? onChanged : null,
@@ -84,7 +87,7 @@ class GuestCategoryField extends StatelessWidget {
           child: InkWell(
             onTap: enabled ? onAddCategory : null,
             borderRadius: BorderRadius.circular(12),
-            child: const SizedBox(
+            child: SizedBox(
               width: 46,
               height: _fieldHeight,
               child: Icon(Icons.add, color: AppColors.primary, size: 20),

@@ -9,6 +9,10 @@ import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../l10n/l10n.dart';
+import '../../../shared/widgets/language_picker.dart';
+import '../../../shared/widgets/theme_picker.dart';
+import '../../../app/theme_mode_provider.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/services/session_manager.dart';
@@ -54,7 +58,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(ApiConfig.baseUrlKey, _serverController.text.trim());
     if (mounted) {
-      AppToast.success('Server URL saved');
+      AppToast.success(context.l10n.serverUrlSaved);
     }
   }
 
@@ -64,13 +68,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final key = _keyController.text.trim();
     if (key.length != 64) {
-      AppToast.warning('Key must be 64 hex characters');
+      AppToast.warning(context.l10n.keyMustBe64);
       return;
     }
 
     await ref.read(keyVaultProvider).save(eventId, key);
     if (mounted) {
-      AppToast.success('Event key saved');
+      AppToast.success(context.l10n.eventKeySaved);
     }
   }
 
@@ -82,11 +86,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final key = await ref.read(eventServiceProvider).fetchEventKey(eventId);
       await ref.read(keyVaultProvider).save(eventId, key);
       if (mounted) {
-        AppToast.success('Key re-downloaded');
+        AppToast.success(context.l10n.keyRedownloaded);
       }
     } catch (_) {
       if (mounted) {
-        AppToast.error('Failed to download key');
+        AppToast.error(context.l10n.keyDownloadFailed);
       }
     }
   }
@@ -97,12 +101,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final stillWaiting = await ref.read(pendingSyncCountProvider.future);
     if (!mounted) return;
     if (stillWaiting > 0) {
-      AppToast.error(
-        'Synced $synced · $stillWaiting still waiting — check the network',
-      );
+      AppToast.error(context.l10n.syncedSomeWaiting(synced, stillWaiting));
     } else {
       AppToast.success(
-        synced == 0 ? 'Everything is synced' : 'Synced $synced check-ins',
+        synced == 0
+            ? context.l10n.everythingSynced
+            : context.l10n.syncedCheckIns(synced),
       );
     }
   }
@@ -113,7 +117,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       mode: LaunchMode.externalApplication,
     );
     if (!opened && mounted) {
-      AppToast.error('Could not open the page');
+      AppToast.error(context.l10n.couldNotOpenPage);
     }
   }
 
@@ -121,16 +125,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Log out?'),
-        content: const Text('You will need to sign in again to use the app.'),
+        title: Text(context.l10n.logOutQuestion),
+        content: Text(context.l10n.logOutBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Log out'),
+            child: Text(context.l10n.logOut),
           ),
         ],
       ),
@@ -172,12 +176,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Server URL', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                context.l10n.serverUrl,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: _serverController,
-                decoration: const InputDecoration(
-                  labelText: 'Server URL',
+                decoration: InputDecoration(
+                  labelText: context.l10n.serverUrl,
                   hintText: 'https://your-server.com',
                 ),
                 keyboardType: TextInputType.url,
@@ -190,7 +197,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     await _saveServerUrl();
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('Save'),
+                  child: Text(context.l10n.save),
                 ),
               ),
             ],
@@ -203,7 +210,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showKeySheet() {
     final eventId = ref.read(activeEventIdProvider);
     if (eventId == null) {
-      AppToast.info('Select an event first');
+      AppToast.info(context.l10n.selectEventFirst);
       return;
     }
 
@@ -237,21 +244,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Encryption key',
+                context.l10n.encryptionKey,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Paste the 64-character key for decrypting guest QR codes.',
+              Text(
+                context.l10n.pasteKeyHelp,
                 style: TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _keyController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Event key',
-                  hintText: '64-character hex key',
+                decoration: InputDecoration(
+                  labelText: context.l10n.eventKey,
+                  hintText: context.l10n.eventKeyHint,
                 ),
               ),
               const SizedBox(height: 16),
@@ -260,14 +267,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _saveKey,
-                      child: const Text('Save key'),
+                      child: Text(context.l10n.saveKey),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _redownloadKey,
-                      child: const Text('Re-download'),
+                      child: Text(context.l10n.redownload),
                     ),
                   ),
                 ],
@@ -281,21 +288,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventName = ref.watch(activeEventNameProvider) ?? 'No event selected';
+    final l10n = context.l10n;
+    final eventName =
+        ref.watch(activeEventNameProvider) ?? l10n.noEventSelected;
     final user = ref.watch(currentUserProvider);
     final pendingAsync = ref.watch(pendingSyncCountProvider);
     final pending = pendingAsync.maybeWhen(data: (v) => v, orElse: () => 0);
     final canSwitchEvent = user?.isEventScoped != true;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        title: const Text(
-          'Settings',
+        title: Text(
+          l10n.settingsTitle,
           style: TextStyle(
             fontWeight: FontWeight.w800,
             color: AppColors.onSurface,
@@ -303,7 +312,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Sync now',
+            tooltip: l10n.syncNow,
             onPressed: _forceSync,
             icon: Badge(
               isLabelVisible: pending > 0,
@@ -331,7 +340,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   items: [
                     _SettingsItem(
                       icon: Icons.event_outlined,
-                      label: 'Active event',
+                      label: l10n.activeEvent,
                       subtitle: eventName,
                       onTap: canSwitchEvent
                           ? () => context.go('/events')
@@ -339,18 +348,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     _SettingsItem(
                       icon: Icons.cloud_sync_outlined,
-                      label: 'Sync check-ins',
+                      label: l10n.syncCheckIns,
                       subtitle: pending > 0
-                          ? '$pending waiting to sync'
-                          : 'All synced',
+                          ? l10n.waitingToSync(pending)
+                          : l10n.allSynced,
                       onTap: _forceSync,
                     ),
                     // Dev builds only — production is locked to its server.
                     if (AppEnvironment.allowsServerOverride)
                       _SettingsItem(
                         icon: Icons.dns_outlined,
-                        label: 'Server connection',
-                        subtitle: 'Manage API server URL',
+                        label: l10n.serverConnection,
+                        subtitle: l10n.serverConnectionSubtitle,
                         onTap: _showServerSheet,
                       ),
                   ],
@@ -360,8 +369,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   items: [
                     _SettingsItem(
                       icon: Icons.vpn_key_outlined,
-                      label: 'Encryption key',
-                      subtitle: 'QR code decryption key',
+                      label: l10n.encryptionKey,
+                      subtitle: l10n.encryptionKeySubtitle,
                       onTap: _showKeySheet,
                     ),
                   ],
@@ -370,21 +379,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 _SettingsSection(
                   items: [
                     _SettingsItem(
+                      icon: Icons.translate_rounded,
+                      label: l10n.language,
+                      subtitle: l10n.languageName,
+                      onTap: () => showLanguageSheet(context, ref),
+                    ),
+                    _SettingsItem(
+                      icon: Icons.dark_mode_outlined,
+                      label: l10n.appearance,
+                      subtitle: themeModeLabel(
+                        l10n,
+                        ref.watch(themeModeProvider),
+                      ),
+                      onTap: () => showThemeSheet(context, ref),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _SettingsSection(
+                  items: [
+                    _SettingsItem(
                       icon: Icons.help_outline_rounded,
-                      label: 'FAQ',
-                      subtitle: 'Common questions about Cardly',
+                      label: l10n.faq,
+                      subtitle: l10n.faqSubtitle,
                       onTap: () => _openLink(_faqUrl),
                     ),
                     _SettingsItem(
                       icon: Icons.description_outlined,
-                      label: 'Terms of service',
-                      subtitle: 'The rules for using Cardly',
+                      label: l10n.terms,
+                      subtitle: l10n.termsSubtitle,
                       onTap: () => _openLink(_termsUrl),
                     ),
                     _SettingsItem(
                       icon: Icons.shield_outlined,
-                      label: 'User policy',
-                      subtitle: 'How your data is handled',
+                      label: l10n.userPolicy,
+                      subtitle: l10n.userPolicySubtitle,
                       onTap: () => _openLink(_policyUrl),
                     ),
                   ],
@@ -402,13 +431,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               height: 52,
               child: OutlinedButton.icon(
                 onPressed: _logout,
-                icon: const Icon(
+                icon: Icon(
                   Icons.logout_rounded,
                   color: AppColors.danger,
                   size: 18,
                 ),
-                label: const Text(
-                  'Log out',
+                label: Text(
+                  l10n.logOut,
                   style: TextStyle(
                     color: AppColors.danger,
                     fontWeight: FontWeight.w700,
@@ -447,7 +476,7 @@ class _ProfileHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onSeeInfo,
@@ -465,7 +494,7 @@ class _ProfileHeaderCard extends StatelessWidget {
                 backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                 child: Text(
                   _initials,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w800,
                     fontSize: 20,
@@ -479,7 +508,7 @@ class _ProfileHeaderCard extends StatelessWidget {
                   children: [
                     Text(
                       user.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: AppColors.onSurface,
@@ -488,17 +517,14 @@ class _ProfileHeaderCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       user.email,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.muted),
+              Icon(Icons.chevron_right, color: AppColors.muted),
             ],
           ),
         ),
@@ -524,7 +550,7 @@ class _AppVersionFooter extends StatelessWidget {
             AppEnvironment.isProd
                 ? 'Cardly v${info.version} (${info.buildNumber})'
                 : 'Cardly v${info.version} (${info.buildNumber}) · ${AppEnvironment.label}',
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
         );
       },
@@ -541,7 +567,7 @@ class _SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
@@ -550,7 +576,7 @@ class _SettingsSection extends StatelessWidget {
           for (var i = 0; i < items.length; i++) ...[
             items[i],
             if (i < items.length - 1)
-              const Divider(
+              Divider(
                 height: 1,
                 indent: 60,
                 endIndent: 16,
@@ -613,18 +639,14 @@ class _SettingsItem extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              if (enabled)
-                const Icon(Icons.chevron_right, color: AppColors.muted),
+              if (enabled) Icon(Icons.chevron_right, color: AppColors.muted),
             ],
           ),
         ),

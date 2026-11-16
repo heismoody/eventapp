@@ -61,7 +61,7 @@ class _UpdateDialogContentState extends ConsumerState<_UpdateDialogContent> {
     final release = widget.release;
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
           Icon(Icons.system_update_outlined, color: AppColors.primary),
           SizedBox(width: 10),
@@ -87,7 +87,7 @@ class _UpdateDialogContentState extends ConsumerState<_UpdateDialogContent> {
                 const SizedBox(height: 8),
                 Text(
                   '${(_progress * 100).round()}%',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
               ],
             )
@@ -101,20 +101,14 @@ class _UpdateDialogContentState extends ConsumerState<_UpdateDialogContent> {
                   const SizedBox(height: 12),
                   Text(
                     release.releaseNotes!,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 13),
                   ),
                 ],
                 if (_error != null) ...[
                   const SizedBox(height: 12),
                   Text(
                     _error!,
-                    style: const TextStyle(
-                      color: AppColors.danger,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: AppColors.danger, fontSize: 13),
                   ),
                 ],
               ],

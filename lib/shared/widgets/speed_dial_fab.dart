@@ -80,7 +80,7 @@ class _SpeedDialFabState extends State<SpeedDialFab>
               onTap: _toggle,
               child: Opacity(
                 opacity: _controller.value * 0.5,
-                child: Container(color: Colors.black),
+                child: Container(color: AppColors.scrim),
               ),
             );
           },
@@ -136,7 +136,7 @@ class _FabMainButton extends StatelessWidget {
         child: Container(
           width: 58,
           height: 58,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
               colors: [AppColors.primary, AppColors.accent],
@@ -148,7 +148,7 @@ class _FabMainButton extends StatelessWidget {
             turns: open ? 0.125 : 0,
             duration: const Duration(milliseconds: 260),
             curve: Curves.easeOutBack,
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
+            child: const Icon(Icons.add, color: AppColors.onPrimary, size: 28),
           ),
         ),
       ),
@@ -190,10 +190,10 @@ class _FabMenuItem extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Material(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(10),
                 elevation: 3,
-                shadowColor: Colors.black.withValues(alpha: 0.15),
+                shadowColor: AppColors.shadow.withValues(alpha: 0.15),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -201,7 +201,7 @@ class _FabMenuItem extends StatelessWidget {
                   ),
                   child: Text(
                     action.label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                       color: AppColors.onSurface,
@@ -211,10 +211,10 @@ class _FabMenuItem extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Material(
-                color: Colors.white,
+                color: AppColors.surface,
                 shape: const CircleBorder(),
                 elevation: 3,
-                shadowColor: Colors.black.withValues(alpha: 0.15),
+                shadowColor: AppColors.shadow.withValues(alpha: 0.15),
                 child: InkWell(
                   onTap: onTap,
                   customBorder: const CircleBorder(),

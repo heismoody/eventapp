@@ -13,6 +13,7 @@ import '../services/attendee_service.dart';
 import '../widgets/add_guest_sheet.dart';
 import '../widgets/attendee_display.dart';
 import '../widgets/contact_import_sheet.dart';
+import '../../../l10n/l10n.dart';
 
 class AttendeesScreen extends ConsumerStatefulWidget {
   const AttendeesScreen({super.key});
@@ -71,14 +72,14 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: AppColors.canvas,
           appBar: AppBar(
-            backgroundColor: const Color(0xFFF8FAFC),
+            backgroundColor: AppColors.canvas,
             foregroundColor: AppColors.onSurface,
             elevation: 0,
             scrolledUnderElevation: 0,
-            title: const Text(
-              'Guests',
+            title: Text(
+              context.l10n.navGuests,
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 color: AppColors.onSurface,
@@ -93,16 +94,18 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: AppColors.border),
                         ),
                         child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: 'Search by name',
-                            prefixIcon: Icon(Icons.search),
+                          decoration: InputDecoration(
+                            hintText: context.l10n.searchByName,
+                            prefixIcon: const Icon(Icons.search),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(vertical: 14),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                            ),
                           ),
                           onChanged: (v) => setState(() => _search = v),
                         ),
@@ -141,17 +144,17 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
               actions: [
                 SpeedDialAction(
                   icon: Icons.person_add_alt_1,
-                  label: 'Add guest manually',
+                  label: context.l10n.addGuestManually,
                   onTap: () => _addGuestManually(eventId),
                 ),
                 SpeedDialAction(
                   icon: Icons.contacts_outlined,
-                  label: 'Import from contacts',
+                  label: context.l10n.importFromContacts,
                   onTap: () => _importContacts(eventId),
                 ),
                 SpeedDialAction(
                   icon: Icons.category_outlined,
-                  label: 'Categories',
+                  label: context.l10n.categories,
                   onTap: () => showCategoriesManageSheet(
                     context: context,
                     eventId: eventId,
@@ -200,7 +203,9 @@ class _CategoryFilterBar extends ConsumerWidget {
     for (final a in attendees) {
       final key = a.categoryId ?? _noCategory;
       counts[key] = (counts[key] ?? 0) + 1;
-      names[key] = _titleCase(a.categoryName ?? 'No category');
+      names[key] = a.categoryName != null
+          ? _titleCase(a.categoryName!)
+          : context.l10n.dashNoCategory;
     }
     // Nothing to choose between: every guest is in the same category.
     if (counts.length < 2) return const SizedBox.shrink();
@@ -213,7 +218,7 @@ class _CategoryFilterBar extends ConsumerWidget {
         return names[x]!.toLowerCase().compareTo(names[y]!.toLowerCase());
       });
     final options = [
-      ('all', 'All', attendees.length),
+      ('all', context.l10n.filterAll, attendees.length),
       for (final k in keys) (k, names[k]!, counts[k]!),
     ];
 
@@ -260,12 +265,12 @@ class _FilterTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = selected ? Colors.white : AppColors.onSurface;
+    final foreground = selected ? AppColors.onPrimary : AppColors.onSurface;
     return Semantics(
       selected: selected,
       button: true,
       child: Material(
-        color: selected ? AppColors.primary : Colors.white,
+        color: selected ? AppColors.primary : AppColors.surface,
         shape: StadiumBorder(
           side: BorderSide(
             color: selected ? AppColors.primary : AppColors.border,
@@ -287,7 +292,7 @@ class _FilterTab extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: selected
-                            ? Colors.white.withValues(alpha: 0.75)
+                            ? AppColors.onPrimary.withValues(alpha: 0.75)
                             : AppColors.muted,
                       ),
                     ),
@@ -321,13 +326,13 @@ class _OfflineBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.wifi_off, size: 18, color: AppColors.warning),
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Offline — showing locally scanned guests only',
+              context.l10n.offlineLocalGuests,
               style: TextStyle(
                 color: AppColors.warning,
                 fontSize: 13,
@@ -476,8 +481,8 @@ class _GuestsListSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 10),
           child: Text(
-            '${attendees.length} guest${attendees.length == 1 ? '' : 's'}',
-            style: const TextStyle(
+            context.l10n.dashGuestCount(attendees.length),
+            style: TextStyle(
               color: AppColors.muted,
               fontWeight: FontWeight.w600,
               fontSize: 14,
@@ -494,10 +499,13 @@ class _GuestsListSection extends StatelessWidget {
                 name: attendee.name,
                 subtitle: attendee.phone,
                 trailing: attendee.admits > 1
-                    ? '${attendee.enteredCount}/${attendee.admits} in'
+                    ? context.l10n.enteredShort(
+                        attendee.enteredCount,
+                        attendee.admits,
+                      )
                     : attendee.checkedIn
-                    ? 'Checked in'
-                    : 'Pending',
+                    ? context.l10n.dashCheckedIn
+                    : context.l10n.pending,
                 checkedIn: attendee.checkedIn,
                 paymentStatus: attendee.paymentStatus,
               ),
@@ -518,7 +526,7 @@ class _GuestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -563,7 +571,7 @@ class _GuestTile extends StatelessWidget {
             backgroundColor: AppColors.primary.withValues(alpha: 0.12),
             child: Text(
               initials,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w800,
               ),
@@ -576,7 +584,7 @@ class _GuestTile extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                   ),
@@ -584,7 +592,7 @@ class _GuestTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -641,7 +649,7 @@ class _GuestsEmptySelectionState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(32),
         child: Column(
@@ -650,7 +658,7 @@ class _GuestsEmptySelectionState extends StatelessWidget {
             Icon(Icons.event_busy_outlined, size: 56, color: AppColors.muted),
             SizedBox(height: 16),
             Text(
-              'Select an event first',
+              context.l10n.selectEventFirst,
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
           ],
@@ -674,15 +682,11 @@ class _GuestsListEmptyState extends StatelessWidget {
             color: AppColors.primary.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.people_outline,
-            size: 42,
-            color: AppColors.primary,
-          ),
+          child: Icon(Icons.people_outline, size: 42, color: AppColors.primary),
         ),
         const SizedBox(height: 20),
-        const Text(
-          'No guests found',
+        Text(
+          context.l10n.noGuestsFound,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -690,8 +694,8 @@ class _GuestsListEmptyState extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Try a different filter or tap + to add a guest.',
+        Text(
+          context.l10n.noGuestsFoundHint,
           textAlign: TextAlign.center,
           style: TextStyle(color: AppColors.muted, height: 1.5),
         ),
@@ -718,19 +722,18 @@ class _GuestsErrorState extends StatelessWidget {
               color: AppColors.danger.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.error_outline,
-              color: AppColors.danger,
-              size: 34,
-            ),
+            child: Icon(Icons.error_outline, color: AppColors.danger, size: 34),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Failed to load guests',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          Text(
+            context.l10n.loadGuestsFailedTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 16),
-          OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+          OutlinedButton(
+            onPressed: onRetry,
+            child: Text(context.l10n.tryAgain),
+          ),
         ],
       ),
     );

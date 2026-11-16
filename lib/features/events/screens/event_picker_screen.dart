@@ -93,7 +93,7 @@ class _EventPickerScreenState extends ConsumerState<EventPickerScreen> {
               const SizedBox(height: 8),
               Text(
                 'Paste the 64-character hex key for ${event.name}',
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 16),
               TextField(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
+import '../../../l10n/l10n.dart';
 
 /// Cardly's own numbers, for people who'd rather call or WhatsApp.
 class CardlyContact {
@@ -22,27 +23,37 @@ class CardlyContact {
 }
 
 enum EventType {
-  wedding('wedding', 'Wedding'),
-  sendOff('send_off', 'Send-off'),
-  kitchenParty('kitchen_party', 'Kitchen party'),
-  birthday('birthday', 'Birthday'),
-  corporate('corporate', 'Corporate'),
-  other('other', 'Something else');
+  wedding('wedding'),
+  sendOff('send_off'),
+  kitchenParty('kitchen_party'),
+  birthday('birthday'),
+  corporate('corporate'),
+  other('other');
 
-  const EventType(this.apiValue, this.label);
+  const EventType(this.apiValue);
   final String apiValue;
-  final String label;
+
+  String label(AppLocalizations l10n) => switch (this) {
+    wedding => l10n.eventTypeWedding,
+    sendOff => l10n.eventTypeSendOff,
+    kitchenParty => l10n.eventTypeKitchenParty,
+    birthday => l10n.eventTypeBirthday,
+    corporate => l10n.eventTypeCorporate,
+    other => l10n.eventTypeOther,
+  };
 }
 
 enum GuestRange {
-  under100('under_100', 'Under 100'),
+  under100('under_100', null),
   from100('100_300', '100–300'),
   from300('300_600', '300–600'),
   over600('600_plus', '600+');
 
-  const GuestRange(this.apiValue, this.label);
+  const GuestRange(this.apiValue, this._label);
   final String apiValue;
-  final String label;
+  final String? _label;
+
+  String label(AppLocalizations l10n) => _label ?? l10n.guestsUnder100;
 }
 
 class EventRequestDraft {
@@ -151,28 +162,21 @@ class EventRequestService {
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.connectionError:
-        return EventRequestException(
-          "Can't reach Cardly. Check your internet connection and try again.",
-        );
+        return EventRequestException(appL10n.requestUnreachable);
       case DioExceptionType.badResponse:
         final status = error.response?.statusCode ?? 0;
         if (status == 422 && data is Map && data['fields'] is Map) {
           return EventRequestException(
-            serverMessage ?? 'Check the highlighted fields.',
+            serverMessage ?? appL10n.requestCheckFields,
             fields: (data['fields'] as Map).map(
               (key, value) => MapEntry(key.toString(), value.toString()),
             ),
           );
         }
         if (status == 429) {
-          return EventRequestException(
-            serverMessage ??
-                'Too many requests right now. Please try again in an hour.',
-          );
+          return EventRequestException(serverMessage ?? appL10n.requestTooMany);
         }
-        return EventRequestException(
-          serverMessage ?? "We couldn't send your request. Please try again.",
-        );
+        return EventRequestException(serverMessage ?? appL10n.requestFailed);
       default:
         return EventRequestException(
           "We couldn't send your request. Please try again.",

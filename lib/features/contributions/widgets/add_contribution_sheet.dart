@@ -8,6 +8,7 @@ import '../../attendees/services/attendee_service.dart';
 import '../../attendees/widgets/attendee_display.dart';
 import '../models/contribution_models.dart';
 import '../services/contribution_service.dart';
+import '../../../l10n/l10n.dart';
 
 /// Lets an owner set a pledge and/or record a payment for one or more
 /// guests at once, without going through each guest's own detail page.
@@ -57,7 +58,7 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
     final text = (value ?? '').trim();
     if (text.isEmpty) return null;
     final parsed = double.tryParse(text);
-    if (parsed == null || parsed <= 0) return 'Enter a valid amount';
+    if (parsed == null || parsed <= 0) return context.l10n.enterValidAmount;
     return null;
   }
 
@@ -91,9 +92,9 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
     final filtered = _filterFor(attendees, categoryId);
 
     if (filtered.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'No guests found',
+          context.l10n.noGuestsFound,
           style: TextStyle(color: AppColors.muted),
         ),
       );
@@ -109,8 +110,8 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
           child: Row(
             children: [
               Text(
-                '${filtered.length} guest${filtered.length == 1 ? '' : 's'}',
-                style: const TextStyle(
+                context.l10n.dashGuestCount(filtered.length),
+                style: TextStyle(
                   color: AppColors.muted,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
@@ -119,7 +120,9 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
               const Spacer(),
               TextButton(
                 onPressed: _submitting ? null : () => _selectAll(filtered),
-                child: Text(allSelected ? 'Clear all' : 'Select all'),
+                child: Text(
+                  allSelected ? context.l10n.clearAll : context.l10n.selectAll,
+                ),
               ),
             ],
           ),
@@ -163,14 +166,14 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
 
   Future<void> _submit() async {
     if (_selected.isEmpty) {
-      AppToast.warning('Pick at least one guest');
+      AppToast.warning(context.l10n.pickAtLeastOneGuest);
       return;
     }
 
     final pledgeText = _pledgeController.text.trim();
     final amountText = _amountController.text.trim();
     if (pledgeText.isEmpty && amountText.isEmpty) {
-      AppToast.warning('Enter a pledge, an amount paid, or both');
+      AppToast.warning(context.l10n.enterPledgeOrPaid);
       return;
     }
     if (!_formKey.currentState!.validate()) return;
@@ -211,11 +214,11 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
       Navigator.pop(context, true);
       AppToast.success(
         failed == 0
-            ? 'Updated $succeeded guest${succeeded == 1 ? '' : 's'}'
-            : 'Updated $succeeded, failed for $failed',
+            ? appL10n.updatedGuests(succeeded)
+            : appL10n.updatedSomeFailed(succeeded, failed),
       );
     } else {
-      AppToast.error('Failed to update contribution');
+      AppToast.error(appL10n.updateContributionFailed);
     }
   }
 
@@ -251,8 +254,8 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
             child: Text(
               _selected.isEmpty
-                  ? 'Add contribution'
-                  : 'Add contribution (${_selected.length} selected)',
+                  ? context.l10n.addContribution
+                  : context.l10n.addContributionSelected(_selected.length),
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -260,18 +263,18 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.border),
               ),
               child: TextField(
                 controller: _searchController,
                 enabled: !_submitting,
-                decoration: const InputDecoration(
-                  hintText: 'Search guest by name',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  hintText: context.l10n.searchGuestByName,
+                  prefixIcon: const Icon(Icons.search),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -282,9 +285,9 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
                 ? attendeesAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (_, _) => const Center(
+                    error: (_, _) => Center(
                       child: Text(
-                        'Could not load guests',
+                        context.l10n.loadGuestsFailed,
                         style: TextStyle(color: AppColors.muted),
                       ),
                     ),
@@ -309,7 +312,7 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
                               letterSpacing: 0.4,
                             ),
                             tabs: [
-                              const Tab(text: 'ALL'),
+                              Tab(text: context.l10n.filterAll.toUpperCase()),
                               for (final category in categories)
                                 Tab(text: category.name.toUpperCase()),
                             ],
@@ -320,9 +323,9 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
                             loading: () => const Center(
                               child: CircularProgressIndicator(),
                             ),
-                            error: (_, _) => const Center(
+                            error: (_, _) => Center(
                               child: Text(
-                                'Could not load guests',
+                                context.l10n.loadGuestsFailed,
                                 style: TextStyle(color: AppColors.muted),
                               ),
                             ),
@@ -355,9 +358,9 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
                         child: TextFormField(
                           controller: _pledgeController,
                           enabled: !_submitting,
-                          decoration: const InputDecoration(
-                            labelText: 'Pledge per guest (TZS)',
-                            helperText: 'What they committed to give',
+                          decoration: InputDecoration(
+                            labelText: context.l10n.pledgePerGuest,
+                            helperText: context.l10n.pledgePerGuestHelper,
                           ),
                           keyboardType: TextInputType.number,
                           inputFormatters: [
@@ -371,9 +374,9 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
                         child: TextFormField(
                           controller: _amountController,
                           enabled: !_submitting,
-                          decoration: const InputDecoration(
-                            labelText: 'Paid per guest (TZS)',
-                            helperText: 'Money received now',
+                          decoration: InputDecoration(
+                            labelText: context.l10n.paidPerGuest,
+                            helperText: context.l10n.paidPerGuestHelper,
                           ),
                           keyboardType: TextInputType.number,
                           inputFormatters: [
@@ -391,10 +394,10 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
                       onPressed: _submitting ? null : _submit,
                       child: Text(
                         _submitting
-                            ? 'Saving...'
+                            ? context.l10n.saving
                             : _selected.length > 1
-                            ? 'Save for ${_selected.length} guests'
-                            : 'Save',
+                            ? context.l10n.saveForGuests(_selected.length)
+                            : context.l10n.save,
                       ),
                     ),
                   ),
@@ -426,7 +429,7 @@ class _GuestSelectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -447,7 +450,7 @@ class _GuestSelectCard extends StatelessWidget {
                 backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                 child: Text(
                   initials,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w800,
                   ),
@@ -460,7 +463,7 @@ class _GuestSelectCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
                       ),
@@ -468,10 +471,7 @@ class _GuestSelectCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

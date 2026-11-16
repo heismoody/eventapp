@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../features/scanner/models/card_status.dart';
 import '../../features/scanner/models/scan_result.dart';
+import '../../l10n/l10n.dart';
 
 /// Shows a scanned (or manually picked) card. While it has places left the
 /// sheet asks how many people are entering and admits them through
@@ -101,12 +102,12 @@ class _GuestResultSheetState extends State<_GuestResultSheet> {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                           ),
                         )
                       : const Icon(Icons.how_to_reg_outlined),
                   label: Text(
-                    _count == 1 ? 'Admit 1 person' : 'Admit $_count people',
+                    context.l10n.admitPeople(_count),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -119,7 +120,7 @@ class _GuestResultSheetState extends State<_GuestResultSheet> {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: _admitting ? null : () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(context.l10n.cancel),
                 ),
               ),
             ] else
@@ -128,7 +129,9 @@ class _GuestResultSheetState extends State<_GuestResultSheet> {
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context),
                   child: Text(
-                    result.method == 'manual' ? 'Done' : 'Continue Scanning',
+                    result.method == 'manual'
+                        ? context.l10n.done
+                        : context.l10n.continueScanning,
                   ),
                 ),
               ),
@@ -154,7 +157,7 @@ class _GuestHeading extends StatelessWidget {
           style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 4),
-        Text(card.phone, style: const TextStyle(color: AppColors.muted)),
+        Text(card.phone, style: TextStyle(color: AppColors.muted)),
         const SizedBox(height: 14),
         _CategoryBadge(categoryName: card.category),
       ],
@@ -184,21 +187,13 @@ class _ReadyContent extends StatelessWidget {
         _PlacesPanel(card: card, color: AppColors.primary),
         if (!card.known) ...[
           const SizedBox(height: 12),
-          const _Note(
-            icon: Icons.info_outline,
-            text:
-                "This card isn't in the phone's guest list yet, so its places "
-                'are unknown. Admitting one person — refresh the guest list '
-                'when the network is back.',
-          ),
+          _Note(icon: Icons.info_outline, text: context.l10n.cardUnknownNote),
         ],
         if (manual) ...[
           const SizedBox(height: 12),
-          const _Note(
+          _Note(
             icon: Icons.badge_outlined,
-            text:
-                'Confirm this is the person at the door. This is recorded as '
-                'a manual check-in.',
+            text: context.l10n.manualCheckInNote,
           ),
         ],
         if (card.placesLeft > 1) ...[
@@ -223,10 +218,10 @@ class _FullContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Icon(Icons.block, color: AppColors.danger, size: 52),
+        Icon(Icons.block, color: AppColors.danger, size: 52),
         const SizedBox(height: 8),
-        const Text(
-          'Card fully used',
+        Text(
+          context.l10n.cardFullyUsed,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -261,7 +256,7 @@ class _AdmittedContent extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          refused ? 'Not admitted' : 'Admitted',
+          refused ? context.l10n.notAdmitted : context.l10n.admitted,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -273,7 +268,7 @@ class _AdmittedContent extends StatelessWidget {
           Text(
             result.message!,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted),
+            style: TextStyle(color: AppColors.muted),
           ),
         ],
         const SizedBox(height: 12),
@@ -282,11 +277,9 @@ class _AdmittedContent extends StatelessWidget {
         _PlacesPanel(card: result.card, color: color),
         if (result.outcome == AdmitOutcome.queued) ...[
           const SizedBox(height: 12),
-          const _Note(
+          _Note(
             icon: Icons.cloud_upload_outlined,
-            text:
-                'Saved on this phone. It will sync automatically when the '
-                'network allows.',
+            text: context.l10n.savedOnPhoneNote,
           ),
         ],
       ],
@@ -305,12 +298,10 @@ class _PlacesPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final left = card.placesLeft;
     final summary = card.over > 0
-        ? 'Over by ${card.over}'
+        ? context.l10n.overBy(card.over)
         : left == 0
-        ? 'No places left'
-        : left == 1
-        ? '1 place left'
-        : '$left places left';
+        ? context.l10n.noPlacesLeft
+        : context.l10n.placesLeft(left);
 
     return Container(
       width: double.infinity,
@@ -327,7 +318,7 @@ class _PlacesPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${card.entered} of ${card.admits}',
+                context.l10n.enteredOf(card.entered, card.admits),
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -339,7 +330,7 @@ class _PlacesPanel extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
-                  'entered',
+                  context.l10n.enteredWord,
                   style: TextStyle(color: color, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -368,8 +359,8 @@ class _PlacesPanel extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _entryLabel(entry),
-                        style: const TextStyle(
+                        _entryLabel(context, entry),
+                        style: TextStyle(
                           color: AppColors.onSurface,
                           fontSize: 13,
                         ),
@@ -384,15 +375,14 @@ class _PlacesPanel extends StatelessWidget {
     );
   }
 
-  static String _entryLabel(EntryLine entry) {
+  static String _entryLabel(BuildContext context, EntryLine entry) {
+    final l10n = context.l10n;
     final time = DateFormatter.formatTime(entry.at);
     final people = entry.count == 0
-        ? 'First entry'
-        : entry.count == 1
-        ? '1 person'
-        : '${entry.count} people';
+        ? l10n.firstEntry
+        : l10n.peopleCount(entry.count);
     final by = entry.byName != null ? ' · ${entry.byName}' : '';
-    final waiting = entry.waiting ? ' · waiting to sync' : '';
+    final waiting = entry.waiting ? ' · ${l10n.waitingToSyncShort}' : '';
     return '$time  ·  $people$by$waiting';
   }
 }
@@ -413,14 +403,14 @@ class _CountStepper extends StatelessWidget {
     final change = onChanged;
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Text(
-            'People entering now',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+            context.l10n.peopleEnteringNow,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
         ),
         IconButton.filledTonal(
-          tooltip: 'One fewer',
+          tooltip: context.l10n.oneFewer,
           onPressed: change == null || count <= 1
               ? null
               : () => change(count - 1),
@@ -439,7 +429,7 @@ class _CountStepper extends StatelessWidget {
           ),
         ),
         IconButton.filledTonal(
-          tooltip: 'One more',
+          tooltip: context.l10n.oneMore,
           onPressed: change == null || count >= max
               ? null
               : () => change(count + 1),
@@ -466,7 +456,7 @@ class _Note extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: AppColors.muted, height: 1.4),
+            style: TextStyle(color: AppColors.muted, height: 1.4),
           ),
         ),
       ],
@@ -495,7 +485,7 @@ class _CategoryBadge extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'CATEGORY',
+            context.l10n.category.toUpperCase(),
             style: TextStyle(
               color: color,
               fontSize: 11,
@@ -505,7 +495,7 @@ class _CategoryBadge extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            hasCategory ? categoryName! : 'No category assigned',
+            hasCategory ? categoryName! : context.l10n.noCategoryAssigned,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: color,
@@ -524,17 +514,17 @@ class _InvalidContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
         Icon(Icons.error_outline, color: AppColors.danger, size: 56),
         SizedBox(height: 12),
         Text(
-          'Invalid QR Code',
+          context.l10n.invalidQr,
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         SizedBox(height: 8),
         Text(
-          'Could not decrypt this code. Check your event key in Settings.',
+          context.l10n.invalidQrBody,
           textAlign: TextAlign.center,
           style: TextStyle(color: AppColors.muted),
         ),

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../../../l10n/l10n.dart';
 
 /// A card as the door sees it: the server's count from the phone's copy of
 /// the guest list, plus this phone's entries the server hasn't counted yet.
@@ -72,7 +73,8 @@ class DoorSummary {
     required this.waitingSync,
   });
 
-  static const uncategorisedLabel = 'No card type';
+  /// Groups and labels cards without a type, in the app language.
+  static String get uncategorisedLabel => appL10n.noCardType;
 
   final List<DoorCard> cards;
 

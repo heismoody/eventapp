@@ -12,15 +12,17 @@ class SummaryStatItem {
     required this.icon,
     required this.label,
     required this.value,
-    this.accent = AppColors.primary,
+    Color? accent,
     this.caption,
     this.isLoading = false,
-  });
+  }) : _accent = accent;
 
   final IconData icon;
   final String label;
   final String value;
-  final Color accent;
+  final Color? _accent;
+
+  Color get accent => _accent ?? AppColors.primary;
   final String? caption;
   final bool isLoading;
 }
@@ -89,7 +91,7 @@ class _SummaryStatItemCentered extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 19,
               color: AppColors.onSurface,
@@ -99,7 +101,7 @@ class _SummaryStatItemCentered extends StatelessWidget {
         Text(
           data.label,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.muted,
             fontSize: 12,
             fontWeight: FontWeight.w600,

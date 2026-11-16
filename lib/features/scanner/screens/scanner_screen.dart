@@ -12,6 +12,7 @@ import '../../../shared/widgets/guest_result_sheet.dart';
 import '../../attendees/services/attendee_service.dart';
 import '../../events/providers/event_provider.dart';
 import '../providers/scanner_provider.dart';
+import '../../../l10n/l10n.dart';
 
 /// The camera, opened from the Scan tab. It keeps scanning after each guest,
 /// so the door can work through a queue; the close button goes back to the
@@ -163,7 +164,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         : ref.watch(doorSummaryProvider(eventId)).value;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.scrim,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -192,12 +193,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: AppColors.border),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.18),
+                          color: AppColors.scrim.withValues(alpha: 0.18),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -208,15 +209,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         _ScannerIconButton(
                           icon: Icons.close,
                           onPressed: () => context.pop(),
-                          tooltip: 'Back to the door overview',
+                          tooltip: context.l10n.backToDoor,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Scan card',
+                              Text(
+                                context.l10n.scanCard,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -225,10 +226,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                               ),
                               Text(
                                 summary == null
-                                    ? 'Keeps scanning after each guest'
-                                    : '${summary.peopleIn} of '
-                                          '${summary.peopleExpected} people in',
-                                style: const TextStyle(
+                                    ? context.l10n.keepsScanning
+                                    : context.l10n.peopleInOf(
+                                        summary.peopleIn,
+                                        summary.peopleExpected,
+                                      ),
+                                style: TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 12,
                                   fontFeatures: [FontFeature.tabularFigures()],
@@ -244,8 +247,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           active: _torchOn,
                           onPressed: _toggleTorch,
                           tooltip: _torchOn
-                              ? 'Turn off flashlight'
-                              : 'Turn on flashlight',
+                              ? context.l10n.flashlightOff
+                              : context.l10n.flashlightOn,
                         ),
                         const SizedBox(width: 8),
                         _StatusPill(isOnline: _isOnline),
@@ -263,12 +266,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       vertical: 14,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: AppColors.border),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.18),
+                          color: AppColors.scrim.withValues(alpha: 0.18),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -287,10 +290,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         Expanded(
                           child: Text(
                             _processing
-                                ? 'Checking card...'
-                                : 'Align the QR code inside the frame. '
-                                      'Pinch to zoom.',
-                            style: const TextStyle(
+                                ? context.l10n.checkingCard
+                                : context.l10n.alignQr,
+                            style: TextStyle(
                               color: AppColors.onSurface,
                               fontWeight: FontWeight.w600,
                             ),
@@ -333,7 +335,7 @@ class _ScannerIconButton extends StatelessWidget {
     return Material(
       color: active
           ? AppColors.accent.withValues(alpha: 0.18)
-          : const Color(0xFFF1F5F9),
+          : AppColors.chipFill,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onPressed,
@@ -368,7 +370,7 @@ class _ZoomButton extends StatelessWidget {
     return Semantics(
       button: true,
       toggled: zoomed,
-      label: zoomed ? 'Zoom out' : 'Zoom in',
+      label: zoomed ? context.l10n.zoomOut : context.l10n.zoomIn,
       child: Material(
         color: zoomed ? AppColors.primary : AppColors.secondary,
         borderRadius: BorderRadius.circular(12),
@@ -383,14 +385,14 @@ class _ZoomButton extends StatelessWidget {
                 Icon(
                   zoomed ? Icons.zoom_out : Icons.zoom_in,
                   size: 20,
-                  color: zoomed ? Colors.white : AppColors.primary,
+                  color: zoomed ? AppColors.onPrimary : AppColors.primary,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  zoomed ? 'Zoom out' : 'Zoom',
+                  zoomed ? context.l10n.zoomOut : context.l10n.zoom,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: zoomed ? Colors.white : AppColors.primary,
+                    color: zoomed ? AppColors.onPrimary : AppColors.primary,
                   ),
                 ),
               ],
@@ -417,7 +419,7 @@ class _StatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        isOnline ? 'Online' : 'Offline',
+        isOnline ? context.l10n.online : context.l10n.offline,
         style: TextStyle(
           color: color,
           fontSize: 11,
@@ -439,7 +441,8 @@ class _ScannerFramePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final overlayPaint = Paint()..color = Colors.black.withValues(alpha: 0.55);
+    final overlayPaint = Paint()
+      ..color = AppColors.scrim.withValues(alpha: 0.55);
     final fullScreen = Path()
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
     final cutout = Path()
@@ -450,7 +453,7 @@ class _ScannerFramePainter extends CustomPainter {
     canvas.drawPath(overlay, overlayPaint);
 
     final borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
+      ..color = AppColors.onPrimary.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -460,7 +463,7 @@ class _ScannerFramePainter extends CustomPainter {
     );
 
     final cornerPaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.onPrimary
       ..style = PaintingStyle.stroke
       ..strokeWidth = _cornerStroke
       ..strokeCap = StrokeCap.round;
