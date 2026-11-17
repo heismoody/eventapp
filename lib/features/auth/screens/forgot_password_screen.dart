@@ -10,6 +10,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../l10n/l10n.dart';
 import '../../event_request/services/event_request_service.dart';
+import '../../event_request/services/my_request_store.dart';
+import '../widgets/login_form.dart';
 import '../providers/auth_provider.dart';
 import '../services/password_reset_service.dart';
 
@@ -18,11 +20,20 @@ enum _Step { find, code, password }
 /// "Forgot password", in three steps on one screen: where to send the
 /// code, the 6-digit code, then the new password. Saving it signs the
 /// person straight in.
+///
+/// With [firstPassword], it's a new customer whose event is ready: the
+/// code goes straight to the phone on their request, and saving takes
+/// them to the sign-in sheet with that number filled in.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
-  const ForgotPasswordScreen({super.key, this.initialIdentifier});
+  const ForgotPasswordScreen({
+    super.key,
+    this.initialIdentifier,
+    this.firstPassword = false,
+  });
 
   /// Whatever was typed on the sign-in form, so it isn't typed twice.
   final String? initialIdentifier;
+  final bool firstPassword;
 
   @override
   ConsumerState<ForgotPasswordScreen> createState() =>
@@ -52,7 +63,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    _identifier.text = widget.initialIdentifier ?? '';
+    _identifier.text = widget.initialIdentifier == null
+        ? ''
+        : widget.firstPassword
+        ? CardlyContact.display(widget.initialIdentifier!)
+        : widget.initialIdentifier!;
+    if (widget.firstPassword && _identifier.text.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _sendCode());
+    }
   }
 
   @override
@@ -148,6 +166,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       setState(() => _error = context.l10n.passwordsDontMatch);
       return;
     }
+    if (widget.firstPassword) {
+      await _service.choose(_resetToken, password);
+      await ref.read(myRequestProvider.notifier).clear();
+      if (!mounted) return;
+      context.go(
+        '/login?skip=1',
+        extra: LoginPrefill(identifier: _sentTo, passwordSaved: true),
+      );
+      return;
+    }
     final user = await _service.complete(_resetToken, password);
     if (!mounted) return;
     await publishSession(ref, user);
@@ -161,6 +189,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (_busy) return;
     switch (_step) {
       case _Step.find:
+        context.canPop() ? context.pop() : context.go('/login?skip=1');
+      case _Step.code when widget.firstPassword:
+        // The number comes from their request: nothing to change here.
         context.canPop() ? context.pop() : context.go('/login?skip=1');
       case _Step.code:
         setState(() {
@@ -179,6 +210,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   String get _title => switch (_step) {
+    _Step.find when widget.firstPassword => context.l10n.choosePasswordButton,
     _Step.find => context.l10n.forgotTitle,
     _Step.code => context.l10n.enterCodeTitle,
     _Step.password => context.l10n.newPasswordTitle,
@@ -346,15 +378,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                     ),
             ),
-            TextButton(
-              onPressed: _busy ? null : _back,
-              child: Text(
-                _channel == ResetChannel.sms
-                    ? l10n.changeNumber
-                    : l10n.changeEmail,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+            if (!widget.firstPassword)
+              TextButton(
+                onPressed: _busy ? null : _back,
+                child: Text(
+                  _channel == ResetChannel.sms
+                      ? l10n.changeNumber
+                      : l10n.changeEmail,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -419,7 +452,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           _errorLine(),
           const SizedBox(height: 20),
-          _primary(l10n.saveAndSignIn, l10n.saving, _save),
+          _primary(
+            widget.firstPassword ? l10n.savePassword : l10n.saveAndSignIn,
+            l10n.saving,
+            _save,
+          ),
         ],
       ),
     );

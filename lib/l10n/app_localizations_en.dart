@@ -1619,4 +1619,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guestPhoneExists =>
       'A guest with this phone number already exists';
+
+  @override
+  String get trackMyRequest => 'Track my request';
+
+  @override
+  String requestSentTo(String name) {
+    return 'Request sent, $name';
+  }
+
+  @override
+  String get requestSpokenTitle => 'We\'ve spoken with you';
+
+  @override
+  String get requestSettingUpLead =>
+      'We\'re setting up your event. We\'ll text you when it\'s ready.';
+
+  @override
+  String get requestReadyTitle => 'Your event is ready';
+
+  @override
+  String requestReadyLead(String phone) {
+    return 'Choose a password to open it. You\'ll sign in with $phone.';
+  }
+
+  @override
+  String get requestClosedTitle => 'Request closed';
+
+  @override
+  String get requestClosedLead =>
+      'This request won\'t go ahead. If your plans change, send us a new one.';
+
+  @override
+  String get stepReceived => 'We received it';
+
+  @override
+  String get stepWeCall => 'We call you';
+
+  @override
+  String get stepWeCalled => 'We called you';
+
+  @override
+  String get stepCallHint => 'To agree on the details and price';
+
+  @override
+  String get stepSettingUp => 'Setting up your event';
+
+  @override
+  String get stepSetUp => 'Your event is set up';
+
+  @override
+  String get stepSetUpHint => 'Then you choose your password';
+
+  @override
+  String get choosePasswordButton => 'Choose your password';
+
+  @override
+  String get sendNewRequest => 'Send a new request';
+
+  @override
+  String get checkingForUpdates => 'Checking for updates...';
+
+  @override
+  String statusUpdatedAt(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get statusRefreshFailed =>
+      'Couldn\'t check for updates. This is the last status we had.';
+
+  @override
+  String get savePassword => 'Save password';
+
+  @override
+  String get passwordSavedSignIn =>
+      'Password saved. Sign in to open your event.';
 }

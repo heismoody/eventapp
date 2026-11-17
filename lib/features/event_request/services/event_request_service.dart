@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/config/app_environment.dart';
 import '../../../core/constants/api_config.dart';
 import '../../../l10n/l10n.dart';
+import 'my_request_store.dart';
 
 /// Cardly's own numbers, for people who'd rather call or WhatsApp.
 class CardlyContact {
@@ -124,19 +125,40 @@ class EventRequestService {
   String get serverUrl =>
       AppEnvironment.baseUrl(_ref.read(sharedPreferencesProvider));
 
+  Dio get _dio => Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 20),
+      headers: {'Content-Type': 'application/json'},
+    ),
+  );
+
+  /// Sends the request and remembers it on this phone, so the person can
+  /// track it later.
   Future<void> send(EventRequestDraft draft) async {
-    final dio = Dio(
-      BaseOptions(
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 20),
-        headers: {'Content-Type': 'application/json'},
-      ),
-    );
     final url = '$serverUrl${ApiConfig.eventRequestsPath}';
 
     try {
-      final response = await dio.post(url, data: draft.toJson());
+      final response = await _dio.post(url, data: draft.toJson());
       debugPrint('[event-request] POST $url -> ${response.statusCode}');
+      final data = response.data;
+      final id = data is Map ? data['id'] as String? : null;
+      if (id != null) {
+        await _ref
+            .read(myRequestProvider.notifier)
+            .save(
+              MyRequest(
+                id: id,
+                name: draft.name,
+                phone: draft.phone,
+                email: draft.email,
+                progress: RequestProgress(
+                  stage: RequestStage.received,
+                  receivedAt: DateTime.now(),
+                ),
+              ),
+            );
+      }
     } on DioException catch (error) {
       // Shows in `adb logcat` even in release builds.
       debugPrint(
@@ -151,6 +173,37 @@ class EventRequestService {
         fields: explained.fields,
       );
     }
+  }
+
+  /// Asks the portal where the request is now and saves the answer. A
+  /// request the portal no longer has counts as closed.
+  Future<RequestProgress> refreshStatus(MyRequest request) async {
+    final url = '$serverUrl${ApiConfig.eventRequestsPath}/${request.id}';
+    RequestProgress progress;
+    try {
+      final response = await _dio.get(url);
+      progress = RequestProgress.fromApi(
+        (response.data as Map).cast<String, dynamic>(),
+      );
+    } on DioException catch (error) {
+      debugPrint(
+        '[event-request] GET $url failed: ${error.type.name} '
+        '${error.response?.statusCode ?? ''}',
+      );
+      // Only the portal's own "not found" (JSON) means the request is
+      // gone. A server without this route answers 404 too, as a page.
+      final gone =
+          error.response?.statusCode == 404 && error.response?.data is Map;
+      if (!gone) throw _explain(error);
+      progress = RequestProgress(
+        stage: RequestStage.closed,
+        receivedAt: request.progress.receivedAt,
+        contactedAt: request.progress.contactedAt,
+        closedAt: request.progress.closedAt ?? DateTime.now(),
+      );
+    }
+    await _ref.read(myRequestProvider.notifier).updateProgress(progress);
+    return progress;
   }
 
   EventRequestException _explain(DioException error) {

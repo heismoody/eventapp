@@ -14,11 +14,28 @@ import '../services/auth_service.dart';
 
 typedef LoginSuccessCallback = void Function();
 
+/// What to put on the sign-in sheet when opening it from elsewhere: the
+/// phone number a new customer just chose a password for, say.
+class LoginPrefill {
+  const LoginPrefill({required this.identifier, this.passwordSaved = false});
+
+  final String identifier;
+
+  /// Show "Password saved. Sign in to open your event." above the form.
+  final bool passwordSaved;
+}
+
 class LoginForm extends ConsumerStatefulWidget {
-  const LoginForm({super.key, required this.onSuccess, this.compact = false});
+  const LoginForm({
+    super.key,
+    required this.onSuccess,
+    this.compact = false,
+    this.initialIdentifier,
+  });
 
   final LoginSuccessCallback onSuccess;
   final bool compact;
+  final String? initialIdentifier;
 
   @override
   ConsumerState<LoginForm> createState() => _LoginFormState();
@@ -37,6 +54,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     super.initState();
     final prefs = ref.read(sharedPreferencesProvider);
     _serverController.text = AppEnvironment.baseUrl(prefs);
+    _emailController.text = widget.initialIdentifier ?? '';
   }
 
   @override

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/language_picker.dart';
+import '../../event_request/services/my_request_store.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/login_form.dart';
 
@@ -43,10 +44,13 @@ final _slides = [
 /// or ask Cardly to plan an event. Someone who installs the app from the
 /// Play Store has no account yet, so signing in can't be the only way.
 class WelcomeScreen extends ConsumerStatefulWidget {
-  const WelcomeScreen({super.key, this.skipSplash = false});
+  const WelcomeScreen({super.key, this.skipSplash = false, this.prefill});
 
   /// Open straight on the sign-in sheet (after logging out, say).
   final bool skipSplash;
+
+  /// Filled into the sign-in sheet, e.g. after choosing a first password.
+  final LoginPrefill? prefill;
 
   @override
   ConsumerState<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -128,7 +132,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     _startCarousel();
   }
 
-  void _planEvent() => context.push('/plan-event');
+  /// "Plan an event", or "Track my request" once one was sent from this
+  /// phone.
+  void _planEvent() => context.push(
+    ref.read(myRequestProvider) == null ? '/plan-event' : '/plan-event/sent',
+  );
 
   Future<void> _handleLoginSuccess() async {
     final user = ref.read(currentUserProvider);
@@ -148,6 +156,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final hasRequest = ref.watch(myRequestProvider) != null;
     final media = MediaQuery.of(context);
     final bottomInset = media.viewInsets.bottom;
     final maxSheetHeight = media.size.height * 0.88;
@@ -209,6 +218,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                     activePage: _currentPage,
                     onPlanEvent: _planEvent,
                     onSignIn: _openSignIn,
+                    tracking: hasRequest,
                   ),
                 ),
               ),
@@ -268,9 +278,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                 ),
                               ),
                               const SizedBox(height: 12),
+                              if (widget.prefill?.passwordSaved == true)
+                                const _PasswordSavedNote(),
                               LoginForm(
                                 compact: true,
                                 onSuccess: _handleLoginSuccess,
+                                initialIdentifier: widget.prefill?.identifier,
                               ),
                               // One centred line under Sign In, no divider:
                               // the way in for people without an account.
@@ -294,7 +307,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                         ),
                                       ),
                                       child: Text(
-                                        context.l10n.planAnEvent,
+                                        hasRequest
+                                            ? context.l10n.trackMyRequest
+                                            : context.l10n.planAnEvent,
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
@@ -335,12 +350,16 @@ class _WelcomeActions extends StatelessWidget {
     required this.activePage,
     required this.onPlanEvent,
     required this.onSignIn,
+    required this.tracking,
   });
 
   final int pageCount;
   final int activePage;
   final VoidCallback onPlanEvent;
   final VoidCallback onSignIn;
+
+  /// A request was sent from this phone: the first button follows it.
+  final bool tracking;
 
   @override
   Widget build(BuildContext context) {
@@ -365,7 +384,9 @@ class _WelcomeActions extends StatelessWidget {
             textStyle: buttonText,
             shape: shape,
           ),
-          child: Text(l10n.planEventWithCardly),
+          child: Text(
+            tracking ? l10n.trackMyRequest : l10n.planEventWithCardly,
+          ),
         ),
         const SizedBox(height: 12),
         OutlinedButton(
@@ -488,6 +509,40 @@ class _PageIndicators extends StatelessWidget {
           ),
         );
       }),
+    );
+  }
+}
+
+/// Above the sign-in form after a new customer chose their password.
+class _PasswordSavedNote extends StatelessWidget {
+  const _PasswordSavedNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_rounded, color: AppColors.success, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.passwordSavedSignIn,
+              style: TextStyle(
+                color: AppColors.onSurface,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

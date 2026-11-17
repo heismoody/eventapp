@@ -11,7 +11,6 @@ import '../../../core/utils/app_toast.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/tanzania_phone_field.dart';
 import '../services/event_request_service.dart';
-import 'request_sent_screen.dart';
 
 /// "Plan an event with Cardly": for someone who installed the app without
 /// an account. It asks Cardly to call them back. It doesn't create an
@@ -149,14 +148,7 @@ class _RequestEventScreenState extends ConsumerState<RequestEventScreen> {
     try {
       await ref.read(eventRequestServiceProvider).send(draft);
       if (!mounted) return;
-      context.go(
-        '/plan-event/sent',
-        extra: RequestSentDetails(
-          name: draft.name,
-          phone: draft.phone,
-          email: draft.email,
-        ),
-      );
+      context.go('/plan-event/sent');
     } on EventRequestException catch (error) {
       if (!mounted) return;
       setState(() => _serverErrors = error.fields);
