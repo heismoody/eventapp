@@ -484,5 +484,8 @@
   "statusUpdatedAt": "Imesasishwa {time}",
   "statusRefreshFailed": "Imeshindikana kupata taarifa mpya. Hii ni hali ya mwisho tuliyokuwa nayo.",
   "savePassword": "Hifadhi nenosiri",
-  "passwordSavedSignIn": "Nenosiri limehifadhiwa. Ingia ili kufungua tukio lako."
+  "passwordSavedSignIn": "Nenosiri limehifadhiwa. Ingia ili kufungua tukio lako.",
+  "updateReadyTitle": "Sasisho limepakuliwa",
+  "updateReadyBody": "Anzisha upya Cardly ili kukamilisha kusasisha.",
+  "updateRestart": "Anzisha upya"
 }

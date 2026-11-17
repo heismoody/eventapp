@@ -2,6 +2,8 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <!-- Android 13+: asked for once, when the app first opens (push_gate.dart). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- REQUEST_INSTALL_PACKAGES (self-hosted updates) is added by the dev
          flavor only: src/dev/AndroidManifest.xml. The prod build goes to
          Google Play, which forbids it. -->
@@ -32,6 +34,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Push notifications: the channel MainActivity creates, the white
+             bear icon and the brand brown. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="cardly" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_brown" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

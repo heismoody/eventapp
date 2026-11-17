@@ -1699,4 +1699,14 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get passwordSavedSignIn =>
       'Nenosiri limehifadhiwa. Ingia ili kufungua tukio lako.';
+
+  @override
+  String get updateReadyTitle => 'Sasisho limepakuliwa';
+
+  @override
+  String get updateReadyBody =>
+      'Anzisha upya Cardly ili kukamilisha kusasisha.';
+
+  @override
+  String get updateRestart => 'Anzisha upya';
 }

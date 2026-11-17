@@ -1,9 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
+
 import '../core/config/app_environment.dart';
 import '../core/constants/app_colors.dart';
+import '../features/notifications/services/push_ready.dart';
+import '../features/notifications/widgets/push_gate.dart';
+import '../features/update/widgets/play_update_gate.dart';
 import '../l10n/l10n.dart';
 import 'locale_provider.dart';
 import 'theme_mode_provider.dart';
@@ -53,7 +59,13 @@ class EventApp extends ConsumerWidget {
               final l10n = AppLocalizations.of(context);
               setAppL10n(l10n);
               Intl.defaultLocale = l10n.localeName;
-              return child ?? const SizedBox.shrink();
+              var screen = child ?? const SizedBox.shrink();
+              if (pushReady) screen = PushGate(child: screen);
+              // The Play build updates through Play itself, without a trip
+              // to the store. The dev build has its own updater.
+              return AppEnvironment.isProd && Platform.isAndroid
+                  ? PlayUpdateGate(child: screen)
+                  : screen;
             },
           ),
         );

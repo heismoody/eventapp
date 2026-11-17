@@ -13,6 +13,7 @@ val keystoreProperties = Properties().apply {
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -94,4 +95,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Google Play in-app updates (the Play build asks Play for a newer
+    // version itself, see PlayUpdates.kt). Google's own library.
+    implementation("com.google.android.play:app-update:2.1.0")
 }

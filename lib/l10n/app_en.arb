@@ -989,5 +989,8 @@
   },
   "statusRefreshFailed": "Couldn't check for updates. This is the last status we had.",
   "savePassword": "Save password",
-  "passwordSavedSignIn": "Password saved. Sign in to open your event."
+  "passwordSavedSignIn": "Password saved. Sign in to open your event.",
+  "updateReadyTitle": "Update downloaded",
+  "updateReadyBody": "Restart Cardly to finish updating.",
+  "updateRestart": "Restart"
 }

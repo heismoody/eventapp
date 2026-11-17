@@ -3007,6 +3007,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password saved. Sign in to open your event.'**
   String get passwordSavedSignIn;
+
+  /// No description provided for @updateReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update downloaded'**
+  String get updateReadyTitle;
+
+  /// No description provided for @updateReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart Cardly to finish updating.'**
+  String get updateReadyBody;
+
+  /// No description provided for @updateRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get updateRestart;
 }
 
 class _AppLocalizationsDelegate
