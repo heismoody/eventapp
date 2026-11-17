@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
+import '../features/auth/widgets/login_form.dart';
 import '../features/event_request/screens/request_event_screen.dart';
 import '../features/event_request/screens/request_sent_screen.dart';
 import '../features/events/screens/event_picker_screen.dart';
@@ -60,7 +61,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         builder: (context, state) {
           final skipSplash = state.uri.queryParameters['skip'] == '1';
-          return WelcomeScreen(skipSplash: skipSplash);
+          return WelcomeScreen(
+            skipSplash: skipSplash,
+            prefill: state.extra is LoginPrefill
+                ? state.extra as LoginPrefill
+                : null,
+          );
         },
       ),
       GoRoute(
@@ -74,8 +80,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/plan-event/sent',
-        builder: (context, state) =>
-            RequestSentScreen(details: state.extra as RequestSentDetails?),
+        builder: (context, state) => const RequestSentScreen(),
+      ),
+      // A new customer whose event is ready chooses their first password:
+      // the Forgot password steps, sent to the phone on their request.
+      GoRoute(
+        path: '/plan-event/password',
+        builder: (context, state) => ForgotPasswordScreen(
+          initialIdentifier: state.extra as String?,
+          firstPassword: true,
+        ),
       ),
       GoRoute(
         path: '/events',

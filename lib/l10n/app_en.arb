@@ -946,5 +946,48 @@
       }
     }
   },
-  "guestPhoneExists": "A guest with this phone number already exists"
+  "guestPhoneExists": "A guest with this phone number already exists",
+  "trackMyRequest": "Track my request",
+  "requestSentTo": "Request sent, {name}",
+  "@requestSentTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestSpokenTitle": "We've spoken with you",
+  "requestSettingUpLead": "We're setting up your event. We'll text you when it's ready.",
+  "requestReadyTitle": "Your event is ready",
+  "requestReadyLead": "Choose a password to open it. You'll sign in with {phone}.",
+  "@requestReadyLead": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "requestClosedTitle": "Request closed",
+  "requestClosedLead": "This request won't go ahead. If your plans change, send us a new one.",
+  "stepReceived": "We received it",
+  "stepWeCall": "We call you",
+  "stepWeCalled": "We called you",
+  "stepCallHint": "To agree on the details and price",
+  "stepSettingUp": "Setting up your event",
+  "stepSetUp": "Your event is set up",
+  "stepSetUpHint": "Then you choose your password",
+  "choosePasswordButton": "Choose your password",
+  "sendNewRequest": "Send a new request",
+  "checkingForUpdates": "Checking for updates...",
+  "statusUpdatedAt": "Updated {time}",
+  "@statusUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "statusRefreshFailed": "Couldn't check for updates. This is the last status we had.",
+  "savePassword": "Save password",
+  "passwordSavedSignIn": "Password saved. Sign in to open your event."
 }

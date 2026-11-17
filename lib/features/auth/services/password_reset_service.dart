@@ -96,6 +96,16 @@ class PasswordResetService {
     return _ref.read(authServiceProvider).storeSession(data);
   }
 
+  /// A new customer's first password. Only saves it: they then sign in
+  /// on the sign-in sheet like everyone else.
+  Future<void> choose(String resetToken, String newPassword) async {
+    await _post(ApiConfig.resetCompletePath, {
+      'resetToken': resetToken,
+      'newPassword': newPassword,
+      'signIn': false,
+    });
+  }
+
   Future<Map<String, dynamic>> _post(
     String path,
     Map<String, dynamic> body,

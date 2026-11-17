@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/jwt_utils.dart';
+import '../../event_request/services/my_request_store.dart';
 import '../../events/providers/event_provider.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
@@ -66,6 +67,15 @@ Future<void> publishSession(WidgetRef ref, UserModel user) async {
   ref.read(authTokenProvider.notifier).state = token;
   ref.read(currentUserProvider.notifier).state = user;
   ref.invalidate(authInitializedProvider);
+
+  // An event owner is in, or the request turned into their event: nothing
+  // left to track, so the welcome screen offers "Plan an event" again.
+  final request = ref.read(myRequestProvider);
+  if (request != null &&
+      (user.ownedEventId != null ||
+          request.progress.stage == RequestStage.ready)) {
+    await ref.read(myRequestProvider.notifier).clear();
+  }
 }
 
 /// Where a just-signed-in person lands: their own event's dashboard, or

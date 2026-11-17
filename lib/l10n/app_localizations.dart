@@ -2875,6 +2875,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A guest with this phone number already exists'**
   String get guestPhoneExists;
+
+  /// No description provided for @trackMyRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Track my request'**
+  String get trackMyRequest;
+
+  /// No description provided for @requestSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent, {name}'**
+  String requestSentTo(String name);
+
+  /// No description provided for @requestSpokenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve spoken with you'**
+  String get requestSpokenTitle;
+
+  /// No description provided for @requestSettingUpLead.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re setting up your event. We\'ll text you when it\'s ready.'**
+  String get requestSettingUpLead;
+
+  /// No description provided for @requestReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event is ready'**
+  String get requestReadyTitle;
+
+  /// No description provided for @requestReadyLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password to open it. You\'ll sign in with {phone}.'**
+  String requestReadyLead(String phone);
+
+  /// No description provided for @requestClosedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request closed'**
+  String get requestClosedTitle;
+
+  /// No description provided for @requestClosedLead.
+  ///
+  /// In en, this message translates to:
+  /// **'This request won\'t go ahead. If your plans change, send us a new one.'**
+  String get requestClosedLead;
+
+  /// No description provided for @stepReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'We received it'**
+  String get stepReceived;
+
+  /// No description provided for @stepWeCall.
+  ///
+  /// In en, this message translates to:
+  /// **'We call you'**
+  String get stepWeCall;
+
+  /// No description provided for @stepWeCalled.
+  ///
+  /// In en, this message translates to:
+  /// **'We called you'**
+  String get stepWeCalled;
+
+  /// No description provided for @stepCallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To agree on the details and price'**
+  String get stepCallHint;
+
+  /// No description provided for @stepSettingUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up your event'**
+  String get stepSettingUp;
+
+  /// No description provided for @stepSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event is set up'**
+  String get stepSetUp;
+
+  /// No description provided for @stepSetUpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Then you choose your password'**
+  String get stepSetUpHint;
+
+  /// No description provided for @choosePasswordButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your password'**
+  String get choosePasswordButton;
+
+  /// No description provided for @sendNewRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new request'**
+  String get sendNewRequest;
+
+  /// No description provided for @checkingForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates...'**
+  String get checkingForUpdates;
+
+  /// No description provided for @statusUpdatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String statusUpdatedAt(String time);
+
+  /// No description provided for @statusRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check for updates. This is the last status we had.'**
+  String get statusRefreshFailed;
+
+  /// No description provided for @savePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get savePassword;
+
+  /// No description provided for @passwordSavedSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Password saved. Sign in to open your event.'**
+  String get passwordSavedSignIn;
 }
 
 class _AppLocalizationsDelegate

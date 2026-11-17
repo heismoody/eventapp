@@ -1623,4 +1623,80 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get guestPhoneExists => 'Tayari kuna mgeni mwenye namba hii ya simu';
+
+  @override
+  String get trackMyRequest => 'Fuatilia ombi lako';
+
+  @override
+  String requestSentTo(String name) {
+    return 'Ombi limetumwa, $name';
+  }
+
+  @override
+  String get requestSpokenTitle => 'Tumezungumza nawe';
+
+  @override
+  String get requestSettingUpLead =>
+      'Tunaandaa tukio lako. Tutakutumia SMS likiwa tayari.';
+
+  @override
+  String get requestReadyTitle => 'Tukio lako liko tayari';
+
+  @override
+  String requestReadyLead(String phone) {
+    return 'Chagua nenosiri ili ulifungue. Utaingia kwa $phone.';
+  }
+
+  @override
+  String get requestClosedTitle => 'Ombi limefungwa';
+
+  @override
+  String get requestClosedLead =>
+      'Ombi hili halitaendelea. Mipango ikibadilika, tutumie ombi jipya.';
+
+  @override
+  String get stepReceived => 'Tumelipokea';
+
+  @override
+  String get stepWeCall => 'Tutakupigia simu';
+
+  @override
+  String get stepWeCalled => 'Tumekupigia simu';
+
+  @override
+  String get stepCallHint => 'Kukubaliana kuhusu maelezo na bei';
+
+  @override
+  String get stepSettingUp => 'Tunaandaa tukio lako';
+
+  @override
+  String get stepSetUp => 'Tukio lako limeandaliwa';
+
+  @override
+  String get stepSetUpHint => 'Kisha unachagua nenosiri lako';
+
+  @override
+  String get choosePasswordButton => 'Chagua nenosiri lako';
+
+  @override
+  String get sendNewRequest => 'Tuma ombi jipya';
+
+  @override
+  String get checkingForUpdates => 'Inatafuta taarifa mpya...';
+
+  @override
+  String statusUpdatedAt(String time) {
+    return 'Imesasishwa $time';
+  }
+
+  @override
+  String get statusRefreshFailed =>
+      'Imeshindikana kupata taarifa mpya. Hii ni hali ya mwisho tuliyokuwa nayo.';
+
+  @override
+  String get savePassword => 'Hifadhi nenosiri';
+
+  @override
+  String get passwordSavedSignIn =>
+      'Nenosiri limehifadhiwa. Ingia ili kufungua tukio lako.';
 }
