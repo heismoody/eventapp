@@ -10,6 +10,7 @@ class ApiConfig {
   static const String resetVerifyPath = '/api/mobile/auth/reset/verify';
   static const String resetCompletePath = '/api/mobile/auth/reset/complete';
   static const String eventRequestsPath = '/api/mobile/event-requests';
+  static const String devicesPath = '/api/mobile/devices';
   static const String eventsPath = '/api/mobile/events';
   static String eventKeyPath(String eventId) =>
       '/api/mobile/events/$eventId/key';

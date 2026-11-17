@@ -1695,4 +1695,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get passwordSavedSignIn =>
       'Password saved. Sign in to open your event.';
+
+  @override
+  String get updateReadyTitle => 'Update downloaded';
+
+  @override
+  String get updateReadyBody => 'Restart Cardly to finish updating.';
+
+  @override
+  String get updateRestart => 'Restart';
 }

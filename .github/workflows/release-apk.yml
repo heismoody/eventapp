@@ -17,6 +17,14 @@ on:
       - main
       - development
   workflow_dispatch:
+    inputs:
+      update_priority:
+        description: >-
+          Play in-app update priority, 0-5. 4 or 5 makes the update required
+          (full screen, no skipping), lower ones only offer it.
+        type: choice
+        options: ["2", "0", "1", "3", "4", "5"]
+        default: "2"
 
 concurrency:
   group: release-${{ github.ref_name }}
@@ -56,6 +64,26 @@ jobs:
           echo "BUILD_NUMBER=$(( ${{ github.run_number }} + 100 ))" >> "$GITHUB_ENV"
           VERSION_NAME=$(grep '^version:' pubspec.yaml | sed -E 's/^version: *([^+]+).*/\1/')
           echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+
+      - name: Work out update priority
+        if: env.FLAVOR == 'prod'
+        env:
+          CHOSEN: ${{ inputs.update_priority }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          # How hard the Play app pushes this release (PlayUpdateGate):
+          # 4-5 = required, full screen; below = a prompt they can skip.
+          # A run started by hand uses the chosen value. A push is 2, or 5
+          # when the commit message has [urgent] in it.
+          if [ -n "$CHOSEN" ]; then
+            PRIORITY="$CHOSEN"
+          elif printf '%s' "$COMMIT_MESSAGE" | grep -qiF '[urgent]'; then
+            PRIORITY=5
+          else
+            PRIORITY=2
+          fi
+          echo "UPDATE_PRIORITY=$PRIORITY" >> "$GITHUB_ENV"
+          echo "In-app update priority: $PRIORITY"
 
       - name: Restore signing key
         env:
@@ -123,12 +151,15 @@ jobs:
           releaseName: ${{ env.VERSION_NAME }} (${{ env.BUILD_NUMBER }})
           track: alpha
           status: draft
+          inAppUpdatePriority: ${{ env.UPDATE_PRIORITY }}
 
       - name: Summary
         if: env.FLAVOR == 'prod'
         run: |
           {
             echo "## Cardly $VERSION_NAME (version code $BUILD_NUMBER) is a draft on Google Play"
+            echo ""
+            echo "In-app update priority: $UPDATE_PRIORITY (4-5 = required update, lower = optional)."
             echo ""
             echo "Play Console → Cardly → Testing → Closed testing - Alpha → review the draft release → Roll out."
           } >> "$GITHUB_STEP_SUMMARY"
