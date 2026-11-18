@@ -28,7 +28,14 @@ class RequestProgress {
     required this.receivedAt,
     this.contactedAt,
     this.closedAt,
+    this.smsHint,
+    this.emailHint,
   });
+
+  /// Where "Choose your password" can send its code, masked by the portal
+  /// ("•••456", "a•••@gmail.com"). Only once the event is ready.
+  final String? smsHint;
+  final String? emailHint;
 
   final RequestStage stage;
   final DateTime receivedAt;
@@ -41,7 +48,10 @@ class RequestProgress {
   factory RequestProgress.fromApi(Map<String, dynamic> json) {
     final status = json['status'] as String?;
     final ready = json['eventReady'] == true;
+    final codeTo = json['codeTo'] is Map ? json['codeTo'] as Map : const {};
     return RequestProgress(
+      smsHint: codeTo['sms'] as String?,
+      emailHint: codeTo['email'] as String?,
       stage: switch (status) {
         'contacted' => RequestStage.contacted,
         // Booked but the event not made yet: still being set up.
@@ -64,9 +74,13 @@ class RequestProgress {
         receivedAt: _date(json['receivedAt']) ?? DateTime.now(),
         contactedAt: _date(json['contactedAt']),
         closedAt: _date(json['closedAt']),
+        smsHint: json['smsHint'] as String?,
+        emailHint: json['emailHint'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
+    'smsHint': smsHint,
+    'emailHint': emailHint,
     'stage': stage.name,
     'receivedAt': receivedAt.toIso8601String(),
     'contactedAt': contactedAt?.toIso8601String(),

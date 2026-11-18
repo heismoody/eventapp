@@ -8,19 +8,51 @@ import '../services/contribution_service.dart';
 import 'contribution_category_sheet.dart';
 import '../../../l10n/l10n.dart';
 
+/// What the list sheet asks for when it closes: add a category, or edit
+/// [category]. Null when it was just dismissed.
+class _OpenCategory {
+  const _OpenCategory([this.category]);
+
+  final ContributionCategory? category;
+}
+
+/// A bottom sheet's slide-down, so the next one waits for it to finish.
+const _handOff = Duration(milliseconds: 240);
+
+/// The categories list. Adding or editing one hands over to its own sheet
+/// instead of stacking on top: the list slides down, the category sheet
+/// slides up, and after Save (or closing it) the list comes back, updated.
 Future<void> showCategoriesManageSheet({
   required BuildContext context,
   required String eventId,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (context) => _CategoriesManageSheet(eventId: eventId),
-  );
+}) async {
+  while (true) {
+    if (!context.mounted) return;
+    final next = await showModalBottomSheet<_OpenCategory>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => _CategoriesManageSheet(eventId: eventId),
+    );
+    if (next == null || !context.mounted) return;
+
+    await Future<void>.delayed(_handOff);
+    if (!context.mounted) return;
+    await showContributionCategorySheet(
+      context: context,
+      eventId: eventId,
+      category: next.category,
+    );
+    if (!context.mounted) return;
+    ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).invalidate(contributionCategoriesProvider(eventId));
+    await Future<void>.delayed(_handOff);
+  }
 }
 
 class _CategoriesManageSheet extends ConsumerWidget {
@@ -28,23 +60,13 @@ class _CategoriesManageSheet extends ConsumerWidget {
 
   final String eventId;
 
-  Future<void> _add(BuildContext context, WidgetRef ref) async {
-    await showContributionCategorySheet(context: context, eventId: eventId);
-    ref.invalidate(contributionCategoriesProvider(eventId));
-  }
+  // Close this sheet and let showCategoriesManageSheet open the category
+  // sheet in its place.
+  void _add(BuildContext context) =>
+      Navigator.pop(context, const _OpenCategory());
 
-  Future<void> _edit(
-    BuildContext context,
-    WidgetRef ref,
-    ContributionCategory category,
-  ) async {
-    await showContributionCategorySheet(
-      context: context,
-      eventId: eventId,
-      category: category,
-    );
-    ref.invalidate(contributionCategoriesProvider(eventId));
-  }
+  void _edit(BuildContext context, ContributionCategory category) =>
+      Navigator.pop(context, _OpenCategory(category));
 
   Future<void> _delete(
     BuildContext context,
@@ -116,7 +138,7 @@ class _CategoriesManageSheet extends ConsumerWidget {
               Tooltip(
                 message: context.l10n.addCategory,
                 child: IconButton.filled(
-                  onPressed: () => _add(context, ref),
+                  onPressed: () => _add(context),
                   style: IconButton.styleFrom(
                     backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                     foregroundColor: AppColors.primary,
@@ -179,7 +201,7 @@ class _CategoriesManageSheet extends ConsumerWidget {
                         children: [
                           IconButton(
                             tooltip: context.l10n.edit,
-                            onPressed: () => _edit(context, ref, category),
+                            onPressed: () => _edit(context, category),
                             icon: const Icon(Icons.edit_outlined),
                           ),
                           IconButton(

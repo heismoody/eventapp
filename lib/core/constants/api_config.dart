@@ -11,12 +11,20 @@ class ApiConfig {
   static const String resetCompletePath = '/api/mobile/auth/reset/complete';
   static const String eventRequestsPath = '/api/mobile/event-requests';
   static const String devicesPath = '/api/mobile/devices';
+
+  /// POST `{channel}`: a new customer's first-password code.
+  static String requestCodePath(String requestId) =>
+      '/api/mobile/event-requests/$requestId/code';
   static const String eventsPath = '/api/mobile/events';
   static String eventKeyPath(String eventId) =>
       '/api/mobile/events/$eventId/key';
   static const String checkInPath = '/api/mobile/check-in';
   static const String attendeesPath = '/api/mobile/attendees';
   static const String attendeesImportPath = '/api/mobile/attendees/import';
+  static const String attendeesImportFilePath =
+      '/api/mobile/attendees/import-file';
+  static const String attendeesImportTemplatePath =
+      '/api/mobile/attendees/import-template';
   static String attendeePatchPath(String id) => '/api/mobile/attendees/$id';
   static String attendeeCompanionsPath(String id) =>
       '/api/mobile/attendees/$id/companions';

@@ -17,9 +17,17 @@ typedef LoginSuccessCallback = void Function();
 /// What to put on the sign-in sheet when opening it from elsewhere: the
 /// phone number a new customer just chose a password for, say.
 class LoginPrefill {
-  const LoginPrefill({required this.identifier, this.passwordSaved = false});
+  const LoginPrefill({
+    required this.identifier,
+    this.password,
+    this.passwordSaved = false,
+  });
 
   final String identifier;
+
+  /// The password they just chose, so Sign In is one tap. Only ever held
+  /// in memory while the sheet opens, never saved.
+  final String? password;
 
   /// Show "Password saved. Sign in to open your event." above the form.
   final bool passwordSaved;
@@ -31,11 +39,13 @@ class LoginForm extends ConsumerStatefulWidget {
     required this.onSuccess,
     this.compact = false,
     this.initialIdentifier,
+    this.initialPassword,
   });
 
   final LoginSuccessCallback onSuccess;
   final bool compact;
   final String? initialIdentifier;
+  final String? initialPassword;
 
   @override
   ConsumerState<LoginForm> createState() => _LoginFormState();
@@ -55,6 +65,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     final prefs = ref.read(sharedPreferencesProvider);
     _serverController.text = AppEnvironment.baseUrl(prefs);
     _emailController.text = widget.initialIdentifier ?? '';
+    _passwordController.text = widget.initialPassword ?? '';
   }
 
   @override

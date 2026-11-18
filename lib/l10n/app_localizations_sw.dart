@@ -1698,7 +1698,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get passwordSavedSignIn =>
-      'Nenosiri limehifadhiwa. Ingia ili kufungua tukio lako.';
+      'Nenosiri limehifadhiwa. Gusa Ingia ili kufungua tukio lako.';
 
   @override
   String get updateReadyTitle => 'Sasisho limepakuliwa';
@@ -1709,4 +1709,225 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get updateRestart => 'Anzisha upya';
+
+  @override
+  String get selectEventTitle => 'Chagua tukio';
+
+  @override
+  String get eventsLoadFailedTitle => 'Imeshindikana kupakia matukio yako';
+
+  @override
+  String get eventsLoadFailedBody =>
+      'Angalia muunganisho wako wa intaneti kisha ujaribu tena. Ikiendelea, toka kisha uingie tena.';
+
+  @override
+  String get noEventsTitle => 'Bado hakuna matukio';
+
+  @override
+  String get noEventsBody =>
+      'Matukio unayoshiriki yataonekana hapa. Vuta chini kuangalia tena.';
+
+  @override
+  String get eventKeyMissing => 'Ufunguo haupo';
+
+  @override
+  String get noVenue => 'Hakuna ukumbi';
+
+  @override
+  String get eventKeySavedChip => 'Ufunguo umehifadhiwa';
+
+  @override
+  String get whereSendCodeTitle => 'Tukutumie msimbo wapi?';
+
+  @override
+  String whereSendCodeLead(String name) {
+    return 'Tutakutumia msimbo wa tarakimu 6 kuhakikisha ni wewe, $name.';
+  }
+
+  @override
+  String get viaTextMessage => 'Ujumbe mfupi (SMS)';
+
+  @override
+  String viaTextTo(String hint) {
+    return 'Kwenye simu inayoishia $hint';
+  }
+
+  @override
+  String get viaEmail => 'Barua pepe';
+
+  @override
+  String viaEmailTo(String hint) {
+    return 'Kwenda $hint';
+  }
+
+  @override
+  String get cantUseEither => 'Huwezi kutumia vyovyote?';
+
+  @override
+  String get whatsAppUsLink => 'Tuandikie WhatsApp';
+
+  @override
+  String codeTextedTo(String hint) {
+    return 'Tumetuma msimbo wa tarakimu 6 kwa SMS kwenye simu inayoishia $hint.';
+  }
+
+  @override
+  String codeEmailedTo(String hint) {
+    return 'Tumetuma msimbo wa tarakimu 6 kwa barua pepe kwenda $hint.';
+  }
+
+  @override
+  String get noSmsYet => 'Bado hujapata SMS?';
+
+  @override
+  String get noEmailYet => 'Bado hujapata barua pepe?';
+
+  @override
+  String sendToInstead(String hint) {
+    return 'Ituma kwenda $hint badala yake';
+  }
+
+  @override
+  String get eventNotReadyYet =>
+      'Tukio lako bado halijawa tayari. Vuta chini kwenye ukurasa wa ombi kuangalia tena, au tuandikie WhatsApp.';
+
+  @override
+  String get chooseCategoryTitle => 'Chagua aina';
+
+  @override
+  String get chooseCategoryLead =>
+      'Inaweka idadi ya watu kadi inaruhusu. Unaweza kuibadilisha kwa kila mgeni.';
+
+  @override
+  String admitsPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Inaruhusu watu $count',
+      one: 'Inaruhusu mtu 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newCategoryButton => 'Aina mpya';
+
+  @override
+  String get tapToChoose => 'Gusa kuchagua';
+
+  @override
+  String get importFromExcel => 'Leta kutoka Excel';
+
+  @override
+  String get excelImportLead =>
+      'Tumia faili la Excel au CSV lililopangwa hivi, mgeni mmoja kila mstari. Pakua mfano uanzie hapo.';
+
+  @override
+  String get chooseFile => 'Chagua faili';
+
+  @override
+  String get chooseAnotherFile => 'Chagua faili jingine';
+
+  @override
+  String readingFile(String file) {
+    return 'Inasoma $file…';
+  }
+
+  @override
+  String excelWillAdd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wageni $count wataongezwa',
+      one: 'Mgeni 1 ataongezwa',
+      zero: 'Hakuna wageni wapya wa kuongeza',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String excelMoreRows(int count) {
+    return 'na wengine $count';
+  }
+
+  @override
+  String get excelNewCategories => 'Aina mpya';
+
+  @override
+  String excelDuplicates(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tayari wapo kwenye orodha',
+      one: '1 tayari yupo kwenye orodha',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get excelDuplicatesHint =>
+      'Namba ya simu sawa na mgeni uliye naye, au imerudiwa kwenye faili. Hawa wanarukwa.';
+
+  @override
+  String excelProblems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mistari $count haiwezi kuletwa',
+      one: 'Mstari 1 hauwezi kuletwa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get excelProblemsHint =>
+      'Rekebisha haya kwenye faili kisha ulete tena. Wageni walioongezwa tayari wanarukwa.';
+
+  @override
+  String excelRow(int row) {
+    return 'Mstari $row';
+  }
+
+  @override
+  String excelImportCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Leta wageni $count',
+      one: 'Leta mgeni 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String excelImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wageni $count wameongezwa',
+      one: 'Mgeni 1 ameongezwa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get excelReadFailed =>
+      'Imeshindikana kusoma faili hilo. Tafadhali jaribu tena.';
+
+  @override
+  String get excelFileTooBig => 'Faili hilo ni kubwa mno. Kikomo ni MB 2.';
+
+  @override
+  String get sampleSheet => 'Mfano';
+
+  @override
+  String get downloadSampleSheet => 'Pakua faili la mfano';
+
+  @override
+  String get sampleSheetSaved =>
+      'Mfano umehifadhiwa. Ujaze, kisha uchague hapa.';
+
+  @override
+  String get sampleSheetFailed =>
+      'Imeshindikana kupakua mfano. Tafadhali jaribu tena.';
 }

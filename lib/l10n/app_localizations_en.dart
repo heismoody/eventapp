@@ -1694,7 +1694,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordSavedSignIn =>
-      'Password saved. Sign in to open your event.';
+      'Password saved. Tap Sign In to open your event.';
 
   @override
   String get updateReadyTitle => 'Update downloaded';
@@ -1704,4 +1704,224 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateRestart => 'Restart';
+
+  @override
+  String get selectEventTitle => 'Select event';
+
+  @override
+  String get eventsLoadFailedTitle => 'Couldn\'t load your events';
+
+  @override
+  String get eventsLoadFailedBody =>
+      'Check your internet connection and try again. If it keeps happening, sign out and sign in again.';
+
+  @override
+  String get noEventsTitle => 'No events yet';
+
+  @override
+  String get noEventsBody =>
+      'Events you\'re part of show up here. Pull down to check again.';
+
+  @override
+  String get eventKeyMissing => 'Key missing';
+
+  @override
+  String get noVenue => 'No venue';
+
+  @override
+  String get eventKeySavedChip => 'Key saved';
+
+  @override
+  String get whereSendCodeTitle => 'Where should we send your code?';
+
+  @override
+  String whereSendCodeLead(String name) {
+    return 'We\'ll send a 6-digit code to make sure it\'s really you, $name.';
+  }
+
+  @override
+  String get viaTextMessage => 'Text message';
+
+  @override
+  String viaTextTo(String hint) {
+    return 'To your phone ending $hint';
+  }
+
+  @override
+  String get viaEmail => 'Email';
+
+  @override
+  String viaEmailTo(String hint) {
+    return 'To $hint';
+  }
+
+  @override
+  String get cantUseEither => 'Can\'t use either?';
+
+  @override
+  String get whatsAppUsLink => 'WhatsApp us';
+
+  @override
+  String codeTextedTo(String hint) {
+    return 'We texted a 6-digit code to your phone ending $hint.';
+  }
+
+  @override
+  String codeEmailedTo(String hint) {
+    return 'We emailed a 6-digit code to $hint.';
+  }
+
+  @override
+  String get noSmsYet => 'No SMS yet?';
+
+  @override
+  String get noEmailYet => 'No email yet?';
+
+  @override
+  String sendToInstead(String hint) {
+    return 'Send it to $hint instead';
+  }
+
+  @override
+  String get eventNotReadyYet =>
+      'Your event isn\'t ready yet. Pull down on the request page to check again, or WhatsApp us.';
+
+  @override
+  String get chooseCategoryTitle => 'Choose a category';
+
+  @override
+  String get chooseCategoryLead =>
+      'It sets how many people a card admits. You can change that per guest.';
+
+  @override
+  String admitsPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Admits $count people',
+      one: 'Admits 1 person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newCategoryButton => 'New category';
+
+  @override
+  String get tapToChoose => 'Tap to choose';
+
+  @override
+  String get importFromExcel => 'Import from Excel';
+
+  @override
+  String get excelImportLead =>
+      'Use an Excel or CSV file laid out like this, one guest per row. Download the sample to start from it.';
+
+  @override
+  String get chooseFile => 'Choose file';
+
+  @override
+  String get chooseAnotherFile => 'Choose another file';
+
+  @override
+  String readingFile(String file) {
+    return 'Reading $file…';
+  }
+
+  @override
+  String excelWillAdd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count guests will be added',
+      one: '1 guest will be added',
+      zero: 'No new guests to add',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String excelMoreRows(int count) {
+    return 'and $count more';
+  }
+
+  @override
+  String get excelNewCategories => 'New categories';
+
+  @override
+  String excelDuplicates(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count already on the list',
+      one: '1 already on the list',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get excelDuplicatesHint =>
+      'Same phone number as a guest you have, or repeated in the file. These are skipped.';
+
+  @override
+  String excelProblems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rows can\'t be imported',
+      one: '1 row can\'t be imported',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get excelProblemsHint =>
+      'Fix these in the file and import it again. Guests already added are skipped.';
+
+  @override
+  String excelRow(int row) {
+    return 'Row $row';
+  }
+
+  @override
+  String excelImportCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Import $count guests',
+      one: 'Import 1 guest',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String excelImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count guests added',
+      one: '1 guest added',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get excelReadFailed => 'Couldn\'t read that file. Please try again.';
+
+  @override
+  String get excelFileTooBig => 'That file is too big. The limit is 2 MB.';
+
+  @override
+  String get sampleSheet => 'Sample';
+
+  @override
+  String get downloadSampleSheet => 'Download a sample sheet';
+
+  @override
+  String get sampleSheetSaved =>
+      'Sample saved. Fill it in, then choose it here.';
+
+  @override
+  String get sampleSheetFailed =>
+      'Couldn\'t download the sample. Please try again.';
 }
