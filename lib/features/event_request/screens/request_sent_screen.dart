@@ -194,8 +194,7 @@ class _RequestSentScreenState extends ConsumerState<RequestSentScreen> {
         child: Text(l10n.done),
       ),
       RequestStage.ready => FilledButton(
-        onPressed: () =>
-            context.push('/plan-event/password', extra: request.phone),
+        onPressed: () => context.push('/plan-event/password'),
         style: _primaryStyle,
         child: Text(l10n.choosePasswordButton),
       ),

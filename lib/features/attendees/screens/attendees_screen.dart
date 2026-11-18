@@ -13,6 +13,7 @@ import '../services/attendee_service.dart';
 import '../widgets/add_guest_sheet.dart';
 import '../widgets/attendee_display.dart';
 import '../widgets/contact_import_sheet.dart';
+import '../widgets/excel_import_sheet.dart';
 import '../../../l10n/l10n.dart';
 
 class AttendeesScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,16 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
     final imported = await showContactImportSheet(
       context: context,
       ref: ref,
+      eventId: eventId,
+    );
+    if (imported == true && mounted) {
+      ref.invalidate(attendeesProvider(eventId));
+    }
+  }
+
+  Future<void> _importExcel(String eventId) async {
+    final imported = await showExcelImportSheet(
+      context: context,
       eventId: eventId,
     );
     if (imported == true && mounted) {
@@ -151,6 +162,11 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
                   icon: Icons.contacts_outlined,
                   label: context.l10n.importFromContacts,
                   onTap: () => _importContacts(eventId),
+                ),
+                SpeedDialAction(
+                  icon: Icons.table_view_outlined,
+                  label: context.l10n.importFromExcel,
+                  onTap: () => _importExcel(eventId),
                 ),
                 SpeedDialAction(
                   icon: Icons.category_outlined,

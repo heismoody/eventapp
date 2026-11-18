@@ -284,6 +284,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                 compact: true,
                                 onSuccess: _handleLoginSuccess,
                                 initialIdentifier: widget.prefill?.identifier,
+                                initialPassword: widget.prefill?.password,
                               ),
                               // One centred line under Sign In, no divider:
                               // the way in for people without an account.

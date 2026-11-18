@@ -16,19 +16,62 @@ class GuestCategoryField extends StatelessWidget {
     required this.categories,
     required this.selectedCategoryId,
     required this.onChanged,
-    required this.onAddCategory,
+    this.onAddCategory,
     this.enabled = true,
     this.label,
+    this.onPick,
   });
+
+  /// When set, the field is a button that opens [showCategoryPickerSheet]
+  /// (the caller closes its own sheet first) instead of a dropdown.
+  final VoidCallback? onPick;
 
   final List<ContributionCategory> categories;
   final String? selectedCategoryId;
   final ValueChanged<String?> onChanged;
-  final VoidCallback onAddCategory;
+
+  /// The + beside the dropdown. Not shown with [onPick].
+  final VoidCallback? onAddCategory;
   final bool enabled;
 
   /// Defaults to "Category (optional)" in the app language.
   final String? label;
+
+  String _selectedName(BuildContext context) {
+    if (selectedCategoryId == null) return context.l10n.dashNoCategory;
+    return categories
+            .where((c) => c.id == selectedCategoryId)
+            .firstOrNull
+            ?.name ??
+        context.l10n.selectedCategory;
+  }
+
+  Widget _pickerField(BuildContext context) {
+    final decoration = InputDecoration(
+      labelText: label ?? context.l10n.categoryOptional,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      suffixIcon: const Icon(Icons.expand_more_rounded),
+      enabled: enabled,
+    );
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: enabled ? onPick : null,
+        borderRadius: BorderRadius.circular(12),
+        child: InputDecorator(
+          decoration: decoration,
+          child: Text(
+            _selectedName(context),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,63 +80,71 @@ class GuestCategoryField extends StatelessWidget {
         Expanded(
           child: SizedBox(
             height: _fieldHeight,
-            child: InputDecorator(
-              decoration: InputDecoration(
-                labelText: label ?? context.l10n.categoryOptional,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String?>(
-                  value: selectedCategoryId,
-                  isExpanded: true,
-                  items: [
-                    DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text(context.l10n.dashNoCategory),
-                    ),
-                    ...categories.map(
-                      (category) => DropdownMenuItem<String?>(
-                        value: category.id,
-                        child: Text(category.name),
+            child: onPick != null
+                ? _pickerField(context)
+                : InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: label ?? context.l10n.categoryOptional,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    // A just-created category can be selected before the
-                    // categories list has refetched to include it — keep
-                    // the dropdown's value valid until it catches up.
-                    if (selectedCategoryId != null &&
-                        !categories.any((c) => c.id == selectedCategoryId))
-                      DropdownMenuItem<String?>(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
                         value: selectedCategoryId,
-                        child: Text(context.l10n.selectedCategory),
+                        isExpanded: true,
+                        items: [
+                          DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text(context.l10n.dashNoCategory),
+                          ),
+                          ...categories.map(
+                            (category) => DropdownMenuItem<String?>(
+                              value: category.id,
+                              child: Text(category.name),
+                            ),
+                          ),
+                          // A just-created category can be selected before the
+                          // categories list has refetched to include it — keep
+                          // the dropdown's value valid until it catches up.
+                          if (selectedCategoryId != null &&
+                              !categories.any(
+                                (c) => c.id == selectedCategoryId,
+                              ))
+                            DropdownMenuItem<String?>(
+                              value: selectedCategoryId,
+                              child: Text(context.l10n.selectedCategory),
+                            ),
+                        ],
+                        onChanged: enabled ? onChanged : null,
                       ),
-                  ],
-                  onChanged: enabled ? onChanged : null,
-                ),
+                    ),
+                  ),
+          ),
+        ),
+        // The picker has its own "New category", so the + is only for the
+        // dropdown.
+        if (onPick == null) ...[
+          const SizedBox(width: 8),
+          Material(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: enabled ? onAddCategory : null,
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 46,
+                height: _fieldHeight,
+                child: Icon(Icons.add, color: AppColors.primary, size: 20),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Material(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: enabled ? onAddCategory : null,
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: 46,
-              height: _fieldHeight,
-              child: Icon(Icons.add, color: AppColors.primary, size: 20),
-            ),
-          ),
-        ),
+        ],
       ],
     );
   }

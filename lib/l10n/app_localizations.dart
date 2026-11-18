@@ -3005,7 +3005,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordSavedSignIn.
   ///
   /// In en, this message translates to:
-  /// **'Password saved. Sign in to open your event.'**
+  /// **'Password saved. Tap Sign In to open your event.'**
   String get passwordSavedSignIn;
 
   /// No description provided for @updateReadyTitle.
@@ -3025,6 +3025,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restart'**
   String get updateRestart;
+
+  /// No description provided for @selectEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select event'**
+  String get selectEventTitle;
+
+  /// No description provided for @eventsLoadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your events'**
+  String get eventsLoadFailedTitle;
+
+  /// No description provided for @eventsLoadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection and try again. If it keeps happening, sign out and sign in again.'**
+  String get eventsLoadFailedBody;
+
+  /// No description provided for @noEventsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet'**
+  String get noEventsTitle;
+
+  /// No description provided for @noEventsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Events you\'re part of show up here. Pull down to check again.'**
+  String get noEventsBody;
+
+  /// No description provided for @eventKeyMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Key missing'**
+  String get eventKeyMissing;
+
+  /// No description provided for @noVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'No venue'**
+  String get noVenue;
+
+  /// No description provided for @eventKeySavedChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Key saved'**
+  String get eventKeySavedChip;
+
+  /// No description provided for @whereSendCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where should we send your code?'**
+  String get whereSendCodeTitle;
+
+  /// No description provided for @whereSendCodeLead.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll send a 6-digit code to make sure it\'s really you, {name}.'**
+  String whereSendCodeLead(String name);
+
+  /// No description provided for @viaTextMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Text message'**
+  String get viaTextMessage;
+
+  /// No description provided for @viaTextTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To your phone ending {hint}'**
+  String viaTextTo(String hint);
+
+  /// No description provided for @viaEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get viaEmail;
+
+  /// No description provided for @viaEmailTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To {hint}'**
+  String viaEmailTo(String hint);
+
+  /// No description provided for @cantUseEither.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t use either?'**
+  String get cantUseEither;
+
+  /// No description provided for @whatsAppUsLink.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp us'**
+  String get whatsAppUsLink;
+
+  /// No description provided for @codeTextedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We texted a 6-digit code to your phone ending {hint}.'**
+  String codeTextedTo(String hint);
+
+  /// No description provided for @codeEmailedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We emailed a 6-digit code to {hint}.'**
+  String codeEmailedTo(String hint);
+
+  /// No description provided for @noSmsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No SMS yet?'**
+  String get noSmsYet;
+
+  /// No description provided for @noEmailYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No email yet?'**
+  String get noEmailYet;
+
+  /// No description provided for @sendToInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Send it to {hint} instead'**
+  String sendToInstead(String hint);
+
+  /// No description provided for @eventNotReadyYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event isn\'t ready yet. Pull down on the request page to check again, or WhatsApp us.'**
+  String get eventNotReadyYet;
+
+  /// No description provided for @chooseCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category'**
+  String get chooseCategoryTitle;
+
+  /// No description provided for @chooseCategoryLead.
+  ///
+  /// In en, this message translates to:
+  /// **'It sets how many people a card admits. You can change that per guest.'**
+  String get chooseCategoryLead;
+
+  /// No description provided for @admitsPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Admits 1 person} other{Admits {count} people}}'**
+  String admitsPeople(int count);
+
+  /// No description provided for @newCategoryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'New category'**
+  String get newCategoryButton;
+
+  /// No description provided for @tapToChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to choose'**
+  String get tapToChoose;
+
+  /// No description provided for @importFromExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Excel'**
+  String get importFromExcel;
+
+  /// No description provided for @excelImportLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an Excel or CSV file laid out like this, one guest per row. Download the sample to start from it.'**
+  String get excelImportLead;
+
+  /// No description provided for @chooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get chooseFile;
+
+  /// No description provided for @chooseAnotherFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another file'**
+  String get chooseAnotherFile;
+
+  /// No description provided for @readingFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading {file}…'**
+  String readingFile(String file);
+
+  /// No description provided for @excelWillAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No new guests to add} =1{1 guest will be added} other{{count} guests will be added}}'**
+  String excelWillAdd(int count);
+
+  /// No description provided for @excelMoreRows.
+  ///
+  /// In en, this message translates to:
+  /// **'and {count} more'**
+  String excelMoreRows(int count);
+
+  /// No description provided for @excelNewCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'New categories'**
+  String get excelNewCategories;
+
+  /// No description provided for @excelDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 already on the list} other{{count} already on the list}}'**
+  String excelDuplicates(int count);
+
+  /// No description provided for @excelDuplicatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Same phone number as a guest you have, or repeated in the file. These are skipped.'**
+  String get excelDuplicatesHint;
+
+  /// No description provided for @excelProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 row can\'t be imported} other{{count} rows can\'t be imported}}'**
+  String excelProblems(int count);
+
+  /// No description provided for @excelProblemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix these in the file and import it again. Guests already added are skipped.'**
+  String get excelProblemsHint;
+
+  /// No description provided for @excelRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Row {row}'**
+  String excelRow(int row);
+
+  /// No description provided for @excelImportCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Import 1 guest} other{Import {count} guests}}'**
+  String excelImportCount(int count);
+
+  /// No description provided for @excelImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 guest added} other{{count} guests added}}'**
+  String excelImported(int count);
+
+  /// No description provided for @excelReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read that file. Please try again.'**
+  String get excelReadFailed;
+
+  /// No description provided for @excelFileTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is too big. The limit is 2 MB.'**
+  String get excelFileTooBig;
+
+  /// No description provided for @sampleSheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample'**
+  String get sampleSheet;
+
+  /// No description provided for @downloadSampleSheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Download a sample sheet'**
+  String get downloadSampleSheet;
+
+  /// No description provided for @sampleSheetSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample saved. Fill it in, then choose it here.'**
+  String get sampleSheetSaved;
+
+  /// No description provided for @sampleSheetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t download the sample. Please try again.'**
+  String get sampleSheetFailed;
 }
 
 class _AppLocalizationsDelegate

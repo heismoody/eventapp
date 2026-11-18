@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
+import '../../shared/widgets/app_navigation_bar.dart';
 
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/screens/dashboard_screen.dart';
@@ -117,14 +118,14 @@ class MainShell extends ConsumerWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: AppNavigationBar(
         selectedIndex: currentIndex,
-        onDestinationSelected: (index) => context.go(tabs[index].route),
-        destinations: [
+        onSelected: (index) => context.go(tabs[index].route),
+        items: [
           for (final tab in tabs)
-            NavigationDestination(
-              icon: Icon(tab.icon),
-              selectedIcon: Icon(tab.selectedIcon),
+            AppNavigationItem(
+              icon: tab.icon,
+              selectedIcon: tab.selectedIcon,
               label: tab.label,
             ),
         ],

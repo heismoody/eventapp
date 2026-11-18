@@ -989,8 +989,161 @@
   },
   "statusRefreshFailed": "Couldn't check for updates. This is the last status we had.",
   "savePassword": "Save password",
-  "passwordSavedSignIn": "Password saved. Sign in to open your event.",
+  "passwordSavedSignIn": "Password saved. Tap Sign In to open your event.",
   "updateReadyTitle": "Update downloaded",
   "updateReadyBody": "Restart Cardly to finish updating.",
-  "updateRestart": "Restart"
+  "updateRestart": "Restart",
+  "selectEventTitle": "Select event",
+  "eventsLoadFailedTitle": "Couldn't load your events",
+  "eventsLoadFailedBody": "Check your internet connection and try again. If it keeps happening, sign out and sign in again.",
+  "noEventsTitle": "No events yet",
+  "noEventsBody": "Events you're part of show up here. Pull down to check again.",
+  "eventKeyMissing": "Key missing",
+  "noVenue": "No venue",
+  "eventKeySavedChip": "Key saved",
+  "whereSendCodeTitle": "Where should we send your code?",
+  "whereSendCodeLead": "We'll send a 6-digit code to make sure it's really you, {name}.",
+  "@whereSendCodeLead": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "viaTextMessage": "Text message",
+  "viaTextTo": "To your phone ending {hint}",
+  "@viaTextTo": {
+    "placeholders": {
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "viaEmail": "Email",
+  "viaEmailTo": "To {hint}",
+  "@viaEmailTo": {
+    "placeholders": {
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "cantUseEither": "Can't use either?",
+  "whatsAppUsLink": "WhatsApp us",
+  "codeTextedTo": "We texted a 6-digit code to your phone ending {hint}.",
+  "@codeTextedTo": {
+    "placeholders": {
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "codeEmailedTo": "We emailed a 6-digit code to {hint}.",
+  "@codeEmailedTo": {
+    "placeholders": {
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "noSmsYet": "No SMS yet?",
+  "noEmailYet": "No email yet?",
+  "sendToInstead": "Send it to {hint} instead",
+  "@sendToInstead": {
+    "placeholders": {
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "eventNotReadyYet": "Your event isn't ready yet. Pull down on the request page to check again, or WhatsApp us.",
+  "chooseCategoryTitle": "Choose a category",
+  "chooseCategoryLead": "It sets how many people a card admits. You can change that per guest.",
+  "admitsPeople": "{count, plural, =1{Admits 1 person} other{Admits {count} people}}",
+  "@admitsPeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newCategoryButton": "New category",
+  "tapToChoose": "Tap to choose",
+  "importFromExcel": "Import from Excel",
+  "excelImportLead": "Use an Excel or CSV file laid out like this, one guest per row. Download the sample to start from it.",
+  "chooseFile": "Choose file",
+  "chooseAnotherFile": "Choose another file",
+  "readingFile": "Reading {file}…",
+  "@readingFile": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "excelWillAdd": "{count, plural, =0{No new guests to add} =1{1 guest will be added} other{{count} guests will be added}}",
+  "@excelWillAdd": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "excelMoreRows": "and {count} more",
+  "@excelMoreRows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "excelNewCategories": "New categories",
+  "excelDuplicates": "{count, plural, =1{1 already on the list} other{{count} already on the list}}",
+  "@excelDuplicates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "excelDuplicatesHint": "Same phone number as a guest you have, or repeated in the file. These are skipped.",
+  "excelProblems": "{count, plural, =1{1 row can't be imported} other{{count} rows can't be imported}}",
+  "@excelProblems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "excelProblemsHint": "Fix these in the file and import it again. Guests already added are skipped.",
+  "excelRow": "Row {row}",
+  "@excelRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      }
+    }
+  },
+  "excelImportCount": "{count, plural, =1{Import 1 guest} other{Import {count} guests}}",
+  "@excelImportCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "excelImported": "{count, plural, =1{1 guest added} other{{count} guests added}}",
+  "@excelImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "excelReadFailed": "Couldn't read that file. Please try again.",
+  "excelFileTooBig": "That file is too big. The limit is 2 MB.",
+  "sampleSheet": "Sample",
+  "downloadSampleSheet": "Download a sample sheet",
+  "sampleSheetSaved": "Sample saved. Fill it in, then choose it here.",
+  "sampleSheetFailed": "Couldn't download the sample. Please try again."
 }

@@ -12,18 +12,33 @@ import 'auth_service.dart';
 enum ResetChannel { sms, email }
 
 class ResetCodeSent {
-  const ResetCodeSent({required this.channel, required this.resendAfter});
+  const ResetCodeSent({
+    required this.channel,
+    required this.resendAfter,
+    this.sentTo,
+  });
 
   final ResetChannel channel;
   final Duration resendAfter;
+
+  /// Masked by the portal ("•••456"), for a new customer's first password.
+  final String? sentTo;
 }
 
 class ResetVerified {
-  const ResetVerified({required this.resetToken, required this.name});
+  const ResetVerified({
+    required this.resetToken,
+    required this.name,
+    this.signInWith,
+  });
 
   /// Good for one new password, for 15 minutes.
   final String resetToken;
   final String name;
+
+  /// For a new customer's first password: the phone (or email) on their
+  /// account, to fill in the sign-in sheet. Only given after a right code.
+  final String? signInWith;
 }
 
 class PasswordResetException implements Exception {
@@ -72,6 +87,41 @@ class PasswordResetService {
       resendAfter: Duration(
         seconds: (data['resendAfterSeconds'] as num?)?.toInt() ?? 60,
       ),
+    );
+  }
+
+  /// A new customer's first password: the portal sends the code to the
+  /// phone or email on the account it made for [requestId].
+  Future<ResetCodeSent> requestCodeForRequest(
+    String requestId,
+    ResetChannel channel,
+  ) async {
+    final data = await _post(ApiConfig.requestCodePath(requestId), {
+      'channel': channel == ResetChannel.email ? 'email' : 'sms',
+    });
+    return ResetCodeSent(
+      channel: channel,
+      sentTo: data['sentTo'] as String?,
+      resendAfter: Duration(
+        seconds: (data['resendAfterSeconds'] as num?)?.toInt() ?? 60,
+      ),
+    );
+  }
+
+  Future<ResetVerified> verifyCodeForRequest(
+    String requestId,
+    ResetChannel channel,
+    String code,
+  ) async {
+    final data = await _post(ApiConfig.resetVerifyPath, {
+      'eventRequestId': requestId,
+      'channel': channel == ResetChannel.email ? 'email' : 'sms',
+      'code': code,
+    });
+    return ResetVerified(
+      resetToken: data['resetToken'] as String,
+      name: data['name'] as String? ?? '',
+      signInWith: data['signInWith'] as String?,
     );
   }
 
@@ -143,8 +193,8 @@ class PasswordResetService {
         );
       case DioExceptionType.badResponse:
         final status = error.response?.statusCode ?? 0;
-        if (status == 404) {
-          // An older server without password reset.
+        if (status == 404 && serverMessage == null) {
+          // An older server without this address (a page, not JSON).
           return PasswordResetException(
             "Password reset isn't available yet. WhatsApp us and we'll help.",
           );
