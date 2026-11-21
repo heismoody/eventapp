@@ -1973,4 +1973,40 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get updateCheckFailed =>
       'Hatukuweza kuangalia masasisho. Angalia intaneti yako kisha ujaribu tena.';
+
+  @override
+  String get updateAvailableTitle => 'Sasisho linapatikana';
+
+  @override
+  String updateReadyToInstall(String version) {
+    return 'Toleo $version liko tayari kusakinishwa.';
+  }
+
+  @override
+  String get updateRequired =>
+      'Sasisho hili linahitajika ili uendelee kutumia Cardly.';
+
+  @override
+  String get updateWhatsNew => 'Kipya ni nini';
+
+  @override
+  String get updateNow => 'Sasisha';
+
+  @override
+  String get updateLater => 'Baadaye';
+
+  @override
+  String updateDownloading(String version) {
+    return 'Inapakua toleo $version...';
+  }
+
+  @override
+  String get updateDownloadingShort => 'Inapakua...';
+
+  @override
+  String get updateInstallHint => 'Android itakuomba uthibitishe usakinishaji.';
+
+  @override
+  String get updateDownloadFailed =>
+      'Upakuaji haukukamilika. Angalia intaneti yako kisha ujaribu tena.';
 }

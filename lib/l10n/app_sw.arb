@@ -547,5 +547,15 @@
   "goToSignIn": "Nenda kuingia",
   "setupSavedWhileSignedIn": "Nenosiri limehifadhiwa. Toka, kisha uingie kwa {signInWith}.",
   "updateAlreadyLatest": "Una toleo jipya zaidi la Cardly.",
-  "updateCheckFailed": "Hatukuweza kuangalia masasisho. Angalia intaneti yako kisha ujaribu tena."
+  "updateCheckFailed": "Hatukuweza kuangalia masasisho. Angalia intaneti yako kisha ujaribu tena.",
+  "updateAvailableTitle": "Sasisho linapatikana",
+  "updateReadyToInstall": "Toleo {version} liko tayari kusakinishwa.",
+  "updateRequired": "Sasisho hili linahitajika ili uendelee kutumia Cardly.",
+  "updateWhatsNew": "Kipya ni nini",
+  "updateNow": "Sasisha",
+  "updateLater": "Baadaye",
+  "updateDownloading": "Inapakua toleo {version}...",
+  "updateDownloadingShort": "Inapakua...",
+  "updateInstallHint": "Android itakuomba uthibitishe usakinishaji.",
+  "updateDownloadFailed": "Upakuaji haukukamilika. Angalia intaneti yako kisha ujaribu tena."
 }

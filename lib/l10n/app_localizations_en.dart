@@ -1967,4 +1967,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get updateCheckFailed =>
       'Couldn\'t check for updates. Check your internet connection and try again.';
+
+  @override
+  String get updateAvailableTitle => 'Update available';
+
+  @override
+  String updateReadyToInstall(String version) {
+    return 'Version $version is ready to install.';
+  }
+
+  @override
+  String get updateRequired => 'This update is required to keep using Cardly.';
+
+  @override
+  String get updateWhatsNew => 'What\'s new';
+
+  @override
+  String get updateNow => 'Update';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String updateDownloading(String version) {
+    return 'Downloading version $version...';
+  }
+
+  @override
+  String get updateDownloadingShort => 'Downloading...';
+
+  @override
+  String get updateInstallHint =>
+      'Android will ask you to confirm the install.';
+
+  @override
+  String get updateDownloadFailed =>
+      'The download didn\'t finish. Check your internet connection and try again.';
 }

@@ -3385,6 +3385,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t check for updates. Check your internet connection and try again.'**
   String get updateCheckFailed;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateReadyToInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is ready to install.'**
+  String updateReadyToInstall(String version);
+
+  /// No description provided for @updateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This update is required to keep using Cardly.'**
+  String get updateRequired;
+
+  /// No description provided for @updateWhatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get updateWhatsNew;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateNow;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading version {version}...'**
+  String updateDownloading(String version);
+
+  /// No description provided for @updateDownloadingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading...'**
+  String get updateDownloadingShort;
+
+  /// No description provided for @updateInstallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Android will ask you to confirm the install.'**
+  String get updateInstallHint;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The download didn\'t finish. Check your internet connection and try again.'**
+  String get updateDownloadFailed;
 }
 
 class _AppLocalizationsDelegate

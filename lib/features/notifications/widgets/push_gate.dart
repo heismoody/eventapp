@@ -12,7 +12,7 @@ import '../../../l10n/l10n.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../event_request/services/my_request_store.dart';
 import '../../update/services/update_service.dart';
-import '../../update/widgets/update_dialog.dart';
+import '../../update/widgets/update_sheet.dart';
 import '../services/push_service.dart';
 
 /// Wires push notifications into the app:
@@ -23,7 +23,7 @@ import '../services/push_service.dart';
 ///   notification shade, like one that arrives while it's closed;
 /// - opens the right screen when a notification is tapped, or checks for
 ///   an app update when it's the "new version is out" one (the update
-///   dialog, or a message saying it's already the latest or the check
+///   sheet, or a message saying it's already the latest or the check
 ///   failed).
 class PushGate extends ConsumerStatefulWidget {
   const PushGate({super.key, required this.child});
@@ -112,7 +112,7 @@ class _PushGateState extends ConsumerState<PushGate> {
     ref.read(routerProvider).go(route);
   }
 
-  /// Opens the update dialog, signed in or not, or says why it didn't:
+  /// Opens the update sheet, signed in or not, or says why it didn't:
   /// already up to date, or the check failed. A tap never does nothing.
   Future<void> _checkForUpdate() async {
     if (_checkingUpdate) return;
@@ -128,7 +128,7 @@ class _PushGateState extends ConsumerState<PushGate> {
       if (release == null) {
         AppToast.success(appL10n.updateAlreadyLatest);
       } else if (navigator != null && navigator.mounted) {
-        await showUpdateDialog(navigator, release);
+        await showUpdateSheet(navigator, release);
       }
     } catch (error) {
       debugPrint('[push] update check failed: $error');

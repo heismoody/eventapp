@@ -1164,5 +1164,29 @@
     }
   },
   "updateAlreadyLatest": "You have the latest version of Cardly.",
-  "updateCheckFailed": "Couldn't check for updates. Check your internet connection and try again."
+  "updateCheckFailed": "Couldn't check for updates. Check your internet connection and try again.",
+  "updateAvailableTitle": "Update available",
+  "updateReadyToInstall": "Version {version} is ready to install.",
+  "@updateReadyToInstall": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateRequired": "This update is required to keep using Cardly.",
+  "updateWhatsNew": "What's new",
+  "updateNow": "Update",
+  "updateLater": "Later",
+  "updateDownloading": "Downloading version {version}...",
+  "@updateDownloading": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateDownloadingShort": "Downloading...",
+  "updateInstallHint": "Android will ask you to confirm the install.",
+  "updateDownloadFailed": "The download didn't finish. Check your internet connection and try again."
 }
