@@ -3313,6 +3313,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t download the sample. Please try again.'**
   String get sampleSheetFailed;
+
+  /// No description provided for @setupLinkChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your link...'**
+  String get setupLinkChecking;
+
+  /// No description provided for @setupLinkUsedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has already been used'**
+  String get setupLinkUsedTitle;
+
+  /// No description provided for @setupLinkUsedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password is set. Sign in with it. If you forgot it, tap Forgot password on the sign-in screen.'**
+  String get setupLinkUsedBody;
+
+  /// No description provided for @setupLinkExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has expired'**
+  String get setupLinkExpiredTitle;
+
+  /// No description provided for @setupLinkExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Links work for 7 days. WhatsApp us and we\'ll send you a new one.'**
+  String get setupLinkExpiredBody;
+
+  /// No description provided for @setupLinkInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link doesn\'t work'**
+  String get setupLinkInvalidTitle;
+
+  /// No description provided for @setupLinkInvalidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the link from your SMS or email again, or WhatsApp us and we\'ll send a new one.'**
+  String get setupLinkInvalidBody;
+
+  /// No description provided for @setupLinkCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t check your link. Check your internet connection and try again.'**
+  String get setupLinkCheckFailed;
+
+  /// No description provided for @goToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to sign in'**
+  String get goToSignIn;
+
+  /// No description provided for @setupSavedWhileSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Password saved. Sign out, then sign in with {signInWith}.'**
+  String setupSavedWhileSignedIn(String signInWith);
+
+  /// No description provided for @updateAlreadyLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'You have the latest version of Cardly.'**
+  String get updateAlreadyLatest;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check for updates. Check your internet connection and try again.'**
+  String get updateCheckFailed;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateReadyToInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is ready to install.'**
+  String updateReadyToInstall(String version);
+
+  /// No description provided for @updateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This update is required to keep using Cardly.'**
+  String get updateRequired;
+
+  /// No description provided for @updateWhatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get updateWhatsNew;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateNow;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading version {version}...'**
+  String updateDownloading(String version);
+
+  /// No description provided for @updateDownloadingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading...'**
+  String get updateDownloadingShort;
+
+  /// No description provided for @updateInstallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Android will ask you to confirm the install.'**
+  String get updateInstallHint;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The download didn\'t finish. Check your internet connection and try again.'**
+  String get updateDownloadFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -2,4 +2,23 @@
     <!-- Dev build only: lets the self-hosted in-app updater hand a downloaded
          APK to Android's own installer. Merged on top of main/AndroidManifest.xml. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+
+    <application>
+        <activity android:name=".MainActivity">
+            <!-- Android App Links: the "choose your password" link from the
+                 SMS or email opens here instead of the browser. Android checks
+                 appdev.cardly.co.tz/.well-known/assetlinks.json (in the portal's
+                 public folder) for this app's signing key; without a match the
+                 link keeps opening the web page. The Play build gets its own
+                 filter for app.cardly.co.tz in src/prod. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"/>
+                <data android:host="appdev.cardly.co.tz"/>
+                <data android:pathPrefix="/set-password/"/>
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>

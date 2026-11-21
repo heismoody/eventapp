@@ -1924,4 +1924,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sampleSheetFailed =>
       'Couldn\'t download the sample. Please try again.';
+
+  @override
+  String get setupLinkChecking => 'Checking your link...';
+
+  @override
+  String get setupLinkUsedTitle => 'This link has already been used';
+
+  @override
+  String get setupLinkUsedBody =>
+      'Your password is set. Sign in with it. If you forgot it, tap Forgot password on the sign-in screen.';
+
+  @override
+  String get setupLinkExpiredTitle => 'This link has expired';
+
+  @override
+  String get setupLinkExpiredBody =>
+      'Links work for 7 days. WhatsApp us and we\'ll send you a new one.';
+
+  @override
+  String get setupLinkInvalidTitle => 'This link doesn\'t work';
+
+  @override
+  String get setupLinkInvalidBody =>
+      'Open the link from your SMS or email again, or WhatsApp us and we\'ll send a new one.';
+
+  @override
+  String get setupLinkCheckFailed =>
+      'We couldn\'t check your link. Check your internet connection and try again.';
+
+  @override
+  String get goToSignIn => 'Go to sign in';
+
+  @override
+  String setupSavedWhileSignedIn(String signInWith) {
+    return 'Password saved. Sign out, then sign in with $signInWith.';
+  }
+
+  @override
+  String get updateAlreadyLatest => 'You have the latest version of Cardly.';
+
+  @override
+  String get updateCheckFailed =>
+      'Couldn\'t check for updates. Check your internet connection and try again.';
+
+  @override
+  String get updateAvailableTitle => 'Update available';
+
+  @override
+  String updateReadyToInstall(String version) {
+    return 'Version $version is ready to install.';
+  }
+
+  @override
+  String get updateRequired => 'This update is required to keep using Cardly.';
+
+  @override
+  String get updateWhatsNew => 'What\'s new';
+
+  @override
+  String get updateNow => 'Update';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String updateDownloading(String version) {
+    return 'Downloading version $version...';
+  }
+
+  @override
+  String get updateDownloadingShort => 'Downloading...';
+
+  @override
+  String get updateInstallHint =>
+      'Android will ask you to confirm the install.';
+
+  @override
+  String get updateDownloadFailed =>
+      'The download didn\'t finish. Check your internet connection and try again.';
 }

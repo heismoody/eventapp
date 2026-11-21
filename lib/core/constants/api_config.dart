@@ -9,6 +9,11 @@ class ApiConfig {
   static const String resetCodePath = '/api/mobile/auth/reset';
   static const String resetVerifyPath = '/api/mobile/auth/reset/verify';
   static const String resetCompletePath = '/api/mobile/auth/reset/complete';
+
+  /// The "choose your password" link from the SMS or email, opened in the
+  /// app: which event request it's for.
+  static String accountSetupPath(String token) =>
+      '/api/mobile/account-setup/${Uri.encodeComponent(token)}';
   static const String eventRequestsPath = '/api/mobile/event-requests';
   static const String devicesPath = '/api/mobile/devices';
 

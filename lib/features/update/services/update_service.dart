@@ -26,19 +26,23 @@ class UpdateService {
   /// connectivity) — a failed check should never block using the app.
   Future<AppRelease?> checkForUpdate() async {
     try {
-      final dio = _ref.read(apiClientProvider);
-      final response = await dio.get(AppEnvironment.releaseManifestPath);
-      final release = AppRelease.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-
-      final info = await PackageInfo.fromPlatform();
-      final installedCode = int.tryParse(info.buildNumber) ?? 0;
-
-      return release.versionCode > installedCode ? release : null;
+      return await checkNow();
     } catch (_) {
       return null;
     }
+  }
+
+  /// Like [checkForUpdate], but a failed check throws, for when someone
+  /// asked and should hear that it didn't work.
+  Future<AppRelease?> checkNow() async {
+    final dio = _ref.read(apiClientProvider);
+    final response = await dio.get(AppEnvironment.releaseManifestPath);
+    final release = AppRelease.fromJson(response.data as Map<String, dynamic>);
+
+    final info = await PackageInfo.fromPlatform();
+    final installedCode = int.tryParse(info.buildNumber) ?? 0;
+
+    return release.versionCode > installedCode ? release : null;
   }
 
   /// Downloads the APK, reporting progress from 0.0 to 1.0, and returns the

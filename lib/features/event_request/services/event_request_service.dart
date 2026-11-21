@@ -108,6 +108,32 @@ class EventRequestException implements Exception {
   String toString() => message;
 }
 
+/// What a "choose your password" link from the SMS or email is for: the
+/// request the event was made from, and its owner's contacts, masked.
+class SetupLinkTarget {
+  const SetupLinkTarget({
+    required this.requestId,
+    required this.name,
+    this.smsHint,
+    this.emailHint,
+  });
+
+  final String requestId;
+  final String name;
+  final String? smsHint;
+  final String? emailHint;
+
+  String get firstName => name.trim().split(RegExp(r'\s+')).first;
+}
+
+/// Why a "choose your password" link can't be used.
+enum SetupLinkProblem { invalid, used, expired, offline, unknown }
+
+class SetupLinkException implements Exception {
+  const SetupLinkException(this.problem);
+  final SetupLinkProblem problem;
+}
+
 final eventRequestServiceProvider = Provider<EventRequestService>(
   EventRequestService.new,
 );
@@ -204,6 +230,43 @@ class EventRequestService {
     }
     await _ref.read(myRequestProvider.notifier).updateProgress(progress);
     return progress;
+  }
+
+  /// Opens a "choose your password" link (`/set-password/<token>`) in the
+  /// app. The token is the only proof the link needs, so it's never logged.
+  Future<SetupLinkTarget> lookUpSetupLink(String token) async {
+    try {
+      final response = await _dio.get(
+        '$serverUrl${ApiConfig.accountSetupPath(token)}',
+      );
+      final data = (response.data as Map).cast<String, dynamic>();
+      return SetupLinkTarget(
+        requestId: data['requestId'] as String,
+        name: data['name'] as String? ?? '',
+        smsHint: data['smsHint'] as String?,
+        emailHint: data['emailHint'] as String?,
+      );
+    } on DioException catch (error) {
+      debugPrint(
+        '[event-request] setup link check failed: ${error.type.name} '
+        '${error.response?.statusCode ?? ''}',
+      );
+      final data = error.response?.data;
+      throw SetupLinkException(switch (error.type) {
+        DioExceptionType.connectionTimeout ||
+        DioExceptionType.receiveTimeout ||
+        DioExceptionType.sendTimeout ||
+        DioExceptionType.connectionError => SetupLinkProblem.offline,
+        _ => switch (data is Map ? data['reason'] : null) {
+          'invalid' => SetupLinkProblem.invalid,
+          'used' => SetupLinkProblem.used,
+          'expired' => SetupLinkProblem.expired,
+          _ => SetupLinkProblem.unknown,
+        },
+      });
+    } catch (_) {
+      throw const SetupLinkException(SetupLinkProblem.unknown);
+    }
   }
 
   EventRequestException _explain(DioException error) {

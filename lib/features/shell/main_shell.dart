@@ -14,7 +14,7 @@ import '../contributions/screens/contributions_screen.dart';
 import '../settings/screens/settings_screen.dart';
 import '../team/screens/team_screen.dart';
 import '../update/services/update_service.dart';
-import '../update/widgets/update_dialog.dart';
+import '../update/widgets/update_sheet.dart';
 
 class _ShellTab {
   _ShellTab({
@@ -97,7 +97,7 @@ class MainShell extends ConsumerWidget {
     // not on every rebuild — safe to call unconditionally here.
     ref.listen(appUpdateProvider, (previous, next) {
       next.whenData((release) {
-        if (release != null) showUpdateDialog(context, release);
+        if (release != null) showUpdateSheet(context, release);
       });
     });
 
