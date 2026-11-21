@@ -1930,4 +1930,40 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get sampleSheetFailed =>
       'Imeshindikana kupakua mfano. Tafadhali jaribu tena.';
+
+  @override
+  String get setupLinkChecking => 'Tunakagua kiungo chako...';
+
+  @override
+  String get setupLinkUsedTitle => 'Kiungo hiki kimeshatumika';
+
+  @override
+  String get setupLinkUsedBody =>
+      'Nenosiri lako limewekwa. Ingia nalo. Ukilisahau, gusa Umesahau nenosiri kwenye skrini ya kuingia.';
+
+  @override
+  String get setupLinkExpiredTitle => 'Muda wa kiungo hiki umeisha';
+
+  @override
+  String get setupLinkExpiredBody =>
+      'Viungo hufanya kazi kwa siku 7. Tutumie WhatsApp na tutakutumia kipya.';
+
+  @override
+  String get setupLinkInvalidTitle => 'Kiungo hiki hakifanyi kazi';
+
+  @override
+  String get setupLinkInvalidBody =>
+      'Fungua tena kiungo kilicho kwenye SMS au barua pepe yako, au tutumie WhatsApp tukutumie kipya.';
+
+  @override
+  String get setupLinkCheckFailed =>
+      'Hatukuweza kukagua kiungo chako. Angalia intaneti yako kisha ujaribu tena.';
+
+  @override
+  String get goToSignIn => 'Nenda kuingia';
+
+  @override
+  String setupSavedWhileSignedIn(String signInWith) {
+    return 'Nenosiri limehifadhiwa. Toka, kisha uingie kwa $signInWith.';
+  }
 }

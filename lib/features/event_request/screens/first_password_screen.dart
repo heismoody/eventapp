@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../l10n/l10n.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../auth/services/password_reset_service.dart';
 import '../../auth/widgets/code_boxes.dart';
 import '../../auth/widgets/login_form.dart';
@@ -15,6 +16,15 @@ import '../services/event_request_service.dart';
 import '../services/my_request_store.dart';
 
 enum _Step { choose, code, password }
+
+/// Whose first password this is, and where the code can go (masked).
+typedef _Owner = ({
+  String requestId,
+  String firstName,
+  String? smsHint,
+  String? emailHint,
+  String? phone,
+});
 
 /// "Choose your password" for a new customer whose event is ready.
 ///
@@ -24,8 +34,15 @@ enum _Step { choose, code, password }
 /// 3. The password. Then the sign-in sheet opens with their number and the
 ///    new password filled in, one tap from their event. The password is
 ///    only passed along in memory, never saved.
+///
+/// Opened from "Track your request" on the phone that sent the request, or
+/// from the "choose your password" link in the SMS or email ([linkToken]):
+/// the link says which request it's for, so it works on any phone.
 class FirstPasswordScreen extends ConsumerStatefulWidget {
-  const FirstPasswordScreen({super.key});
+  const FirstPasswordScreen({super.key, this.linkToken});
+
+  /// The token from `/set-password/<token>`, when opened from the link.
+  final String? linkToken;
 
   @override
   ConsumerState<FirstPasswordScreen> createState() =>
@@ -51,11 +68,49 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
   Timer? _timer;
   int _resendIn = 0;
 
+  /// From the link: the request it's for, once checked, or why it can't
+  /// be used.
+  SetupLinkTarget? _link;
+  SetupLinkProblem? _linkProblem;
+
   PasswordResetService get _service => ref.read(passwordResetServiceProvider);
+
+  bool get _fromLink => widget.linkToken != null;
+
+  /// Whose password this is: the request from the link, or the one sent
+  /// from this phone.
+  _Owner? _owner({bool watch = false}) {
+    if (_fromLink) {
+      final link = _link;
+      if (link == null) return null;
+      return (
+        requestId: link.requestId,
+        firstName: link.firstName,
+        smsHint: link.smsHint,
+        emailHint: link.emailHint,
+        phone: null,
+      );
+    }
+    final request = watch
+        ? ref.watch(myRequestProvider)
+        : ref.read(myRequestProvider);
+    if (request == null) return null;
+    return (
+      requestId: request.id,
+      firstName: request.firstName,
+      smsHint: request.progress.smsHint,
+      emailHint: request.progress.emailHint,
+      phone: request.phone,
+    );
+  }
 
   @override
   void initState() {
     super.initState();
+    if (_fromLink) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkLink());
+      return;
+    }
     final progress = ref.read(myRequestProvider)?.progress;
     if (progress?.smsHint == null && progress?.emailHint != null) {
       _channel = ResetChannel.email;
@@ -74,6 +129,24 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
     _confirm.dispose();
     _codeFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkLink() async {
+    setState(() => _linkProblem = null);
+    try {
+      final link = await ref
+          .read(eventRequestServiceProvider)
+          .lookUpSetupLink(widget.linkToken!);
+      if (!mounted) return;
+      setState(() {
+        _link = link;
+        if (link.smsHint == null && link.emailHint != null) {
+          _channel = ResetChannel.email;
+        }
+      });
+    } on SetupLinkException catch (error) {
+      if (mounted) setState(() => _linkProblem = error.problem);
+    }
   }
 
   Future<void> _refreshHints() async {
@@ -124,18 +197,15 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
   }
 
   Future<void> _send(ResetChannel channel) => _run(() async {
-    final request = ref.read(myRequestProvider);
-    if (request == null) return;
-    final sent = await _service.requestCodeForRequest(request.id, channel);
+    final owner = _owner();
+    if (owner == null) return;
+    final sent = await _service.requestCodeForRequest(owner.requestId, channel);
     if (!mounted) return;
-    final progress = request.progress;
     setState(() {
       _channel = channel;
       _sentTo =
           sent.sentTo ??
-          (channel == ResetChannel.sms
-              ? progress.smsHint
-              : progress.emailHint) ??
+          (channel == ResetChannel.sms ? owner.smsHint : owner.emailHint) ??
           '';
       _code.clear();
       _step = _Step.code;
@@ -145,14 +215,14 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
   });
 
   Future<void> _verify() => _run(() async {
-    final request = ref.read(myRequestProvider);
-    if (request == null) return;
+    final owner = _owner();
+    if (owner == null) return;
     if (_code.text.length != 6) {
       setState(() => _error = context.l10n.enterSixDigitCode);
       return;
     }
     final verified = await _service.verifyCodeForRequest(
-      request.id,
+      owner.requestId,
       _channel,
       _code.text,
     );
@@ -174,13 +244,23 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
       setState(() => _error = context.l10n.passwordsDontMatch);
       return;
     }
-    final request = ref.read(myRequestProvider);
+    final owner = _owner();
     await _service.choose(_resetToken, password);
+    final phone = owner?.phone;
     final identifier =
-        _signInWith ??
-        (request == null ? '' : CardlyContact.display(request.phone));
-    await ref.read(myRequestProvider.notifier).clear();
+        _signInWith ?? (phone == null ? '' : CardlyContact.display(phone));
+    // Done with the request this phone was tracking, if it's this one.
+    if (ref.read(myRequestProvider)?.id == owner?.requestId) {
+      await ref.read(myRequestProvider.notifier).clear();
+    }
     if (!mounted) return;
+    // Someone else is signed in on this phone: the sign-in sheet isn't
+    // reachable, so say how to use the new password instead.
+    if (isAuthenticated(ref.read(authTokenProvider))) {
+      AppToast.success(context.l10n.setupSavedWhileSignedIn(identifier));
+      context.go('/login');
+      return;
+    }
     context.go(
       '/login?skip=1',
       extra: LoginPrefill(
@@ -195,7 +275,11 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
     if (_busy) return;
     switch (_step) {
       case _Step.choose:
-        context.canPop() ? context.pop() : context.go('/plan-event/sent');
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(_fromLink ? '/login' : '/plan-event/sent');
+        }
       case _Step.code:
         setState(() {
           _step = _Step.choose;
@@ -308,11 +392,14 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
 
   Widget _buildChoose(BuildContext context) {
     final l10n = context.l10n;
-    final request = ref.watch(myRequestProvider);
-    final progress = request?.progress;
-    final sms = progress?.smsHint;
-    final email = progress?.emailHint;
-    final name = request?.firstName ?? '';
+    if (_fromLink && _link == null) {
+      final problem = _linkProblem;
+      return problem == null ? _checkingLink(context) : _linkFailed(problem);
+    }
+    final owner = _owner(watch: true);
+    final sms = owner?.smsHint;
+    final email = owner?.emailHint;
+    final name = owner?.firstName ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -380,11 +467,93 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
     );
   }
 
+  Widget _checkingLink(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 48),
+    child: Column(
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: 16),
+        Text(context.l10n.setupLinkChecking, style: _lead(context)),
+      ],
+    ),
+  );
+
+  /// The link can't be used: say why and what to do instead.
+  Widget _linkFailed(SetupLinkProblem problem) {
+    final l10n = context.l10n;
+    final (icon, color, title, body) = switch (problem) {
+      SetupLinkProblem.used => (
+        Icons.check_circle_outline_rounded,
+        AppColors.primary,
+        l10n.setupLinkUsedTitle,
+        l10n.setupLinkUsedBody,
+      ),
+      SetupLinkProblem.expired => (
+        Icons.schedule_rounded,
+        AppColors.warning,
+        l10n.setupLinkExpiredTitle,
+        l10n.setupLinkExpiredBody,
+      ),
+      SetupLinkProblem.invalid => (
+        Icons.link_off_rounded,
+        Theme.of(context).colorScheme.error,
+        l10n.setupLinkInvalidTitle,
+        l10n.setupLinkInvalidBody,
+      ),
+      SetupLinkProblem.offline || SetupLinkProblem.unknown => (
+        Icons.wifi_off_rounded,
+        AppColors.muted,
+        l10n.genericError,
+        l10n.setupLinkCheckFailed,
+      ),
+    };
+    final canRetry =
+        problem == SetupLinkProblem.offline ||
+        problem == SetupLinkProblem.unknown;
+    final askForNew =
+        problem == SetupLinkProblem.expired ||
+        problem == SetupLinkProblem.invalid;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(icon, size: 48, color: color),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              height: 1.15,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(body, textAlign: TextAlign.center, style: _lead(context)),
+          const SizedBox(height: 28),
+          if (canRetry)
+            _primary(l10n.tryAgain, l10n.checking, _checkLink)
+          else if (askForNew)
+            _primary(l10n.whatsAppUsLink, l10n.whatsAppUsLink, _openWhatsApp)
+          else
+            _primary(l10n.goToSignIn, l10n.goToSignIn, _toSignIn),
+          if (canRetry || askForNew) ...[
+            const SizedBox(height: 8),
+            TextButton(onPressed: _toSignIn, child: Text(l10n.goToSignIn)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _toSignIn() => context.go('/login');
+
   Widget _buildCode(BuildContext context) {
     final l10n = context.l10n;
-    final progress = ref.watch(myRequestProvider)?.progress;
+    final owner = _owner(watch: true);
     final bySms = _channel == ResetChannel.sms;
-    final other = bySms ? progress?.emailHint : progress?.smsHint;
+    final other = bySms ? owner?.emailHint : owner?.smsHint;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -484,7 +653,7 @@ class _FirstPasswordScreenState extends ConsumerState<FirstPasswordScreen> {
 
   Widget _buildPassword(BuildContext context) {
     final l10n = context.l10n;
-    final name = ref.read(myRequestProvider)?.firstName ?? '';
+    final name = _owner()?.firstName ?? '';
     final visibility = IconButton(
       tooltip: _obscure ? l10n.showPassword : l10n.hidePassword,
       onPressed: () => setState(() => _obscure = !_obscure),

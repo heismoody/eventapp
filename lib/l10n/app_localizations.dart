@@ -3313,6 +3313,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t download the sample. Please try again.'**
   String get sampleSheetFailed;
+
+  /// No description provided for @setupLinkChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your link...'**
+  String get setupLinkChecking;
+
+  /// No description provided for @setupLinkUsedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has already been used'**
+  String get setupLinkUsedTitle;
+
+  /// No description provided for @setupLinkUsedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password is set. Sign in with it. If you forgot it, tap Forgot password on the sign-in screen.'**
+  String get setupLinkUsedBody;
+
+  /// No description provided for @setupLinkExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has expired'**
+  String get setupLinkExpiredTitle;
+
+  /// No description provided for @setupLinkExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Links work for 7 days. WhatsApp us and we\'ll send you a new one.'**
+  String get setupLinkExpiredBody;
+
+  /// No description provided for @setupLinkInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link doesn\'t work'**
+  String get setupLinkInvalidTitle;
+
+  /// No description provided for @setupLinkInvalidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the link from your SMS or email again, or WhatsApp us and we\'ll send a new one.'**
+  String get setupLinkInvalidBody;
+
+  /// No description provided for @setupLinkCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t check your link. Check your internet connection and try again.'**
+  String get setupLinkCheckFailed;
+
+  /// No description provided for @goToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to sign in'**
+  String get goToSignIn;
+
+  /// No description provided for @setupSavedWhileSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Password saved. Sign out, then sign in with {signInWith}.'**
+  String setupSavedWhileSignedIn(String signInWith);
 }
 
 class _AppLocalizationsDelegate

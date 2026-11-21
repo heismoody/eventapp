@@ -1924,4 +1924,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sampleSheetFailed =>
       'Couldn\'t download the sample. Please try again.';
+
+  @override
+  String get setupLinkChecking => 'Checking your link...';
+
+  @override
+  String get setupLinkUsedTitle => 'This link has already been used';
+
+  @override
+  String get setupLinkUsedBody =>
+      'Your password is set. Sign in with it. If you forgot it, tap Forgot password on the sign-in screen.';
+
+  @override
+  String get setupLinkExpiredTitle => 'This link has expired';
+
+  @override
+  String get setupLinkExpiredBody =>
+      'Links work for 7 days. WhatsApp us and we\'ll send you a new one.';
+
+  @override
+  String get setupLinkInvalidTitle => 'This link doesn\'t work';
+
+  @override
+  String get setupLinkInvalidBody =>
+      'Open the link from your SMS or email again, or WhatsApp us and we\'ll send a new one.';
+
+  @override
+  String get setupLinkCheckFailed =>
+      'We couldn\'t check your link. Check your internet connection and try again.';
+
+  @override
+  String get goToSignIn => 'Go to sign in';
+
+  @override
+  String setupSavedWhileSignedIn(String signInWith) {
+    return 'Password saved. Sign out, then sign in with $signInWith.';
+  }
 }

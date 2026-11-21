@@ -37,11 +37,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Open to anyone: asking Cardly for an event needs no account.
       final isPlanningEvent = state.matchedLocation.startsWith('/plan-event');
       final isResetting = state.matchedLocation == '/forgot-password';
+      // The "choose your password" link from the SMS or email (Android App
+      // Links), opened before the customer has ever signed in.
+      final isSettingUp = state.matchedLocation.startsWith('/set-password/');
       final token = ref.read(authTokenProvider);
       final authenticated = isAuthenticated(token);
       final user = ref.read(currentUserProvider);
 
-      if (!authenticated && !isLoggingIn && !isPlanningEvent && !isResetting) {
+      if (!authenticated &&
+          !isLoggingIn &&
+          !isPlanningEvent &&
+          !isResetting &&
+          !isSettingUp) {
         return '/login';
       }
 
@@ -87,6 +94,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/plan-event/password',
         builder: (context, state) => const FirstPasswordScreen(),
+      ),
+      // The same flow, from the link in the SMS or email.
+      GoRoute(
+        path: '/set-password/:token',
+        builder: (context, state) =>
+            FirstPasswordScreen(linkToken: state.pathParameters['token']),
       ),
       GoRoute(
         path: '/events',

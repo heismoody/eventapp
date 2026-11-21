@@ -1145,5 +1145,22 @@
   "sampleSheet": "Sample",
   "downloadSampleSheet": "Download a sample sheet",
   "sampleSheetSaved": "Sample saved. Fill it in, then choose it here.",
-  "sampleSheetFailed": "Couldn't download the sample. Please try again."
+  "sampleSheetFailed": "Couldn't download the sample. Please try again.",
+  "setupLinkChecking": "Checking your link...",
+  "setupLinkUsedTitle": "This link has already been used",
+  "setupLinkUsedBody": "Your password is set. Sign in with it. If you forgot it, tap Forgot password on the sign-in screen.",
+  "setupLinkExpiredTitle": "This link has expired",
+  "setupLinkExpiredBody": "Links work for 7 days. WhatsApp us and we'll send you a new one.",
+  "setupLinkInvalidTitle": "This link doesn't work",
+  "setupLinkInvalidBody": "Open the link from your SMS or email again, or WhatsApp us and we'll send a new one.",
+  "setupLinkCheckFailed": "We couldn't check your link. Check your internet connection and try again.",
+  "goToSignIn": "Go to sign in",
+  "setupSavedWhileSignedIn": "Password saved. Sign out, then sign in with {signInWith}.",
+  "@setupSavedWhileSignedIn": {
+    "placeholders": {
+      "signInWith": {
+        "type": "String"
+      }
+    }
+  }
 }
