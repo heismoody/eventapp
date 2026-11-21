@@ -10,4 +10,22 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove"/>
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>
+
+    <application>
+        <activity android:name=".MainActivity">
+            <!-- Android App Links: the "choose your password" link from the
+                 SMS or email opens the Play app instead of the browser.
+                 Android checks app.cardly.co.tz/.well-known/assetlinks.json
+                 (in the portal's public folder) for Play's app-signing key;
+                 without a match the link keeps opening the web page. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"/>
+                <data android:host="app.cardly.co.tz"/>
+                <data android:pathPrefix="/set-password/"/>
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>
