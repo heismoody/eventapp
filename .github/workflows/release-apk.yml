@@ -217,6 +217,36 @@ jobs:
           target: ${{ secrets.DEPLOY_PATH_DEV }}/public/app-releases
           strip_components: 1
 
+      # Push notification to every Cardly Dev phone, sent by the portal's
+      # own script with the server's .env (scripts/notify-app-release.ts),
+      # so no secret or public endpoint is needed. Once per version code: a
+      # re-run of the same build doesn't notify again. A failure here never
+      # fails the release; the app still finds the update when it opens.
+      - name: Tell Cardly Dev phones about this version
+        if: env.FLAVOR == 'dev'
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            nvm use 20.20.2 > /dev/null
+            cd "${{ secrets.DEPLOY_PATH_DEV }}"
+            mkdir -p .release-notified
+            MARK=".release-notified/${{ env.BUILD_NUMBER }}"
+            if [ -e "$MARK" ]; then
+              echo "Already notified about ${{ env.BUILD_NUMBER }}."
+              exit 0
+            fi
+            RELEASE_CODE="${{ env.BUILD_NUMBER }}" RELEASE_NAME="${{ env.VERSION_NAME }}" \
+              node_modules/.bin/tsx scripts/notify-app-release.ts
+            touch "$MARK"
+
       - name: Remove old dev APKs (keep the latest 3)
         if: env.FLAVOR == 'dev'
         uses: appleboy/ssh-action@v1.2.0

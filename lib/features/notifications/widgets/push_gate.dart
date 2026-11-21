@@ -9,6 +9,7 @@ import '../../../app/locale_provider.dart';
 import '../../../app/router.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../event_request/services/my_request_store.dart';
+import '../../update/services/update_service.dart';
 import '../services/push_service.dart';
 
 /// Wires push notifications into the app:
@@ -17,7 +18,8 @@ import '../services/push_service.dart';
 /// - asks for permission once, the first time the app opens;
 /// - puts a notification that arrives while the app is open into the
 ///   notification shade, like one that arrives while it's closed;
-/// - opens the right screen when a notification is tapped.
+/// - opens the right screen when a notification is tapped, or checks for
+///   an app update when it's the "new version is out" one.
 class PushGate extends ConsumerStatefulWidget {
   const PushGate({super.key, required this.child});
 
@@ -91,7 +93,16 @@ class _PushGateState extends ConsumerState<PushGate> {
     if (route is String) _go(route);
   }
 
+  /// The portal's "new version is out" notification (lib/push-release.ts).
+  /// Not a screen: it checks for the update again, so the shell shows the
+  /// update dialog even when the app had already checked before it arrived.
+  static const _appUpdateRoute = '/app-update';
+
   void _go(String route) {
+    if (route == _appUpdateRoute) {
+      ref.invalidate(appUpdateProvider);
+      return;
+    }
     if (!route.startsWith('/')) return;
     ref.read(routerProvider).go(route);
   }
