@@ -7,9 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/locale_provider.dart';
 import '../../../app/router.dart';
+import '../../../core/utils/app_toast.dart';
+import '../../../l10n/l10n.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../event_request/services/my_request_store.dart';
 import '../../update/services/update_service.dart';
+import '../../update/widgets/update_dialog.dart';
 import '../services/push_service.dart';
 
 /// Wires push notifications into the app:
@@ -19,7 +22,9 @@ import '../services/push_service.dart';
 /// - puts a notification that arrives while the app is open into the
 ///   notification shade, like one that arrives while it's closed;
 /// - opens the right screen when a notification is tapped, or checks for
-///   an app update when it's the "new version is out" one.
+///   an app update when it's the "new version is out" one (the update
+///   dialog, or a message saying it's already the latest or the check
+///   failed).
 class PushGate extends ConsumerStatefulWidget {
   const PushGate({super.key, required this.child});
 
@@ -94,17 +99,43 @@ class _PushGateState extends ConsumerState<PushGate> {
   }
 
   /// The portal's "new version is out" notification (lib/push-release.ts).
-  /// Not a screen: it checks for the update again, so the shell shows the
-  /// update dialog even when the app had already checked before it arrived.
+  /// Not a screen: it checks for the update there and then.
   static const _appUpdateRoute = '/app-update';
+  bool _checkingUpdate = false;
 
   void _go(String route) {
     if (route == _appUpdateRoute) {
-      ref.invalidate(appUpdateProvider);
+      _checkForUpdate();
       return;
     }
     if (!route.startsWith('/')) return;
     ref.read(routerProvider).go(route);
+  }
+
+  /// Opens the update dialog, signed in or not, or says why it didn't:
+  /// already up to date, or the check failed. A tap never does nothing.
+  Future<void> _checkForUpdate() async {
+    if (_checkingUpdate) return;
+    _checkingUpdate = true;
+    try {
+      final release = await ref.read(updateServiceProvider).checkNow();
+      if (!mounted) return;
+      final navigator = ref
+          .read(routerProvider)
+          .routerDelegate
+          .navigatorKey
+          .currentContext;
+      if (release == null) {
+        AppToast.success(appL10n.updateAlreadyLatest);
+      } else if (navigator != null && navigator.mounted) {
+        await showUpdateDialog(navigator, release);
+      }
+    } catch (error) {
+      debugPrint('[push] update check failed: $error');
+      AppToast.error(appL10n.updateCheckFailed);
+    } finally {
+      _checkingUpdate = false;
+    }
   }
 
   Future<void> _askThenRegister() async {

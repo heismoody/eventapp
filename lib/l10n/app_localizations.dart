@@ -3373,6 +3373,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password saved. Sign out, then sign in with {signInWith}.'**
   String setupSavedWhileSignedIn(String signInWith);
+
+  /// No description provided for @updateAlreadyLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'You have the latest version of Cardly.'**
+  String get updateAlreadyLatest;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check for updates. Check your internet connection and try again.'**
+  String get updateCheckFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -1960,4 +1960,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String setupSavedWhileSignedIn(String signInWith) {
     return 'Password saved. Sign out, then sign in with $signInWith.';
   }
+
+  @override
+  String get updateAlreadyLatest => 'You have the latest version of Cardly.';
+
+  @override
+  String get updateCheckFailed =>
+      'Couldn\'t check for updates. Check your internet connection and try again.';
 }

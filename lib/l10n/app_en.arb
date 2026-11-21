@@ -1162,5 +1162,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "updateAlreadyLatest": "You have the latest version of Cardly.",
+  "updateCheckFailed": "Couldn't check for updates. Check your internet connection and try again."
 }

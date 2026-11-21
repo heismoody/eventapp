@@ -1966,4 +1966,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String setupSavedWhileSignedIn(String signInWith) {
     return 'Nenosiri limehifadhiwa. Toka, kisha uingie kwa $signInWith.';
   }
+
+  @override
+  String get updateAlreadyLatest => 'Una toleo jipya zaidi la Cardly.';
+
+  @override
+  String get updateCheckFailed =>
+      'Hatukuweza kuangalia masasisho. Angalia intaneti yako kisha ujaribu tena.';
 }

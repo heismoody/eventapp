@@ -545,5 +545,7 @@
   "setupLinkInvalidBody": "Fungua tena kiungo kilicho kwenye SMS au barua pepe yako, au tutumie WhatsApp tukutumie kipya.",
   "setupLinkCheckFailed": "Hatukuweza kukagua kiungo chako. Angalia intaneti yako kisha ujaribu tena.",
   "goToSignIn": "Nenda kuingia",
-  "setupSavedWhileSignedIn": "Nenosiri limehifadhiwa. Toka, kisha uingie kwa {signInWith}."
+  "setupSavedWhileSignedIn": "Nenosiri limehifadhiwa. Toka, kisha uingie kwa {signInWith}.",
+  "updateAlreadyLatest": "Una toleo jipya zaidi la Cardly.",
+  "updateCheckFailed": "Hatukuweza kuangalia masasisho. Angalia intaneti yako kisha ujaribu tena."
 }
